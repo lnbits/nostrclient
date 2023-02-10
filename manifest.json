@@ -1,9 +1,9 @@
 {
-    "repos": [
-        {
-            "id": "nostr-client",
-            "organisation": "lnbits",
-            "repository": "nostr-client-extension"
-        }
-    ]
+  "repos": [
+    {
+      "id": "nostrclient",
+      "organisation": "lnbits",
+      "repository": "nostrclient"
+    }
+  ]
 }
