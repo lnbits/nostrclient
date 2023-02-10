@@ -1,0 +1,6 @@
+{
+  "name": "Nostr Client",
+  "short_description": "Nostr client for extensions",
+  "tile": "/nostr-client/static/images/nostr-bitcoin.png",
+  "contributors": ["calle"]
+}

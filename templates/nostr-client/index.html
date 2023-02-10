@@ -1,0 +1,257 @@
+{% extends "base.html" %} {% from "macros.jinja" import window_vars with context
+%} {% block page %}
+<div class="row q-col-gutter-md">
+  <div class="col-12 col-md-7 q-gutter-y-md">
+    <q-card>
+      <q-card-section>
+        <div class="row items-center no-wrap q-mb-md">
+          <div class="col">
+            <h5 class="text-subtitle1 q-my-none">nostr relays</h5>
+          </div>
+
+          <div class="col-auto">
+            <q-input
+              borderless
+              dense
+              debounce="300"
+              v-model="filter"
+              placeholder="Search"
+            >
+              <template v-slot:append>
+                <q-icon name="search"></q-icon>
+              </template>
+            </q-input>
+          </div>
+        </div>
+        <q-table
+          flat
+          dense
+          :data="nostrrelayLinks"
+          row-key="id"
+          :columns="relayTable.columns"
+          :pagination.sync="relayTable.pagination"
+          :filter="filter"
+        >
+          {% raw %}
+          <template v-slot:header="props">
+            <q-tr :props="props">
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                auto-width
+              >
+                <div v-if="col.name == 'id'"></div>
+                <div v-else>{{ col.label }}</div>
+              </q-th>
+              <!-- <q-th auto-width></q-th> -->
+            </q-tr>
+          </template>
+
+          <template v-slot:body="props">
+            <q-tr :props="props">
+              <q-td
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                auto-width
+              >
+                <div v-if="col.name == 'id'"></div>
+                <div v-else>
+                  <div v-if="col.value == true" style="background-color: green">
+                    {{ col.value }}
+                  </div>
+                  <div v-else>{{ col.value }}</div>
+                </div>
+              </q-td>
+              <q-td auto-width>
+                <q-btn
+                  flat
+                  dense
+                  size="xs"
+                  @click="deleteRelay(props.row.id)"
+                  icon="cancel"
+                  color="pink"
+                ></q-btn>
+            </q-tr>
+          </template>
+          {% endraw %}
+        </q-table>
+      </q-card-section>
+    </q-card>
+    <q-card>
+      <!-- <q-tabs
+        v-model="listSelection"
+        dense
+        class="text-grey"
+        active-color="primary"
+        indicator-color="primary"
+        align="justify"
+        narrow-indicator
+      >
+        <q-tab name="denylist" label="Deny List"></q-tab>
+        <q-tab name="allowlist" label="Allow List"></q-tab>
+      </q-tabs> -->
+      <q-separator></q-separator>
+      <q-form class="q-gutter-md q-y-md" @submit="addRelay">
+        <div class="row">
+          <div class="col q-mx-lg q-my-sm">
+            <q-input v-model="relayToAdd" dense filled autogrow></q-input>
+          </div>
+          <div class="col q-mx-lg items-align flex items-center justify-right">
+            <q-btn unelevated color="primary" type="submit"> Add relay </q-btn>
+          </div>
+        </div>
+      </q-form>
+    </q-card>
+  </div>
+
+  <div class="col-12 col-md-5 q-gutter-y-md">
+    <q-card>
+      <q-card-section>
+        <h6 class="text-subtitle1 q-my-none">{{SITE_TITLE}} Nostr Extension</h6>
+        <p>Only Admin users can manage this extension</p>
+
+        <q-card-section></q-card-section>
+      </q-card-section>
+    </q-card>
+  </div>
+</div>
+{% endblock %} {% block scripts %} {{ window_vars(user) }}
+
+<script>
+  Vue.component(VueQrcode.name, VueQrcode)
+
+  var maplrelays = obj => {
+    obj._data = _.clone(obj)
+    obj.theTime = obj.time * 60 - (Date.now() / 1000 - obj.timestamp)
+    obj.time = obj.time + 'mins'
+
+    obj.ping = obj.ping + ' ms'
+
+    if (obj.time_elapsed) {
+      obj.date = 'Time elapsed'
+    } else {
+      obj.date = Quasar.utils.date.formatDate(
+        new Date((obj.theTime - 3600) * 1000),
+        'HH:mm:ss'
+      )
+    }
+    return obj
+  }
+
+  new Vue({
+    el: '#vue',
+    mixins: [windowMixin],
+    data: function () {
+      return {
+        relayToAdd: '',
+        nostrrelayLinks: [],
+        filter: '',
+        relayTable: {
+          columns: [
+            {
+              name: 'connected_string',
+              align: 'left',
+              label: '',
+              field: 'connected_string'
+            },
+            {
+              name: 'relay',
+              align: 'left',
+              label: 'URL',
+              field: 'url'
+            },
+            {
+              name: 'status',
+              align: 'center',
+              label: 'Status',
+              field: 'status'
+            },
+            {
+              name: 'ping',
+              align: 'center',
+              label: 'Ping',
+              field: 'ping'
+            }
+          ],
+          pagination: {
+            rowsPerPage: 10
+          }
+        }
+      }
+    },
+    methods: {
+      getRelays: function () {
+        var self = this
+        LNbits.api
+          .request(
+            'GET',
+            '/nostradmin/api/v1/relays',
+            self.g.user.wallets[0].adminkey
+          )
+          .then(function (response) {
+            if (response.data) {
+              console.log(response.data)
+              response.data.map(maplrelays)
+              self.nostrrelayLinks = response.data
+              console.log(self.nostrrelayLinks)
+            }
+          })
+          .catch(function (error) {
+            LNbits.utils.notifyApiError(error)
+          })
+      },
+      addRelay: function () {
+        console.log("ADD RELAY " + this.relayToAdd)
+        var self = this
+        LNbits.api
+          .request(
+            'POST',
+            '/nostradmin/api/v1/relay',
+            self.g.user.wallets[0].adminkey,
+            {url:this.relayToAdd},
+          )
+          .then(function (response) {
+            if (response.data) {
+              console.log(response.data)
+              response.data.map(maplrelays)
+              self.nostrrelayLinks = response.data
+              console.log(self.nostrrelayLinks)
+            }
+          })
+          .catch(function (error) {
+            LNbits.utils.notifyApiError(error)
+          })
+      },
+      deleteRelay: function (relay_id) {
+        console.log("DELETE RELAY " + relay_id)
+        var self = this
+        LNbits.api
+          .request(
+            'DELETE',
+            '/nostradmin/api/v1/relay',
+            self.g.user.wallets[0].adminkey,
+            {id:relay_id},
+          )
+          .then(function (response) {
+            if (response.data) {
+              console.log(response.data)
+            }
+          })
+          .catch(function (error) {
+            LNbits.utils.notifyApiError(error)
+          })
+      },      
+      exportlnurldeviceCSV: function () {
+        var self = this
+        LNbits.utils.exportCSV(self.relayTable.columns, this.nostrLinks)
+      }
+    },
+    created: function () {
+      var self = this
+      this.getRelays()
+    }
+  })
+</script>
+{% endblock %}
