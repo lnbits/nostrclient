@@ -17,11 +17,11 @@ from .tasks import client, received_event_queue
 from .crud import get_relays, add_relay, delete_relay
 from .models import RelayList, Relay, Event, Filter, Filters
 
-from .nostr.nostr.event import Event as NostrEvent
-from .nostr.nostr.event import EncryptedDirectMessage
-from .nostr.nostr.filter import Filter as NostrFilter
-from .nostr.nostr.filter import Filters as NostrFilters
-from .nostr.nostr.message_type import ClientMessageType
+from .nostr.event import Event as NostrEvent
+from .nostr.event import EncryptedDirectMessage
+from .nostr.filter import Filter as NostrFilter
+from .nostr.filter import Filters as NostrFilters
+from .nostr.message_type import ClientMessageType
 
 from lnbits.decorators import (
     WalletTypeInfo,

@@ -2,10 +2,10 @@ import asyncio
 import ssl
 import threading
 
-from .nostr.nostr.client.client import NostrClient
-from .nostr.nostr.event import Event
-from .nostr.nostr.key import PublicKey
-from .nostr.nostr.relay_manager import RelayManager
+from .nostr.client.client import NostrClient
+from .nostr.event import Event
+from .nostr.key import PublicKey
+from .nostr.relay_manager import RelayManager
 
 # relays = [
 #     "wss://nostr.mom",
