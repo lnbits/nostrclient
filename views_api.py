@@ -60,6 +60,8 @@ async def api_get_relays():  # type: ignore
 @nostrclient_ext.post("/api/v1/relay")
 async def api_add_relay(relay: Relay):  # type: ignore
     assert relay.url, "no URL"
+    if relay.url in client.relay_manager.relays:
+        return
     relay.id = urlsafe_short_hash()
     await add_relay(relay)
     await init_relays()
@@ -67,6 +69,8 @@ async def api_add_relay(relay: Relay):  # type: ignore
 
 @nostrclient_ext.delete("/api/v1/relay")
 async def api_delete_relay(relay: Relay):  # type: ignore
+    assert relay.url
+    client.relay_manager.remove_relay(relay.url)
     await delete_relay(relay)
 
 

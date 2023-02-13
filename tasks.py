@@ -34,7 +34,7 @@ from .crud import get_relays
 
 async def init_relays():
     relays = await get_relays()
-    client.relays = [r.url for r in relays.__root__]
+    client.relays = set([r.url for r in relays.__root__])
     client.connect()
     return
 
@@ -73,8 +73,7 @@ async def init_relays():
 
 async def subscribe_events():
     while not any([r.connected for r in client.relay_manager.relays.values()]):
-        print("no relays connected yet")
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     def callback(event: Event):
         print(f"From {event.public_key[:3]}..{event.public_key[-3:]}: {event.content}")

@@ -7,14 +7,14 @@ from .models import Relay, RelayList
 
 
 async def get_relays() -> RelayList:
-    row = await db.fetchall("SELECT * FROM nostradmin.relays")
+    row = await db.fetchall("SELECT * FROM nostrclient.relays")
     return RelayList(__root__=row)
 
 
 async def add_relay(relay: Relay) -> None:
     await db.execute(
         f"""
-        INSERT INTO nostradmin.relays (
+        INSERT INTO nostrclient.relays (
             id,
             url,
             active
@@ -26,4 +26,4 @@ async def add_relay(relay: Relay) -> None:
 
 
 async def delete_relay(relay: Relay) -> None:
-    await db.execute("DELETE FROM nostradmin.relays WHERE id = ?", (relay.id,))
+    await db.execute("DELETE FROM nostrclient.relays WHERE url = ?", (relay.url,))
