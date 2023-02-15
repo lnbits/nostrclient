@@ -116,7 +116,7 @@ async def api_subscribe(filters: Filters):
     async def event_getter():
         while True:
             event = await received_event_queue.get()
-            if filters.match(event):
+            if nostr_filters.match(event):
                 yield event.to_message()
 
     return EventSourceResponse(
