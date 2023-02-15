@@ -87,25 +87,29 @@ async def api_post_event(event: Event):
     client.relay_manager.publish_event(nostr_event)
 
 
-@nostrclient_ext.post("/api/v1/filter")
-async def api_subscribe(filter: Filter):
-    nostr_filter = NostrFilter(
-        event_ids=filter.ids,
-        kinds=filter.kinds,  # type: ignore
-        authors=filter.authors,
-        since=filter.since,
-        until=filter.until,
-        event_refs=filter.e,
-        pubkey_refs=filter.p,
-        limit=filter.limit,
-    )
+@nostrclient_ext.post("/api/v1/filters")
+async def api_subscribe(filters: Filters):
+    filter_list = []
+    for filter in filters.__root__:
+        filter_list.append(
+            NostrFilter(
+                event_ids=filter.ids,
+                kinds=filter.kinds,  # type: ignore
+                authors=filter.authors,
+                since=filter.since,
+                until=filter.until,
+                event_refs=filter.e,
+                pubkey_refs=filter.p,
+                limit=filter.limit,
+            )
+        )
 
-    filters = NostrFilters([nostr_filter])
+    nostr_filters = NostrFilters(filter_list)
     subscription_id = urlsafe_short_hash()
-    client.relay_manager.add_subscription(subscription_id, filters)
+    client.relay_manager.add_subscription(subscription_id, nostr_filters)
 
     request = [ClientMessageType.REQUEST, subscription_id]
-    request.extend(filters.to_json_array())
+    request.extend(nostr_filters.to_json_array())
     message = json.dumps(request)
     client.relay_manager.publish_message(message)
 
