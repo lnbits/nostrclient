@@ -57,7 +57,9 @@ async def api_get_relays():  # type: ignore
     return relays
 
 
-@nostrclient_ext.post("/api/v1/relay")
+@nostrclient_ext.post(
+    "/api/v1/relay", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
+)
 async def api_add_relay(relay: Relay):  # type: ignore
     assert relay.url, "no URL"
     if relay.url in client.relay_manager.relays:
@@ -67,7 +69,9 @@ async def api_add_relay(relay: Relay):  # type: ignore
     await init_relays()
 
 
-@nostrclient_ext.delete("/api/v1/relay")
+@nostrclient_ext.delete(
+    "/api/v1/relay", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
+)
 async def api_delete_relay(relay: Relay):  # type: ignore
     assert relay.url
     client.relay_manager.remove_relay(relay.url)

@@ -76,12 +76,13 @@ async def subscribe_events():
         await asyncio.sleep(2)
 
     def callback(event: Event):
-        print(f"From {event.public_key[:3]}..{event.public_key[-3:]}: {event.content}")
+        # print(f"From {event.public_key[:3]}..{event.public_key[-3:]}: {event.content}")
         asyncio.run(received_event_queue.put(event))
 
     t = threading.Thread(
         target=client.subscribe,
         args=(callback,),
         name="Nostr-event-subscription",
+        daemon=True,
     )
     t.start()

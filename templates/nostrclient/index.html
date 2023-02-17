@@ -187,8 +187,8 @@
         LNbits.api
           .request(
             'GET',
-            '/nostrclient/api/v1/relays',
-            self.g.user.wallets[0].adminkey
+            '/nostrclient/api/v1/relays?usr=' + this.g.user.id,
+            this.g.user.wallets[0].adminkey
           )
           .then(function (response) {
             if (response.data) {
@@ -202,7 +202,7 @@
             LNbits.utils.notifyApiError(error)
           })
       },
-      addRelay: function () {
+      addRelay() {
         if (!this.relayToAdd.startsWith("wss://")) {
           this.relayToAdd = ""
           this.$q.notify({
@@ -218,8 +218,8 @@
         LNbits.api
           .request(
             'POST',
-            '/nostrclient/api/v1/relay',
-            self.g.user.wallets[0].adminkey,
+            '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
+            this.g.user.wallets[0].adminkey,
             {url:this.relayToAdd},
           )
           .then(function (response) {
@@ -235,14 +235,13 @@
           })
           location.reload();
       },
-      deleteRelay: function (url) {
+      deleteRelay(url) {
         console.log("DELETE RELAY " + url)
-        var self = this
         LNbits.api
           .request(
             'DELETE',
-            '/nostrclient/api/v1/relay',
-            self.g.user.wallets[0].adminkey,
+            '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
+            this.g.user.wallets[0].adminkey,
             {url:url},
           )
           .then(function (response) {
