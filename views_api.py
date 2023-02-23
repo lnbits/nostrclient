@@ -109,7 +109,7 @@ async def ws_filter_subscribe(websocket: WebSocket):
     await websocket.accept()
     while True:
         json_data = await websocket.receive_text()
-        print('### nostrclient', json_data)
+        # print('### nostrclient', json_data)
         try:
             data = json.loads(json_data)
             filters = data if isinstance(data, list) else [data]
