@@ -103,6 +103,25 @@ async def api_subscribe(filters: Filters):
         media_type="text/event-stream",
     )
 
+
+@nostrclient_ext.websocket("/api/v1/filters")
+async def ws_filter_subscribe(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        json_data = await websocket.receive_text()
+        print('### nostrclient', json_data)
+        try:
+            data = json.loads(json_data)
+            filters = data if isinstance(data, list) else [data]
+            filters = [Filter.parse_obj(f) for f in filters]
+            nostr_filters = init_filters(filters)
+            async for message in event_getter(nostr_filters):
+                await websocket.send_text(message)
+
+        except Exception as e:
+            logger.warning(e)
+
+
 def init_filters(filters: List[Filter]):
     filter_list = []
     for filter in filters:
