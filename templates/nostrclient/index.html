@@ -73,6 +73,7 @@
                   icon="cancel"
                   color="pink"
                 ></q-btn>
+              </q-td>
             </q-tr>
           </template>
           {% endraw %}
@@ -203,14 +204,17 @@
           })
       },
       addRelay() {
-        if (!this.relayToAdd.startsWith("wss://")) {
-          this.relayToAdd = ""
+        if (
+          !this.relayToAdd.startsWith('wss://') &&
+          !this.relayToAdd.startsWith('ws://')
+        ) {
+          this.relayToAdd = ''
           this.$q.notify({
-                timeout: 5000,
-                type: 'warning',
-                message: `Invalid relay URL.`,
-                caption: "Should start with wss://"
-              })
+            timeout: 5000,
+            type: 'warning',
+            message: `Invalid relay URL.`,
+            caption: "Should start with 'wss://'' or 'ws://'"
+          })
           return
         }
         console.log("ADD RELAY " + this.relayToAdd)

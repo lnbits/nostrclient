@@ -2,13 +2,15 @@ from http import HTTPStatus
 import asyncio
 import ssl
 import json
-from fastapi import Request
+from typing import List
+from fastapi import Request, WebSocket
 from fastapi.param_functions import Query
 from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 
 from starlette.exceptions import HTTPException
 from sse_starlette.sse import EventSourceResponse
+from loguru import logger
 
 from . import nostrclient_ext
 
@@ -93,8 +95,35 @@ async def api_post_event(event: Event):
 
 @nostrclient_ext.post("/api/v1/filters")
 async def api_subscribe(filters: Filters):
+    nostr_filters = init_filters(filters.__root__)
+
+    return EventSourceResponse(
+        event_getter(nostr_filters),
+        ping=20,
+        media_type="text/event-stream",
+    )
+
+
+@nostrclient_ext.websocket("/api/v1/filters")
+async def ws_filter_subscribe(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        json_data = await websocket.receive_text()
+        try:
+            data = json.loads(json_data)
+            filters = data if isinstance(data, list) else [data]
+            filters = [Filter.parse_obj(f) for f in filters]
+            nostr_filters = init_filters(filters)
+            async for message in event_getter(nostr_filters):
+                await websocket.send_text(message)
+
+        except Exception as e:
+            logger.warning(e)
+
+
+def init_filters(filters: List[Filter]):
     filter_list = []
-    for filter in filters.__root__:
+    for filter in filters:
         filter_list.append(
             NostrFilter(
                 event_ids=filter.ids,
@@ -116,15 +145,11 @@ async def api_subscribe(filters: Filters):
     request.extend(nostr_filters.to_json_array())
     message = json.dumps(request)
     client.relay_manager.publish_message(message)
+    return nostr_filters
 
-    async def event_getter():
-        while True:
-            event = await received_event_queue.get()
-            if nostr_filters.match(event):
-                yield event.to_message()
 
-    return EventSourceResponse(
-        event_getter(),
-        ping=20,
-        media_type="text/event-stream",
-    )
+async def event_getter(nostr_filters):
+    while True:
+        event = await received_event_queue.get()
+        if nostr_filters.match(event):
+            yield event.to_message()
