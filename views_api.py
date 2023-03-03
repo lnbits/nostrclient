@@ -7,9 +7,7 @@ from fastapi.params import Depends
 from loguru import logger
 from sse_starlette.sse import EventSourceResponse
 
-from lnbits.decorators import (
-    check_admin,
-)
+from lnbits.decorators import check_admin
 from lnbits.helpers import urlsafe_short_hash
 
 from . import nostrclient_ext
@@ -81,6 +79,7 @@ async def api_subscribe(filters: Filters):
         media_type="text/event-stream",
     )
 
+
 @nostrclient_ext.websocket("/api/v1/filters")
 async def ws_filter_subscribe(websocket: WebSocket):
     await websocket.accept()
@@ -139,7 +138,9 @@ def init_filters(filters: List[Filter]):
     return nostr_filters
 
 
-async def event_getter(nostr_filters: NostrFilters, subscription_id: Optional[str] = None):
+async def event_getter(
+    nostr_filters: NostrFilters, subscription_id: Optional[str] = None
+):
     while True:
         event = await received_event_queue.get()
         if nostr_filters.match(event):
