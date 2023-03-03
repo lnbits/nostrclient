@@ -1,39 +1,25 @@
-from http import HTTPStatus
-import asyncio
-import ssl
 import json
-from typing import List
-from fastapi import Request, WebSocket
-from fastapi.param_functions import Query
-from fastapi.params import Depends
-from fastapi.responses import JSONResponse
+from http import HTTPStatus
+from typing import List, Optional
 
-from starlette.exceptions import HTTPException
-from sse_starlette.sse import EventSourceResponse
+from fastapi import WebSocket
+from fastapi.params import Depends
 from loguru import logger
+from sse_starlette.sse import EventSourceResponse
+
+from lnbits.decorators import (
+    check_admin,
+)
+from lnbits.helpers import urlsafe_short_hash
 
 from . import nostrclient_ext
-
-from .tasks import client, received_event_queue
-
-from .crud import get_relays, add_relay, delete_relay
-from .models import RelayList, Relay, Event, Filter, Filters
-
+from .crud import add_relay, delete_relay
+from .models import Event, Filter, Filters, Relay, RelayList
 from .nostr.event import Event as NostrEvent
-from .nostr.event import EncryptedDirectMessage
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
 from .nostr.message_type import ClientMessageType
-
-from lnbits.decorators import (
-    WalletTypeInfo,
-    get_key_type,
-    require_admin_key,
-    check_admin,
-)
-
-from lnbits.helpers import urlsafe_short_hash
-from .tasks import init_relays
+from .tasks import client, init_relays, received_event_queue
 
 
 @nostrclient_ext.get("/api/v1/relays")
@@ -82,15 +68,7 @@ async def api_delete_relay(relay: Relay):  # type: ignore
 
 @nostrclient_ext.post("/api/v1/publish")
 async def api_post_event(event: Event):
-    nostr_event = NostrEvent(
-        content=event.content,
-        public_key=event.pubkey,
-        created_at=event.created_at,  # type: ignore
-        kind=event.kind,
-        tags=event.tags or None,  # type: ignore
-        signature=event.sig,
-    )
-    client.relay_manager.publish_event(nostr_event)
+    publish_event(event)
 
 
 @nostrclient_ext.post("/api/v1/filters")
@@ -105,7 +83,7 @@ async def api_subscribe(filters: Filters):
 
 
 @nostrclient_ext.websocket("/api/v1/filters")
-async def ws_filter_subscribe(websocket: WebSocket):
+async def ws_filters(websocket: WebSocket):
     await websocket.accept()
     while True:
         json_data = await websocket.receive_text()
@@ -116,6 +94,37 @@ async def ws_filter_subscribe(websocket: WebSocket):
             nostr_filters = init_filters(filters)
             async for message in event_getter(nostr_filters):
                 await websocket.send_text(message)
+
+        except Exception as e:
+            logger.warning(e)
+
+
+@nostrclient_ext.websocket("/api/v1/filters/subscribe")
+async def ws_filter_subscribe(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        json_data = await websocket.receive_text()
+        try:
+            message_type, *rest = json.loads(json_data)
+            if message_type.upper() == "CLOSE":
+                client.relay_manager.close_subscription(rest[0])
+                continue
+
+            if message_type.upper() == "EVENT":
+                publish_event(Event(**rest[0]))
+                continue
+
+            if message_type.upper() == "REQ":
+                subscription_id, *data = rest
+                filters = data if isinstance(data, list) else [data]
+
+                filters = [Filter.parse_obj(f) for f in filters]
+                nostr_filters = init_filters(filters)
+                async for message in event_getter(nostr_filters, subscription_id):
+                    await websocket.send_text(message)
+                continue
+
+            logger.info(f"Unknown message type: '{message_type}'")
 
         except Exception as e:
             logger.warning(e)
@@ -148,8 +157,20 @@ def init_filters(filters: List[Filter]):
     return nostr_filters
 
 
-async def event_getter(nostr_filters):
+async def event_getter(nostr_filters: NostrFilters, subscription_id: Optional[str] = None):
     while True:
         event = await received_event_queue.get()
         if nostr_filters.match(event):
-            yield event.to_message()
+            yield event.to_message(subscription_id)
+
+
+def publish_event(event: Event):
+    nostr_event = NostrEvent(
+        content=event.content,
+        public_key=event.pubkey,
+        created_at=event.created_at,  # type: ignore
+        kind=event.kind,
+        tags=event.tags or [],  # type: ignore
+        signature=event.sig,
+    )
+    client.relay_manager.publish_event(nostr_event)

@@ -1,10 +1,11 @@
-import time
 import json
+import time
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import List
-from secp256k1 import PublicKey
 from hashlib import sha256
+from typing import Any, List, Optional
+
+from secp256k1 import PublicKey
 
 from .message_type import ClientMessageType
 
@@ -41,7 +42,7 @@ class Event:
     def serialize(
         public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str
     ) -> bytes:
-        data = [0, public_key, created_at, kind, tags, content]
+        data = [0, public_key, created_at, kind, tags or [], content]
         data_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
         return data_str.encode()
 
@@ -76,21 +77,22 @@ class Event:
             bytes.fromhex(self.id), bytes.fromhex(self.signature), None, raw=True
         )
 
-    def to_message(self) -> str:
-        return json.dumps(
-            [
-                ClientMessageType.EVENT,
-                {
-                    "id": self.id,
-                    "pubkey": self.public_key,
-                    "created_at": self.created_at,
-                    "kind": self.kind,
-                    "tags": self.tags,
-                    "content": self.content,
-                    "sig": self.signature,
-                },
-            ]
+    def to_message(self, subscription_id: Optional[str]) -> str:
+        resp: List[Any] = [ClientMessageType.EVENT]
+        if subscription_id:
+            resp.append(subscription_id)
+        resp.append(
+            {
+                "id": self.id,
+                "pubkey": self.public_key,
+                "created_at": self.created_at,
+                "kind": self.kind,
+                "tags": self.tags,
+                "content": self.content,
+                "sig": self.signature,
+            }
         )
+        return json.dumps(resp)
 
 
 @dataclass
