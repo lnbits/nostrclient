@@ -77,7 +77,7 @@ class Event:
             bytes.fromhex(self.id), bytes.fromhex(self.signature), None, raw=True
         )
 
-    def to_message(self, subscription_id: Optional[str]) -> str:
+    def to_message(self, subscription_id: Optional[str] = None) -> str:
         resp: List[Any] = [ClientMessageType.EVENT]
         if subscription_id:
             resp.append(subscription_id)
