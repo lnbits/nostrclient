@@ -81,30 +81,6 @@ async def api_delete_relay(relay: Relay):  # type: ignore
     await delete_relay(relay)
 
 
-# @nostrclient_ext.post("/api/v1/publish")
-# async def api_post_event(event: Event):
-#     nostr_event = NostrEvent(
-#         content=event.content,
-#         public_key=event.pubkey,
-#         created_at=event.created_at,  # type: ignore
-#         kind=event.kind,
-#         tags=event.tags or None,  # type: ignore
-#         signature=event.sig,
-#     )
-#     client.relay_manager.publish_event(nostr_event)
-
-
-# @nostrclient_ext.post("/api/v1/filters")
-# async def api_subscribe(filters: Filters):
-#     nostr_filters = init_filters(filters.__root__)
-
-#     return EventSourceResponse(
-#         event_getter(nostr_filters),
-#         ping=20,
-#         media_type="text/event-stream",
-#     )
-
-
 def marshall_nostr_filters(data: Union[dict, list]):
     filters = data if isinstance(data, list) else [data]
     filters = [Filter.parse_obj(f) for f in filters]
@@ -216,54 +192,3 @@ async def ws_relay(websocket: WebSocket):
             or not connected
         ):
             break
-
-
-# @nostrclient_ext.websocket("/api/v1/filters")
-# async def ws_filter_subscribe(websocket: WebSocket):
-#     await websocket.accept()
-#     while True:
-#         json_data = await websocket.receive_text()
-#         try:
-#             data = json.loads(json_data)
-#             filters = data if isinstance(data, list) else [data]
-#             filters = [Filter.parse_obj(f) for f in filters]
-#             nostr_filters = init_filters(filters)
-#             async for message in event_getter(nostr_filters):
-#                 await websocket.send_text(message)
-
-#         except Exception as e:
-#             logger.warning(e)
-
-
-# def init_filters(filters: List[Filter]):
-#     filter_list = []
-#     for filter in filters:
-#         filter_list.append(
-#             NostrFilter(
-#                 event_ids=filter.ids,  # type: ignore
-#                 kinds=filter.kinds,  # type: ignore
-#                 authors=filter.authors,  # type: ignore
-#                 since=filter.since,  # type: ignore
-#                 until=filter.until,  # type: ignore
-#                 event_refs=filter.e,  # type: ignore
-#                 pubkey_refs=filter.p,  # type: ignore
-#                 limit=filter.limit,  # type: ignore
-#             )
-#         )
-
-#     nostr_filters = NostrFilters(filter_list)
-#     subscription_id = urlsafe_short_hash()
-#     client.relay_manager.add_subscription(subscription_id, nostr_filters)
-
-#     request = [ClientMessageType.REQUEST, subscription_id]
-#     request.extend(nostr_filters.to_json_array())
-#     message = json.dumps(request)
-#     client.relay_manager.publish_message(message)
-#     return nostr_filters
-
-
-# async def event_getter(nostr_filters):
-#     while True:
-#         event_message = await received_event_queue.get()
-#         if nostr_filters.match(event_message.event):
-#             yield event_message.event.to_message()
