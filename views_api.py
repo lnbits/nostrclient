@@ -1,16 +1,10 @@
 from http import HTTPStatus
 import asyncio
-import ssl
 import json
-import datetime
 from typing import List, Union
-from fastapi import Request, WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.param_functions import Query
 from fastapi.params import Depends
-from fastapi.responses import JSONResponse
-
-from starlette.exceptions import HTTPException
-from sse_starlette.sse import EventSourceResponse
 from loguru import logger
 
 from . import nostrclient_ext
@@ -21,10 +15,8 @@ from .crud import get_relays, add_relay, delete_relay
 from .models import RelayList, Relay, Event, Filter, Filters
 
 from .nostr.event import Event as NostrEvent
-from .nostr.event import EncryptedDirectMessage
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
-from .nostr.message_type import ClientMessageType
 
 from lnbits.decorators import (
     WalletTypeInfo,
@@ -121,7 +113,6 @@ async def ws_relay(websocket: WebSocket):
     await websocket.accept()
     my_subscriptions: List[str] = []
     connected: bool = True
-    last_sent: datetime.datetime = datetime.datetime.now()
 
     async def client_to_nostr(websocket):
         """Receives requests / data from the client and forwards it to relays. If the
@@ -129,7 +120,6 @@ async def ws_relay(websocket: WebSocket):
         Remembers the subscription id so we can send back responses from the relay to this
         client in `nostr_to_client`"""
         nonlocal my_subscriptions
-        nonlocal last_sent
         nonlocal connected
         while True:
             try:
@@ -146,9 +136,6 @@ async def ws_relay(websocket: WebSocket):
 
             # publish data
             client.relay_manager.publish_message(json_str)
-
-            # update timestamp of last sent data
-            last_sent = datetime.datetime.now()
 
     async def nostr_to_client(websocket):
         """Sends responses from relays back to the client. Polls the subscriptions of this client
@@ -183,12 +170,10 @@ async def ws_relay(websocket: WebSocket):
     asyncio.create_task(client_to_nostr(websocket))
     asyncio.create_task(nostr_to_client(websocket))
 
-    # we kill this websocket and the subscriptions if no data was sent for
-    # more than 10 minutes _or_ if the user disconnects and thus `connected==False`
+    # we kill this websocket and the subscriptions if the user disconnects and thus `connected==False`
     while True:
         await asyncio.sleep(10)
-        if (
-            datetime.datetime.now() - last_sent > datetime.timedelta(minutes=10)
-            or not connected
-        ):
+        if not connected:
+            for s in my_subscriptions:
+                client.relay_manager.close_subscription(s)
             break
