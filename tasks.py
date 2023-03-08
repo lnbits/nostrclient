@@ -4,6 +4,7 @@ import threading
 
 from .nostr.client.client import NostrClient
 from .nostr.event import Event
+from .nostr.message_pool import EventMessage
 from .nostr.key import PublicKey
 from .nostr.relay_manager import RelayManager
 
@@ -27,7 +28,8 @@ client = NostrClient(
 #     privatekey_hex="211aac75a687ad96cca402406f8147a2726e31c5fc838e22ce30640ca1f3a6fe",
 # )
 
-received_event_queue: asyncio.Queue[Event] = asyncio.Queue(0)
+received_event_queue: asyncio.Queue[EventMessage] = asyncio.Queue(0)
+received_subscription_events: dict[str, list[Event]] = {}
 
 from .crud import get_relays
 
@@ -75,9 +77,28 @@ async def subscribe_events():
     while not any([r.connected for r in client.relay_manager.relays.values()]):
         await asyncio.sleep(2)
 
-    def callback(event: Event):
+    def callback(eventMessage: EventMessage):
         # print(f"From {event.public_key[:3]}..{event.public_key[-3:]}: {event.content}")
-        asyncio.run(received_event_queue.put(event))
+
+        if eventMessage.subscription_id in received_subscription_events:
+            # do not add duplicate events (by signature)
+            if eventMessage.event.signature in set(
+                [
+                    e.signature
+                    for e in received_subscription_events[eventMessage.subscription_id]
+                ]
+            ):
+                return
+
+            received_subscription_events[eventMessage.subscription_id].append(
+                eventMessage.event
+            )
+        else:
+            received_subscription_events[eventMessage.subscription_id] = [
+                eventMessage.event
+            ]
+
+        asyncio.run(received_event_queue.put(eventMessage))
 
     t = threading.Thread(
         target=client.subscribe,
