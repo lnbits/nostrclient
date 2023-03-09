@@ -4,87 +4,41 @@ import threading
 
 from .nostr.client.client import NostrClient
 from .nostr.event import Event
-from .nostr.message_pool import EventMessage
+from .nostr.message_pool import EventMessage, NoticeMessage, EndOfStoredEventsMessage
 from .nostr.key import PublicKey
 from .nostr.relay_manager import RelayManager
 
-# relays = [
-#     "wss://nostr.mom",
-#     "wss://nostr-pub.wellorder.net",
-#     "wss://nostr.zebedee.cloud",
-#     "wss://relay.damus.io",
-#     "wss://relay.nostr.info",
-#     "wss://nostr.onsats.org",
-#     "wss://nostr-relay.untethr.me",
-#     "wss://relay.snort.social",
-#     "wss://lnbits.link/nostrrelay/client",
-# ]
+
 client = NostrClient(
     connect=False,
 )
 
-# client = NostrClient(
-#     connect=False,
-#     privatekey_hex="211aac75a687ad96cca402406f8147a2726e31c5fc838e22ce30640ca1f3a6fe",
-# )
-
 received_event_queue: asyncio.Queue[EventMessage] = asyncio.Queue(0)
 received_subscription_events: dict[str, list[Event]] = {}
+received_subscription_notices: dict[str, list[NoticeMessage]] = {}
+received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
 
 from .crud import get_relays
 
 
 async def init_relays():
     relays = await get_relays()
-    client.relays = set([r.url for r in relays.__root__])
+    client.relays = list(set([r.url for r in relays.__root__ if r.url]))
     client.connect()
     return
-
-
-# async def send_data():
-#     while not any([r.connected for r in client.relay_manager.relays.values()]):
-#         print("no relays connected yet")
-#         await asyncio.sleep(0.5)
-#     while True:
-#         client.dm("test", PublicKey(bytes.fromhex(client.public_key.hex())))
-#         print("sent DM")
-#         await asyncio.sleep(5)
-#     return
-
-
-# async def receive_data():
-#     while not any([r.connected for r in client.relay_manager.relays.values()]):
-#         print("no relays connected yet")
-#         await asyncio.sleep(0.5)
-
-#     def callback(event: Event, decrypted_content=None):
-#         print(
-#             f"From {event.public_key[:3]}..{event.public_key[-3:]}: {decrypted_content or event.content}"
-#         )
-
-#     t = threading.Thread(
-#         target=client.get_dm,
-#         args=(
-#             client.public_key,
-#             callback,
-#         ),
-#         name="Nostr DM",
-#     )
-#     t.start()
 
 
 async def subscribe_events():
     while not any([r.connected for r in client.relay_manager.relays.values()]):
         await asyncio.sleep(2)
 
-    def callback(eventMessage: EventMessage):
+    def callback_events(eventMessage: EventMessage):
         # print(f"From {event.public_key[:3]}..{event.public_key[-3:]}: {event.content}")
-
         if eventMessage.subscription_id in received_subscription_events:
-            # do not add duplicate events (by signature)
-            if eventMessage.event.signature in set(
+            # do not add duplicate events (by event id)
+            if eventMessage.event.id in set(
                 [
-                    e.signature
+                    e.id
                     for e in received_subscription_events[eventMessage.subscription_id]
                 ]
             ):
@@ -97,12 +51,26 @@ async def subscribe_events():
             received_subscription_events[eventMessage.subscription_id] = [
                 eventMessage.event
             ]
+        return
 
-        asyncio.run(received_event_queue.put(eventMessage))
+    def callback_notices(eventMessage: NoticeMessage):
+        return
+
+    def callback_eose_notices(eventMessage: EndOfStoredEventsMessage):
+        if eventMessage.subscription_id not in received_subscription_eosenotices:
+            received_subscription_eosenotices[
+                eventMessage.subscription_id
+            ] = eventMessage
+
+        return
 
     t = threading.Thread(
         target=client.subscribe,
-        args=(callback,),
+        args=(
+            callback_events,
+            callback_notices,
+            callback_eose_notices,
+        ),
         name="Nostr-event-subscription",
         daemon=True,
     )

@@ -129,10 +129,24 @@ class NostrClient:
                 break
             time.sleep(0.1)
 
-    def subscribe(self, callback_func=None):
+    def subscribe(
+        self,
+        callback_events_func=None,
+        callback_notices_func=None,
+        callback_eosenotices_func=None,
+    ):
         while True:
             while self.relay_manager.message_pool.has_events():
                 event_msg = self.relay_manager.message_pool.get_event()
-                if callback_func:
-                    callback_func(event_msg)
+                if callback_events_func:
+                    callback_events_func(event_msg)
+            while self.relay_manager.message_pool.has_notices():
+                event_msg = self.relay_manager.message_pool.has_notices()
+                if callback_notices_func:
+                    callback_notices_func(event_msg)
+            while self.relay_manager.message_pool.has_eose_notices():
+                event_msg = self.relay_manager.message_pool.get_eose_notice()
+                if callback_eosenotices_func:
+                    callback_eosenotices_func(event_msg)
+
             time.sleep(0.1)
