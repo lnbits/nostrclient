@@ -134,5 +134,5 @@ class NostrClient:
             while self.relay_manager.message_pool.has_events():
                 event_msg = self.relay_manager.message_pool.get_event()
                 if callback_func:
-                    callback_func(event_msg.event)
+                    callback_func(event_msg)
             time.sleep(0.1)
