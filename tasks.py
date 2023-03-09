@@ -4,7 +4,7 @@ import threading
 
 from .nostr.client.client import NostrClient
 from .nostr.event import Event
-from .nostr.message_pool import EventMessage
+from .nostr.message_pool import EventMessage, NoticeMessage, EndOfStoredEventsMessage
 from .nostr.key import PublicKey
 from .nostr.relay_manager import RelayManager
 
@@ -15,6 +15,8 @@ client = NostrClient(
 
 received_event_queue: asyncio.Queue[EventMessage] = asyncio.Queue(0)
 received_subscription_events: dict[str, list[Event]] = {}
+received_subscription_notices: dict[str, list[NoticeMessage]] = {}
+received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
 
 from .crud import get_relays
 
@@ -30,9 +32,8 @@ async def subscribe_events():
     while not any([r.connected for r in client.relay_manager.relays.values()]):
         await asyncio.sleep(2)
 
-    def callback(eventMessage: EventMessage):
+    def callback_events(eventMessage: EventMessage):
         # print(f"From {event.public_key[:3]}..{event.public_key[-3:]}: {event.content}")
-
         if eventMessage.subscription_id in received_subscription_events:
             # do not add duplicate events (by event id)
             if eventMessage.event.id in set(
@@ -50,12 +51,26 @@ async def subscribe_events():
             received_subscription_events[eventMessage.subscription_id] = [
                 eventMessage.event
             ]
+        return
 
-        asyncio.run(received_event_queue.put(eventMessage))
+    def callback_notices(eventMessage: NoticeMessage):
+        return
+
+    def callback_eose_notices(eventMessage: EndOfStoredEventsMessage):
+        if eventMessage.subscription_id not in received_subscription_eosenotices:
+            received_subscription_eosenotices[
+                eventMessage.subscription_id
+            ] = eventMessage
+
+        return
 
     t = threading.Thread(
         target=client.subscribe,
-        args=(callback,),
+        args=(
+            callback_events,
+            callback_notices,
+            callback_eose_notices,
+        ),
         name="Nostr-event-subscription",
         daemon=True,
     )

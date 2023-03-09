@@ -6,7 +6,12 @@ from .models import RelayList, Relay, Event, Filter, Filters
 from .nostr.event import Event as NostrEvent
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
-from .tasks import client, received_event_queue, received_subscription_events
+from .tasks import (
+    client,
+    received_event_queue,
+    received_subscription_events,
+    received_subscription_eosenotices,
+)
 from fastapi import WebSocket, WebSocketDisconnect
 from lnbits.helpers import urlsafe_short_hash
 
@@ -73,6 +78,13 @@ class NostrRouter:
 
                         # send data back to client
                         await self.websocket.send_text(json.dumps(event_to_forward))
+                if s in received_subscription_eosenotices:
+                    my_event = received_subscription_eosenotices[s]
+                    s_original = s[len(f"{self.subscription_id_rewrite}_") :]
+                    event_to_forward = ["EOSE", s_original]
+                    del received_subscription_eosenotices[s]
+                    # send data back to client
+                    await self.websocket.send_text(json.dumps(event_to_forward))
             await asyncio.sleep(0.1)
 
     async def start(self):
