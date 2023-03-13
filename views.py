@@ -74,7 +74,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# @nostrclient_ext.websocket("/nostrclient/ws/relayevents/{nostr_id}", name="nostr_id.websocket_by_id")
+@nostrclient_ext.websocket("/nostrclient/ws/relayevents/{nostr_id}", name="nostr_id.websocket_by_id")
 async def websocket_endpoint(websocket: WebSocket, nostr_id: str):
     await manager.connect(websocket, nostr_id)
     try:
