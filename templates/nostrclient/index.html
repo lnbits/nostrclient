@@ -1,14 +1,13 @@
 {% extends "base.html" %} {% from "macros.jinja" import window_vars with context
-%} {% block page %}
+%} {% block page %} {% raw %}
 <div class="row q-col-gutter-md">
   <div class="col-12 col-md-7 q-gutter-y-md">
     <q-card>
       <q-card-section>
         <div class="row items-center no-wrap q-mb-md">
           <div class="col">
-            <h5 class="text-subtitle1 q-my-none">nostr relays</h5>
+            <h5 class="text-subtitle1 q-my-none">Nostrclient</h5>
           </div>
-
           <div class="col-auto">
             <q-input
               borderless
@@ -32,7 +31,6 @@
           :pagination.sync="relayTable.pagination"
           :filter="filter"
         >
-          {% raw %}
           <template v-slot:header="props">
             <q-tr :props="props">
               <q-th
@@ -76,31 +74,24 @@
               </q-td>
             </q-tr>
           </template>
-          {% endraw %}
         </q-table>
+        
+      </q-card-section>
+      <q-card-section>
+        <div class="text-weight-bold"> Your endpoint:
+          <q-badge outline class="q-ml-sm text-subtitle2" color="primary" :label="`wss://${host}nostrclient/api/v1/relay`" />
+          </div>
       </q-card-section>
     </q-card>
     <q-card>
-      <!-- <q-tabs
-        v-model="listSelection"
-        dense
-        class="text-grey"
-        active-color="primary"
-        indicator-color="primary"
-        align="justify"
-        narrow-indicator
-      >
-        <q-tab name="denylist" label="Deny List"></q-tab>
-        <q-tab name="allowlist" label="Allow List"></q-tab>
-      </q-tabs> -->
       <q-separator></q-separator>
       <q-form class="q-gutter-md q-y-md" @submit="addRelay">
         <div class="row">
-          <div class="col q-mx-lg q-my-sm">
-            <q-input v-model="relayToAdd" dense filled></q-input>
+          <div class="col q-mx-md q-my-sm">
+            <q-input outlined v-model="relayToAdd" dense filled label="Relay URL"></q-input>
           </div>
-          <div class="col q-mx-lg items-align flex items-center justify-right">
-            <q-btn unelevated color="primary" type="submit"> Add relay </q-btn>
+          <div class="col q-mx-md items-align flex items-center justify-right">
+            <q-btn unelevated color="primary" type="submit">Add relay </q-btn>
           </div>
         </div>
       </q-form>
@@ -110,15 +101,26 @@
   <div class="col-12 col-md-5 q-gutter-y-md">
     <q-card>
       <q-card-section>
-        <h6 class="text-subtitle1 q-my-none">{{SITE_TITLE}} Nostr Extension</h6>
-        <p>An always-on nostr client other extensions can use to receive events. Only Admin users can manage this extension.</p>
-
+        <h6 class="text-subtitle1 q-my-none">{{SITE_TITLE}} Nostrclient Extension</h6>
+        <p>
+          This extension is a always-on nostr client that other extensions can
+          use to send and receive events on nostr. 
+          
+          Add multiple nostr relays to connect to. The extension then opens a websocket for you to use
+          at
+          <p>
+            <!-- wss://{{host}}nostrclient/api/v1/relay -->
+            <q-badge outline class="q-ml-sm text-subtitle2" color="primary" :label="`wss://${host}nostrclient/api/v1/relay`" />
+          </p>
+           Only Admin users can manage
+          this extension.
+        </p>
         <q-card-section></q-card-section>
       </q-card-section>
     </q-card>
   </div>
 </div>
-{% endblock %} {% block scripts %} {{ window_vars(user) }}
+{% endraw %} {% endblock %} {% block scripts %} {{ window_vars(user) }}
 
 <script>
   Vue.component(VueQrcode.name, VueQrcode)
@@ -146,6 +148,8 @@
     mixins: [windowMixin],
     data: function () {
       return {
+        base_url: location.protocol + '//' + location.host,
+        host: location.host,
         relayToAdd: '',
         nostrrelayLinks: [],
         filter: '',
@@ -217,14 +221,14 @@
           })
           return
         }
-        console.log("ADD RELAY " + this.relayToAdd)
+        console.log('ADD RELAY ' + this.relayToAdd)
         var self = this
         LNbits.api
           .request(
             'POST',
             '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
             this.g.user.wallets[0].adminkey,
-            {url:this.relayToAdd},
+            {url: this.relayToAdd}
           )
           .then(function (response) {
             if (response.data) {
@@ -237,16 +241,16 @@
           .catch(function (error) {
             LNbits.utils.notifyApiError(error)
           })
-          location.reload();
+        location.reload()
       },
       deleteRelay(url) {
-        console.log("DELETE RELAY " + url)
+        console.log('DELETE RELAY ' + url)
         LNbits.api
           .request(
             'DELETE',
             '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
             this.g.user.wallets[0].adminkey,
-            {url:url},
+            {url: url}
           )
           .then(function (response) {
             if (response.data) {
@@ -256,8 +260,8 @@
           .catch(function (error) {
             LNbits.utils.notifyApiError(error)
           })
-          location.reload();
-      },      
+        location.reload()
+      },
       exportlnurldeviceCSV: function () {
         var self = this
         LNbits.utils.exportCSV(self.relayTable.columns, this.nostrLinks)
@@ -266,7 +270,7 @@
     created: function () {
       var self = this
       this.getRelays()
-      setInterval(this.getRelays, 5000);
+      setInterval(this.getRelays, 5000)
     }
   })
 </script>
