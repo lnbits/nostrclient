@@ -102,9 +102,9 @@ class NostrRouter:
         for filter in filters:
             filter_list.append(
                 NostrFilter(
-                    event_ids=filter.ids or [],
+                    event_ids=filter.ids,  # type: ignore
                     kinds=filter.kinds,  # type: ignore
-                    authors=filter.authors or [],
+                    authors=filter.authors,  # type: ignore
                     since=filter.since,  # type: ignore
                     until=filter.until,  # type: ignore
                     event_refs=filter.e,  # type: ignore
