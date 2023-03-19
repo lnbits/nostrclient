@@ -1,15 +1,20 @@
-import base64
-import json
-import os
+from typing import *
 import ssl
 import time
-from typing import *
+import json
+import os
+import base64
 
-from ..event import EncryptedDirectMessage, Event, EventKind
-from ..filter import Filter, Filters
-from ..key import PrivateKey, PublicKey
-from ..message_type import ClientMessageType
+from ..event import Event
 from ..relay_manager import RelayManager
+from ..message_type import ClientMessageType
+from ..key import PrivateKey, PublicKey
+
+from ..filter import Filter, Filters
+from ..event import Event, EventKind, EncryptedDirectMessage
+from ..relay_manager import RelayManager
+from ..message_type import ClientMessageType
+
 # from aes import AESCipher
 from . import cbc
 
