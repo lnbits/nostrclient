@@ -75,7 +75,7 @@
             </q-tr>
           </template>
         </q-table>
-        
+
       </q-card-section>
       <q-card-section>
         <div class="text-weight-bold"> Your endpoint:
@@ -101,11 +101,11 @@
   <div class="col-12 col-md-5 q-gutter-y-md">
     <q-card>
       <q-card-section>
-        <h6 class="text-subtitle1 q-my-none">{{SITE_TITLE}} Nostrclient Extension</h6>
+        <h6 class="text-subtitle1 q-my-none">Nostrclient Extension</h6>
         <p>
           This extension is a always-on nostr client that other extensions can
-          use to send and receive events on nostr. 
-          
+          use to send and receive events on nostr.
+
           Add multiple nostr relays to connect to. The extension then opens a websocket for you to use
           at
           <p>
@@ -197,10 +197,8 @@
           )
           .then(function (response) {
             if (response.data) {
-              console.log(response.data)
               response.data.map(maplrelays)
               self.nostrrelayLinks = response.data
-              console.log(self.nostrrelayLinks)
             }
           })
           .catch(function (error) {
@@ -219,10 +217,10 @@
             message: `Invalid relay URL.`,
             caption: "Should start with 'wss://'' or 'ws://'"
           })
-          return
+          return false;
         }
         console.log('ADD RELAY ' + this.relayToAdd)
-        var self = this
+        let that = this
         LNbits.api
           .request(
             'POST',
@@ -231,17 +229,17 @@
             {url: this.relayToAdd}
           )
           .then(function (response) {
+              console.log("response:", response)
             if (response.data) {
-              console.log(response.data)
               response.data.map(maplrelays)
-              self.nostrrelayLinks = response.data
-              console.log(self.nostrrelayLinks)
+              that.nostrrelayLinks = response.data
+              that.relayToAdd = ''
             }
           })
           .catch(function (error) {
             LNbits.utils.notifyApiError(error)
           })
-        location.reload()
+          return false;
       },
       deleteRelay(url) {
         console.log('DELETE RELAY ' + url)
@@ -260,7 +258,6 @@
           .catch(function (error) {
             LNbits.utils.notifyApiError(error)
           })
-        location.reload()
       },
       exportlnurldeviceCSV: function () {
         var self = this

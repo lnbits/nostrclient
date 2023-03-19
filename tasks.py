@@ -4,10 +4,10 @@ import threading
 
 from .nostr.client.client import NostrClient
 from .nostr.event import Event
-from .nostr.message_pool import EventMessage, NoticeMessage, EndOfStoredEventsMessage
 from .nostr.key import PublicKey
+from .nostr.message_pool import (EndOfStoredEventsMessage, EventMessage,
+                                 NoticeMessage)
 from .nostr.relay_manager import RelayManager
-
 
 client = NostrClient(
     connect=False,

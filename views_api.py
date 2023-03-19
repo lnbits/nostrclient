@@ -1,33 +1,25 @@
-from http import HTTPStatus
 import asyncio
-from fastapi import WebSocket
-from fastapi.params import Depends
+from http import HTTPStatus
+from typing import Optional
+
+from fastapi import Depends, WebSocket
+from lnbits.decorators import check_admin
+from lnbits.helpers import urlsafe_short_hash
+from loguru import logger
+from starlette.exceptions import HTTPException
 
 from . import nostrclient_ext
-from .tasks import client
-from loguru import logger
-
-from .crud import get_relays, add_relay, delete_relay
-from .models import RelayList, Relay
-
+from .crud import add_relay, delete_relay, get_relays
+from .models import Relay, RelayList
 from .services import NostrRouter
-
-from lnbits.decorators import (
-    WalletTypeInfo,
-    get_key_type,
-    require_admin_key,
-    check_admin,
-)
-
-from lnbits.helpers import urlsafe_short_hash
-from .tasks import init_relays
+from .tasks import client, init_relays
 
 # we keep this in
 all_routers: list[NostrRouter] = []
 
 
 @nostrclient_ext.get("/api/v1/relays")
-async def api_get_relays():  # type: ignore
+async def api_get_relays() -> RelayList:
     relays = RelayList(__root__=[])
     for url, r in client.relay_manager.relays.items():
         status_text = (
@@ -52,20 +44,30 @@ async def api_get_relays():  # type: ignore
 @nostrclient_ext.post(
     "/api/v1/relay", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
-async def api_add_relay(relay: Relay):  # type: ignore
-    assert relay.url, "no URL"
+async def api_add_relay(relay: Relay) -> Optional[RelayList]:
+    if not relay.url:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail=f"Relay url not provided."
+        )
     if relay.url in client.relay_manager.relays:
-        return
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=f"Relay: {relay.url} already exists.",
+        )
     relay.id = urlsafe_short_hash()
     await add_relay(relay)
     await init_relays()
+    return await get_relays()
 
 
 @nostrclient_ext.delete(
     "/api/v1/relay", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
-async def api_delete_relay(relay: Relay):  # type: ignore
-    assert relay.url
+async def api_delete_relay(relay: Relay) -> None:
+    if not relay.url:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail=f"Relay url not provided."
+        )
     client.relay_manager.remove_relay(relay.url)
     await delete_relay(relay)
 
@@ -91,7 +93,7 @@ async def api_stop():
 
 
 @nostrclient_ext.websocket("/api/v1/relay")
-async def ws_relay(websocket: WebSocket):
+async def ws_relay(websocket: WebSocket) -> None:
     """Relay multiplexer: one client (per endpoint) <-> multiple relays"""
     await websocket.accept()
     router = NostrRouter(websocket)

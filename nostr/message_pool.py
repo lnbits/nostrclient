@@ -1,8 +1,9 @@
 import json
 from queue import Queue
 from threading import Lock
-from .message_type import RelayMessageType
+
 from .event import Event
+from .message_type import RelayMessageType
 
 
 class EventMessage:
