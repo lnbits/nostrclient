@@ -29,6 +29,4 @@ from .views_api import *  # noqa
 def nostrclient_start():
     loop = asyncio.get_event_loop()
     loop.create_task(catch_everything_and_restart(init_relays))
-    # loop.create_task(catch_everything_and_restart(send_data))
-    # loop.create_task(catch_everything_and_restart(receive_data))
     loop.create_task(catch_everything_and_restart(subscribe_events))

@@ -4,14 +4,26 @@ from typing import List, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
 from lnbits.helpers import urlsafe_short_hash
+from .nostr.client.client import NostrClient as NostrClientLib
 
 from .models import Event, Filter, Filters, Relay, RelayList
 from .nostr.event import Event as NostrEvent
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
-from .tasks import (client, received_event_queue,
-                    received_subscription_eosenotices,
-                    received_subscription_events)
+from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
+
+
+received_subscription_events: dict[str, list[Event]] = {}
+received_subscription_notices: dict[str, list[NoticeMessage]] = {}
+received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
+
+
+class NostrClient:
+    def __init__(self):
+        self.client: NostrClientLib = NostrClientLib(connect=False)
+
+
+nostr = NostrClient()
 
 
 class NostrRouter:
@@ -44,7 +56,7 @@ class NostrRouter:
                 json_str = json_str_rewritten
 
             # publish data
-            client.relay_manager.publish_message(json_str)
+            nostr.client.relay_manager.publish_message(json_str)
 
     async def nostr_to_client(self):
         """Sends responses from relays back to the client. Polls the subscriptions of this client
@@ -126,7 +138,9 @@ class NostrRouter:
             )
             fltr = json_data[2]
             filters = self._marshall_nostr_filters(fltr)
-            client.relay_manager.add_subscription(subscription_id_rewritten, filters)
+            nostr.client.relay_manager.add_subscription(
+                subscription_id_rewritten, filters
+            )
             request_rewritten = json.dumps(["REQ", subscription_id_rewritten, fltr])
             return subscription_id_rewritten, request_rewritten
         return None, None

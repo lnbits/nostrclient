@@ -2,34 +2,33 @@ import asyncio
 import ssl
 import threading
 
-from .nostr.client.client import NostrClient
 from .nostr.event import Event
 from .nostr.key import PublicKey
-from .nostr.message_pool import (EndOfStoredEventsMessage, EventMessage,
-                                 NoticeMessage)
+from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
 from .nostr.relay_manager import RelayManager
-
-client = NostrClient(
-    connect=False,
+from .services import (
+    nostr,
+    received_subscription_events,
+    received_subscription_eosenotices,
 )
 
-received_event_queue: asyncio.Queue[EventMessage] = asyncio.Queue(0)
-received_subscription_events: dict[str, list[Event]] = {}
-received_subscription_notices: dict[str, list[NoticeMessage]] = {}
-received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
 
 from .crud import get_relays
 
 
 async def init_relays():
+    # reinitialize the entire client
+    nostr.__init__()
+    # get relays from db
     relays = await get_relays()
-    client.relays = list(set([r.url for r in relays.__root__ if r.url]))
-    client.connect()
+    # set relays and connect to them
+    nostr.client.relays = list(set([r.url for r in relays.__root__ if r.url]))
+    nostr.client.connect()
     return
 
 
 async def subscribe_events():
-    while not any([r.connected for r in client.relay_manager.relays.values()]):
+    while not any([r.connected for r in nostr.client.relay_manager.relays.values()]):
         await asyncio.sleep(2)
 
     def callback_events(eventMessage: EventMessage):
@@ -65,7 +64,7 @@ async def subscribe_events():
         return
 
     t = threading.Thread(
-        target=client.subscribe,
+        target=nostr.client.subscribe,
         args=(
             callback_events,
             callback_notices,

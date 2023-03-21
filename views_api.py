@@ -11,8 +11,8 @@ from starlette.exceptions import HTTPException
 from . import nostrclient_ext
 from .crud import add_relay, delete_relay, get_relays
 from .models import Relay, RelayList
-from .services import NostrRouter
-from .tasks import client, init_relays
+from .services import NostrRouter, nostr
+from .tasks import init_relays
 
 # we keep this in
 all_routers: list[NostrRouter] = []
@@ -21,7 +21,7 @@ all_routers: list[NostrRouter] = []
 @nostrclient_ext.get("/api/v1/relays")
 async def api_get_relays() -> RelayList:
     relays = RelayList(__root__=[])
-    for url, r in client.relay_manager.relays.items():
+    for url, r in nostr.client.relay_manager.relays.items():
         status_text = (
             f"⬆️ {r.num_sent_events} ⬇️ {r.num_received_events} ⚠️ {r.error_counter}"
         )
@@ -49,13 +49,14 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail=f"Relay url not provided."
         )
-    if relay.url in client.relay_manager.relays:
+    if relay.url in nostr.client.relay_manager.relays:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail=f"Relay: {relay.url} already exists.",
         )
     relay.id = urlsafe_short_hash()
     await add_relay(relay)
+    # we can't add relays during runtime yet
     await init_relays()
     return await get_relays()
 
@@ -68,7 +69,8 @@ async def api_delete_relay(relay: Relay) -> None:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail=f"Relay url not provided."
         )
-    client.relay_manager.remove_relay(relay.url)
+    # we can remove relays during runtime
+    nostr.client.relay_manager.remove_relay(relay.url)
     await delete_relay(relay)
 
 
@@ -79,13 +81,13 @@ async def api_stop():
     for router in all_routers:
         try:
             for s in router.subscriptions:
-                client.relay_manager.close_subscription(s)
+                nostr.client.relay_manager.close_subscription(s)
             await router.stop()
             all_routers.remove(router)
         except Exception as e:
             logger.error(e)
     try:
-        client.relay_manager.close_connections()
+        nostr.client.relay_manager.close_connections()
     except Exception as e:
         logger.error(e)
 
@@ -106,7 +108,7 @@ async def ws_relay(websocket: WebSocket) -> None:
         if not router.connected:
             for s in router.subscriptions:
                 try:
-                    client.relay_manager.close_subscription(s)
+                    nostr.client.relay_manager.close_subscription(s)
                 except:
                     pass
             await router.stop()
