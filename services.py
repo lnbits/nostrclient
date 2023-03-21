@@ -1,19 +1,17 @@
 import asyncio
 import json
 from typing import List, Union
-from .models import RelayList, Relay, Event, Filter, Filters
 
+from fastapi import WebSocket, WebSocketDisconnect
+from lnbits.helpers import urlsafe_short_hash
+
+from .models import Event, Filter, Filters, Relay, RelayList
 from .nostr.event import Event as NostrEvent
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
-from .tasks import (
-    client,
-    received_event_queue,
-    received_subscription_events,
-    received_subscription_eosenotices,
-)
-from fastapi import WebSocket, WebSocketDisconnect
-from lnbits.helpers import urlsafe_short_hash
+from .tasks import (client, received_event_queue,
+                    received_subscription_eosenotices,
+                    received_subscription_events)
 
 
 class NostrRouter:

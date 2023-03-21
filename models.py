@@ -1,12 +1,10 @@
-from typing import List, Dict
-from typing import Optional
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 from fastapi import Request
-from pydantic import BaseModel, Field
-
 from fastapi.param_functions import Query
-from dataclasses import dataclass
 from lnbits.helpers import urlsafe_short_hash
+from pydantic import BaseModel, Field
 
 
 class Relay(BaseModel):

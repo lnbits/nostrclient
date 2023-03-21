@@ -1,7 +1,8 @@
 from typing import List, Optional, Union
 
-from lnbits.helpers import urlsafe_short_hash
 import shortuuid
+from lnbits.helpers import urlsafe_short_hash
+
 from . import db
 from .models import Relay, RelayList
 
