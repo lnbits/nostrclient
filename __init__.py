@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import APIRouter
 from lnbits.db import Database
 from lnbits.helpers import template_renderer
@@ -23,6 +22,8 @@ def nostr_renderer():
 
 
 from .tasks import init_relays, subscribe_events
+from .views import *  # noqa
+from .views_api import *  # noqa
 
 
 def nostrclient_start():
