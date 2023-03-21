@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter
 from lnbits.db import Database
 from lnbits.helpers import template_renderer
@@ -22,13 +23,9 @@ def nostr_renderer():
 
 
 from .tasks import init_relays, subscribe_events
-from .views import *  # noqa
-from .views_api import *  # noqa
 
 
 def nostrclient_start():
     loop = asyncio.get_event_loop()
     loop.create_task(catch_everything_and_restart(init_relays))
-    # loop.create_task(catch_everything_and_restart(send_data))
-    # loop.create_task(catch_everything_and_restart(receive_data))
     loop.create_task(catch_everything_and_restart(subscribe_events))
