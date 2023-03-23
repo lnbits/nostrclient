@@ -1,9 +1,8 @@
 from fastapi import APIRouter
-from starlette.staticfiles import StaticFiles
-
 from lnbits.db import Database
 from lnbits.helpers import template_renderer
 from lnbits.tasks import catch_everything_and_restart
+from starlette.staticfiles import StaticFiles
 
 db = Database("ext_nostrclient")
 

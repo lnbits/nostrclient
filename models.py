@@ -3,9 +3,8 @@ from typing import Dict, List, Optional
 
 from fastapi import Request
 from fastapi.param_functions import Query
-from pydantic import BaseModel, Field
-
 from lnbits.helpers import urlsafe_short_hash
+from pydantic import BaseModel, Field
 
 
 class Relay(BaseModel):

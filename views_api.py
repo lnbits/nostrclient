@@ -3,11 +3,10 @@ from http import HTTPStatus
 from typing import Optional
 
 from fastapi import Depends, WebSocket
-from loguru import logger
-from starlette.exceptions import HTTPException
-
 from lnbits.decorators import check_admin
 from lnbits.helpers import urlsafe_short_hash
+from loguru import logger
+from starlette.exceptions import HTTPException
 
 from . import nostrclient_ext
 from .crud import add_relay, delete_relay, get_relays
