@@ -3,15 +3,15 @@ import json
 from typing import List, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
+
 from lnbits.helpers import urlsafe_short_hash
-from .nostr.client.client import NostrClient as NostrClientLib
 
 from .models import Event, Filter, Filters, Relay, RelayList
+from .nostr.client.client import NostrClient as NostrClientLib
 from .nostr.event import Event as NostrEvent
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
-
 
 received_subscription_events: dict[str, list[Event]] = {}
 received_subscription_notices: dict[str, list[NoticeMessage]] = {}

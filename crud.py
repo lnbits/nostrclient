@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 
 import shortuuid
+
 from lnbits.helpers import urlsafe_short_hash
 
 from . import db
