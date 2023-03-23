@@ -2,7 +2,9 @@ import json
 import time
 from queue import Queue
 from threading import Lock
+
 from websocket import WebSocketApp
+
 from .event import Event
 from .filter import Filters
 from .message_pool import MessagePool

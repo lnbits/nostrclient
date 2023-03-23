@@ -1,14 +1,15 @@
-import secrets
 import base64
-import secp256k1
-from cffi import FFI
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding
+import secrets
 from hashlib import sha256
 
+import secp256k1
+from cffi import FFI
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+from . import bech32
 from .delegation import Delegation
 from .event import EncryptedDirectMessage, Event, EventKind
-from . import bech32
 
 
 class PublicKey:
