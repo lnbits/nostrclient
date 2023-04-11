@@ -45,7 +45,6 @@ class NostrRouter:
             except WebSocketDisconnect:
                 self.connected = False
                 break
-            # print(json_str)
 
             # registers a subscription if the input was a REQ request
             subscription_id, json_str_rewritten = await self._add_nostr_subscription(
@@ -81,7 +80,7 @@ class NostrRouter:
                         }
 
                         # this reconstructs the original response from the relay
-                        # reconstruct oriiginal subscription id
+                        # reconstruct original subscription id
                         s_original = s[len(f"{self.subscription_id_rewrite}_") :]
                         event_to_forward = ["EVENT", s_original, event_json]
                         # print(json.dumps(event_to_forward))
@@ -104,6 +103,7 @@ class NostrRouter:
     async def stop(self):
         for t in self.tasks:
             t.cancel()
+        self.connected = False
 
     def _marshall_nostr_filters(self, data: Union[dict, list]):
         filters = data if isinstance(data, list) else [data]
