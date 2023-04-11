@@ -3,18 +3,16 @@ import ssl
 import json
 import threading
 
+from .crud import get_relays
 from .nostr.event import Event
 from .nostr.key import PublicKey
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
 from .nostr.relay_manager import RelayManager
 from .services import (
     nostr,
-    received_subscription_events,
     received_subscription_eosenotices,
+    received_subscription_events,
 )
-
-
-from .crud import get_relays
 
 
 async def init_relays():
