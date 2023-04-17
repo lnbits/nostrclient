@@ -50,6 +50,7 @@ class NostrRouter:
             subscription_id, json_str_rewritten = await self._add_nostr_subscription(
                 json_str
             )
+
             if subscription_id and json_str_rewritten:
                 self.subscriptions.append(subscription_id)
                 json_str = json_str_rewritten
@@ -84,6 +85,8 @@ class NostrRouter:
                         # reconstruct original subscription id
                         s_original = s[len(f"{self.subscription_id_rewrite}_") :]
                         event_to_forward = ["EVENT", s_original, event_json]
+
+                        # print("Event to forward")
                         # print(json.dumps(event_to_forward))
 
                         # send data back to client
@@ -136,14 +139,14 @@ class NostrRouter:
         return NostrFilters(filter_list)
 
     async def _add_nostr_subscription(self, json_str):
-        """Parses a (string) request from a client. If it is a subscription (REQ), it will
+        """Parses a (string) request from a client. If it is a subscription (REQ) or a CLOSE, it will
         register the subscription in the nostr client library that we're using so we can
         receive the callbacks on it later. Will rewrite the subscription id since we expect
         multiple clients to use the router and want to avoid subscription id collisions
         """
         json_data = json.loads(json_str)
         assert len(json_data)
-        if json_data[0] == "REQ":
+        if json_data[0] in ["REQ", "CLOSE"]:
             subscription_id = json_data[1]
             subscription_id_rewritten = (
                 f"{self.subscription_id_rewrite}_{subscription_id}"
@@ -153,6 +156,8 @@ class NostrRouter:
             nostr.client.relay_manager.add_subscription(
                 subscription_id_rewritten, filters
             )
-            request_rewritten = json.dumps(["REQ", subscription_id_rewritten, fltr])
+            request_rewritten = json.dumps(
+                [json_data[0], subscription_id_rewritten, fltr]
+            )
             return subscription_id_rewritten, request_rewritten
         return None, None
