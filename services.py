@@ -14,7 +14,7 @@ from .nostr.filter import Filters as NostrFilters
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
 
 received_subscription_events: dict[str, list[Event]] = {}
-received_subscription_notices: dict[str, list[NoticeMessage]] = {}
+received_subscription_notices: list[NoticeMessage] = []
 received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
 
 
@@ -62,7 +62,8 @@ class NostrRouter:
         stored in `my_subscriptions`. Then gets all responses for this subscription id from `received_subscription_events` which
         is filled in tasks.py. Takes one response after the other and relays it back to the client. Reconstructs
         the reponse manually because the nostr client lib we're using can't do it. Reconstructs the original subscription id
-        that we had previously rewritten in order to avoid collisions when multiple clients use the same id."""
+        that we had previously rewritten in order to avoid collisions when multiple clients use the same id.
+        """
         while True and self.connected:
             for s in self.subscriptions:
                 if s in received_subscription_events:
@@ -93,7 +94,17 @@ class NostrRouter:
                     event_to_forward = ["EOSE", s_original]
                     del received_subscription_eosenotices[s]
                     # send data back to client
+                    # print("Sending EOSE", event_to_forward)
                     await self.websocket.send_text(json.dumps(event_to_forward))
+
+                # if s in received_subscription_notices:
+                while len(received_subscription_notices):
+                    my_event = received_subscription_notices.pop(0)
+                    event_to_forward = ["NOTICE", my_event.content]
+                    # send data back to client
+                    print("Received notice", event_to_forward)
+                    #  note: we don't send it to the user because we don't know who should receive it
+                    # await self.websocket.send_text(json.dumps(event_to_forward))
             await asyncio.sleep(0.1)
 
     async def start(self):
@@ -128,7 +139,8 @@ class NostrRouter:
         """Parses a (string) request from a client. If it is a subscription (REQ), it will
         register the subscription in the nostr client library that we're using so we can
         receive the callbacks on it later. Will rewrite the subscription id since we expect
-        multiple clients to use the router and want to avoid subscription id collisions"""
+        multiple clients to use the router and want to avoid subscription id collisions
+        """
         json_data = json.loads(json_str)
         assert len(json_data)
         if json_data[0] == "REQ":

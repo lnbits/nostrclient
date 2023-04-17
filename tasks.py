@@ -11,6 +11,7 @@ from .nostr.relay_manager import RelayManager
 from .services import (
     nostr,
     received_subscription_eosenotices,
+    received_subscription_notices,
     received_subscription_events,
 )
 
@@ -68,7 +69,9 @@ async def subscribe_events():
             ]
         return
 
-    def callback_notices(eventMessage: NoticeMessage):
+    def callback_notices(noticeMessage: NoticeMessage):
+        if noticeMessage not in received_subscription_notices:
+            received_subscription_notices.append(noticeMessage)
         return
 
     def callback_eose_notices(eventMessage: EndOfStoredEventsMessage):

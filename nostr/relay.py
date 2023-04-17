@@ -33,6 +33,7 @@ class Relay:
         self.subscriptions = subscriptions
         self.connected: bool = False
         self.reconnect: bool = True
+        self.shutdown: bool = False
         self.error_counter: int = 0
         self.error_threshold: int = 0
         self.num_received_events: int = 0
@@ -66,6 +67,7 @@ class Relay:
 
     def close(self):
         self.ws.close()
+        self.shutdown = True
 
     def check_reconnect(self):
         try:
@@ -85,12 +87,16 @@ class Relay:
     def publish(self, message: str):
         self.queue.put(message)
 
-    def queue_worker(self):
+    def queue_worker(self, shutdown):
         while True:
             if self.connected:
-                message = self.queue.get()
-                self.num_sent_events += 1
-                self.ws.send(message)
+                try:
+                    message = self.queue.get(timeout=1)
+                    self.num_sent_events += 1
+                    self.ws.send(message)
+                except:
+                    if shutdown():
+                        break
             else:
                 time.sleep(0.1)
 

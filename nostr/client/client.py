@@ -141,7 +141,7 @@ class NostrClient:
                 if callback_events_func:
                     callback_events_func(event_msg)
             while self.relay_manager.message_pool.has_notices():
-                event_msg = self.relay_manager.message_pool.has_notices()
+                event_msg = self.relay_manager.message_pool.get_notice()
                 if callback_notices_func:
                     callback_notices_func(event_msg)
             while self.relay_manager.message_pool.has_eose_notices():

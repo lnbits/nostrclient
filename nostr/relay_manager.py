@@ -15,6 +15,8 @@ class RelayException(Exception):
 class RelayManager:
     def __init__(self) -> None:
         self.relays: dict[str, Relay] = {}
+        self.threads: dict[str, threading.Thread] = {}
+        self.queue_threads: dict[str, threading.Thread] = {}
         self.message_pool = MessagePool()
 
     def add_relay(
@@ -25,7 +27,10 @@ class RelayManager:
         self.relays[url] = relay
 
     def remove_relay(self, url: str):
+        self.relays[url].close()
         self.relays.pop(url)
+        self.threads[url].join(timeout=1)
+        self.threads.pop(url)
 
     def add_subscription(self, id: str, filters: Filters):
         for relay in self.relays.values():
@@ -37,16 +42,21 @@ class RelayManager:
 
     def open_connections(self, ssl_options: dict = None, proxy: dict = None):
         for relay in self.relays.values():
-            threading.Thread(
+            self.threads[relay.url] = threading.Thread(
                 target=relay.connect,
                 args=(ssl_options, proxy),
                 name=f"{relay.url}-thread",
                 daemon=True,
-            ).start()
+            )
+            self.threads[relay.url].start()
 
-            threading.Thread(
-                target=relay.queue_worker, name=f"{relay.url}-queue", daemon=True
-            ).start()
+            self.queue_threads[relay.url] = threading.Thread(
+                target=relay.queue_worker,
+                args=(lambda: relay.shutdown,),
+                name=f"{relay.url}-queue",
+                daemon=True,
+            )
+            self.queue_threads[relay.url].start()
 
     def close_connections(self):
         for relay in self.relays.values():
