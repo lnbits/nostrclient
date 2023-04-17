@@ -32,7 +32,7 @@ class NostrRouter:
         self.connected: bool = True
         self.websocket = websocket
         self.tasks: List[asyncio.Task] = []
-        self.subscription_id_rewrite: str = urlsafe_short_hash()
+        self.oridinal_subscription_ids = {}
 
     async def client_to_nostr(self):
         """Receives requests / data from the client and forwards it to relays. If the
@@ -83,7 +83,7 @@ class NostrRouter:
 
                         # this reconstructs the original response from the relay
                         # reconstruct original subscription id
-                        s_original = s[len(f"{self.subscription_id_rewrite}_") :]
+                        s_original = self.oridinal_subscription_ids[s]
                         event_to_forward = ["EVENT", s_original, event_json]
 
                         # print("Event to forward")
@@ -93,7 +93,7 @@ class NostrRouter:
                         await self.websocket.send_text(json.dumps(event_to_forward))
                 if s in received_subscription_eosenotices:
                     my_event = received_subscription_eosenotices[s]
-                    s_original = s[len(f"{self.subscription_id_rewrite}_") :]
+                    s_original = self.oridinal_subscription_ids[s]
                     event_to_forward = ["EOSE", s_original]
                     del received_subscription_eosenotices[s]
                     # send data back to client
@@ -148,9 +148,8 @@ class NostrRouter:
         assert len(json_data)
         if json_data[0] in ["REQ", "CLOSE"]:
             subscription_id = json_data[1]
-            subscription_id_rewritten = (
-                f"{self.subscription_id_rewrite}_{subscription_id}"
-            )
+            subscription_id_rewritten = urlsafe_short_hash()
+            self.oridinal_subscription_ids[subscription_id_rewritten] = subscription_id
             fltr = json_data[2]
             filters = self._marshall_nostr_filters(fltr)
             nostr.client.relay_manager.add_subscription(
