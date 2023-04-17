@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException
 from lnbits.decorators import check_admin
 from lnbits.helpers import urlsafe_short_hash
 
-from . import nostrclient_ext
+from . import nostrclient_ext, scheduled_tasks
 from .crud import add_relay, delete_relay, get_relays
 from .models import Relay, RelayList
 from .services import NostrRouter, nostr
@@ -91,6 +91,12 @@ async def api_stop():
         nostr.client.relay_manager.close_connections()
     except Exception as e:
         logger.error(e)
+
+    for scheduled_task in scheduled_tasks:
+        try:
+            scheduled_task.cancel()
+        except Exception as ex:
+            logger.warning(ex)
 
     return {"success": True}
 
