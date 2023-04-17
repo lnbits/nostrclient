@@ -3,7 +3,7 @@ import json
 from typing import List, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
-
+from loguru import logger
 from lnbits.helpers import urlsafe_short_hash
 
 from .models import Event, Filter, Filters, Relay, RelayList
@@ -105,7 +105,7 @@ class NostrRouter:
                     my_event = received_subscription_notices.pop(0)
                     event_to_forward = ["NOTICE", my_event.content]
                     # send data back to client
-                    print("Received notice", event_to_forward)
+                    logger.debug("Nostrclient: Received notice", event_to_forward[1])
                     #  note: we don't send it to the user because we don't know who should receive it
                     # await self.websocket.send_text(json.dumps(event_to_forward))
             await asyncio.sleep(0.1)
