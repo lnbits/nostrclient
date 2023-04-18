@@ -43,8 +43,10 @@ class Relay:
         self.proxy: dict = {}
         self.lock = Lock()
         self.queue = Queue()
+
+    def connect(self, ssl_options: dict = None, proxy: dict = None):
         self.ws = WebSocketApp(
-            url,
+            self.url,
             on_open=self._on_open,
             on_message=self._on_message,
             on_error=self._on_error,
@@ -52,8 +54,6 @@ class Relay:
             on_ping=self._on_ping,
             on_pong=self._on_pong,
         )
-
-    def connect(self, ssl_options: dict = None, proxy: dict = None):
         self.ssl_options = ssl_options
         self.proxy = proxy
         if not self.connected:
