@@ -129,6 +129,10 @@ class Relay:
 
     def _on_close(self, class_obj, status_code, message):
         self.connected = False
+        if self.error_threshold and self.error_counter > self.error_threshold:
+            pass
+        else:
+            self.check_reconnect()
         pass
 
     def _on_message(self, class_obj, message: str):
@@ -139,10 +143,6 @@ class Relay:
     def _on_error(self, class_obj, error):
         self.connected = False
         self.error_counter += 1
-        if self.error_threshold and self.error_counter > self.error_threshold:
-            pass
-        else:
-            self.check_reconnect()
 
     def _on_ping(self, class_obj, message):
         return
