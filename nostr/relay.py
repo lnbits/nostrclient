@@ -35,7 +35,7 @@ class Relay:
         self.reconnect: bool = True
         self.shutdown: bool = False
         self.error_counter: int = 0
-        self.error_threshold: int = 0
+        self.error_threshold: int = 100
         self.num_received_events: int = 0
         self.num_sent_events: int = 0
         self.num_subscriptions: int = 0
@@ -76,7 +76,7 @@ class Relay:
             pass
         self.connected = False
         if self.reconnect:
-            time.sleep(1)
+            time.sleep(self.error_counter**2)
             self.connect(self.ssl_options, self.proxy)
 
     @property
