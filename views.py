@@ -1,17 +1,9 @@
-import asyncio
-from http import HTTPStatus
-
-# FastAPI good for incoming
-from fastapi import Request
-from fastapi.param_functions import Query
-from fastapi.params import Depends
+from fastapi import Request, Depends
 from fastapi.templating import Jinja2Templates
 from starlette.responses import HTMLResponse
 
-from lnbits.core.crud import update_payment_status
 from lnbits.core.models import User
-from lnbits.core.views.api import api_payment
-from lnbits.decorators import check_admin, check_user_exists
+from lnbits.decorators import check_admin
 
 from . import nostr_renderer, nostrclient_ext
 
