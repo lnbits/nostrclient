@@ -93,8 +93,6 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
         )
         private_key.sign_event(dm)
 
-        print("### api_test_endpoint", data)
-
         return TestMessageResponse(private_key=private_key.hex(), public_key=to_public_key, event_json=dm.to_message())
     except (ValueError, AssertionError) as ex:
         raise HTTPException(

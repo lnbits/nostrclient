@@ -110,17 +110,17 @@
             </div>
           </div>
           <div class="col-3">
-            <q-btn unelevated color="primary" class="float-right"
-              >Test Endpoint</q-btn
+            <q-btn @click="toggleTestPanel" :label="testData.show ? 'Close' : 'Test Endpoint' " unelevated color="primary" class="float-right"
+              ></q-btn
             >
           </div>
         </div>
       </q-card-section>
-      <q-separator></q-separator>
-      <q-card-section>
+      <q-separator v-if="testData.show"></q-separator>
+      <q-card-section v-if="testData.show">
         <div class="row">
           <div class="col-3">
-            <span>Private Key (optional):</span>
+            <span>Sender Private Key:</span>
           </div>
           <div class="col-9">
             <q-input
@@ -147,6 +147,20 @@
             </q-badge>
           </div>
         </div>
+        <div v-if="testData.senderPublicKey" class="row">
+          <div class="col-3">
+            <span>Sender Public Key:</span>
+          </div>
+          <div class="col-9">
+            <q-input
+              outlined
+              v-model="testData.senderPublicKey"
+              dense
+              readonly
+              filled
+            ></q-input>
+          </div>
+        </div>
         <div class="row q-mt-md">
           <div class="col-3">
             <span>Test Message:</span>
@@ -165,7 +179,7 @@
         </div>
         <div class="row q-mt-md">
           <div class="col-3">
-            <span>Public Key (hex or npub):</span>
+            <span>Receiver Public Key:</span>
           </div>
           <div class="col-9">
             <q-input
@@ -173,7 +187,7 @@
               v-model="testData.recieverPublicKey"
               dense
               filled
-              label="Public Key *"
+              label="Public Key (hex or npub) *"
             ></q-input>
           </div>
         </div>
@@ -198,8 +212,8 @@
           </div>
         </div>
       </q-card-section>
-      <q-separator></q-separator>
-      <q-card-section>
+      <q-separator  v-if="testData.show"></q-separator>
+      <q-card-section  v-if="testData.show">
         <div class="row q-mt-md">
           <div class="col-3">
             <span>Sent Data:</span>
@@ -292,8 +306,10 @@
         nostrrelayLinks: [],
         filter: '',
         testData: {
+          show: false,
           wsConnection: null,
           senderPrivateKey: null,
+          senderPublicKey: null,
           recieverPublicKey: null,
           message: null,
           sentData: '',
@@ -405,6 +421,38 @@
             LNbits.utils.notifyApiError(error)
           })
       },
+      toggleTestPanel: async function() {
+        if (this.testData.show) {
+          await this.hideTestPannel()
+        } else {
+          await this.showTestPanel()
+        }
+      },
+      showTestPanel: async function() {
+        this.testData = {
+          show: true,
+          wsConnection: null,
+          senderPrivateKey: this.$q.localStorage.getItem('lnbits.nostrclient.senderPrivateKey') || '',
+          recieverPublicKey: null,
+          message: null,
+          sentData: '',
+          receivedData: ''
+        }
+        await this.closeWebsocket()
+        this.connectToWebsocket()
+      },
+      hideTestPannel: async function() {
+        await this.closeWebsocket()
+        this.testData = {
+          show: false,
+          wsConnection: null,
+          senderPrivateKey: null,
+          recieverPublicKey: null,
+          message: null,
+          sentData: '',
+          receivedData: ''
+        }
+      },
       sendTestMessage: async function () {
         try {
           const {data} = await LNbits.api.request(
@@ -423,6 +471,7 @@
             data.private_key || ''
           )
           const event = JSON.parse(data.event_json)[1]
+          this.testData.senderPublicKey = event.pubkey
           await this.sendDataToWebSocket(data.event_json)
           const subscription = JSON.stringify([
             'REQ',
@@ -469,6 +518,16 @@
         this.testData.wsConnection.onerror = updateReciveData
         this.testData.wsConnection.onclose = updateReciveData
       },
+      closeWebsocket: async function () {
+        try {
+          if (this.testData.wsConnection) {
+            this.testData.wsConnection.close()
+            await this.sleep(100)
+          }
+        } catch (error) {
+          console.warn(error)
+        }
+      },
       exportlnurldeviceCSV: function () {
         var self = this
         LNbits.utils.exportCSV(self.relayTable.columns, this.nostrLinks)
@@ -479,9 +538,6 @@
       var self = this
       this.getRelays()
       setInterval(this.getRelays, 5000)
-      this.testData.senderPrivateKey =
-        this.$q.localStorage.getItem('lnbits.nostrclient.senderPrivateKey') ||
-        ''
     }
   })
 </script>
