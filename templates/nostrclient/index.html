@@ -3,6 +3,24 @@
 <div class="row q-col-gutter-md">
   <div class="col-12 col-md-7 q-gutter-y-md">
     <q-card>
+      <q-form @submit="addRelay">
+        <div class="row q-pa-md">
+          <div class="col-9">
+            <q-input
+              outlined
+              v-model="relayToAdd"
+              dense
+              filled
+              label="Relay URL"
+            ></q-input>
+          </div>
+          <div class="col-3">
+            <q-btn unelevated color="primary" class="float-right" type="submit">Add relay </q-btn>
+          </div>
+        </div>
+      </q-form>
+    </q-card>
+    <q-card>
       <q-card-section>
         <div class="row items-center no-wrap q-mb-md">
           <div class="col">
@@ -42,7 +60,7 @@
                 <div v-if="col.name == 'id'"></div>
                 <div v-else>{{ col.label }}</div>
               </q-th>
-              <!-- <q-th auto-width></q-th> -->
+              
             </q-tr>
           </template>
 
@@ -76,36 +94,24 @@
           </template>
         </q-table>
       </q-card-section>
-      <q-card-section>
-        <div class="text-weight-bold">
-          Your endpoint:
-          <q-badge
-            outline
-            class="q-ml-sm text-subtitle2"
-            color="primary"
-            :label="`wss://${host}/nostrclient/api/v1/relay`"
-          />
-        </div>
-      </q-card-section>
+
     </q-card>
     <q-card>
-      <q-separator></q-separator>
-      <q-form class="q-gutter-md q-y-md" @submit="addRelay">
-        <div class="row">
-          <div class="col q-mx-md q-my-sm">
-            <q-input
-              outlined
-              v-model="relayToAdd"
-              dense
-              filled
-              label="Relay URL"
-            ></q-input>
+        <div class="row q-pa-md">
+          <div class="col-9">
+            <div class="text-weight-bold">
+              Your endpoint:
+              <q-badge
+                outline
+                class="q-ml-sm text-subtitle2"
+                :label="`wss://${host}/nostrclient/api/v1/relay`"
+              />
+            </div>
           </div>
-          <div class="col q-mx-md items-align flex items-center justify-right">
-            <q-btn unelevated color="primary" type="submit">Add relay </q-btn>
+          <div class="col-3">
+            <q-btn unelevated color="primary" class="float-right" >Test Endpoint</q-btn>
           </div>
         </div>
-      </q-form>
     </q-card>
   </div>
 
