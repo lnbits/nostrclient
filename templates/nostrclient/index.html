@@ -216,6 +216,22 @@
             ></q-input>
           </div>
         </div>
+        <div class="row q-mt-md">
+          <div class="col-3">
+            <span>Received Data:</span>
+          </div>
+          <div class="col-9">
+            <q-input
+              outlined
+              v-model="testData.receivedData"
+              dense
+              filled
+              readonly
+              rows="5"
+              type="textarea"
+            ></q-input>
+          </div>
+        </div>
       </q-card-section>
     </q-card>
   </div>
@@ -411,7 +427,7 @@
           )
           const event = JSON.parse(data.event_json)[1]
           console.log('### event', event)
-          this.sendDataToWebSocket(data.event_json)
+          await this.sendDataToWebSocket(data.event_json)
         } catch (error) {
           LNbits.utils.notifyApiError(error)
         }
@@ -421,9 +437,11 @@
         try {
           if (!this.testData.wsConnection) {
             this.connectToWebsocket()
+            await this.sleep(500)
           }
           this.testData.wsConnection.send(data)
-          this.testData.sentData = data + '\n' + this.testData.sentData
+          const separator = '='.repeat(80)
+          this.testData.sentData = data + `\n\n${separator}\n` + this.testData.sentData
         } catch (error) {
           this.$q.notify({
             timeout: 5000,
@@ -438,23 +456,20 @@
         const port = location.port ? `:${location.port}` : ''
         const wsUrl = `${scheme}://${document.domain}${port}/nostrclient/api/v1/relay`
         this.testData.wsConnection = new WebSocket(wsUrl)
-        wsConnection.onmessage = async e => {
-          // const data = JSON.parse(e.data)
-          console.log('### onmessage', e.data)
+        const updateReciveData = async e => {
+          console.log('### updateReciveData', e.data)
+          this.testData.receivedData = e.data + '\n' +this.testData.receivedData
         }
-        wsConnection.onerror = async e => {
-          // const data = JSON.parse(e.data)
-          console.log('### onerror', e.data)
-        }
-        wsConnection.onclose = async e => {
-          // const data = JSON.parse(e.data)
-          console.log('### onclose', e.data)
-        }
+        
+        this.testData.wsConnection.onmessage = updateReciveData
+        this.testData.wsConnection.onerror = updateReciveData
+        this.testData.wsConnection.onclose = updateReciveData
       },
       exportlnurldeviceCSV: function () {
         var self = this
         LNbits.utils.exportCSV(self.relayTable.columns, this.nostrLinks)
-      }
+      },
+      sleep: (ms) => new Promise(r => setTimeout(r, ms))
     },
     created: function () {
       var self = this
