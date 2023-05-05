@@ -210,7 +210,6 @@
               v-model="testData.sentData"
               dense
               filled
-              readonly
               rows="5"
               type="textarea"
             ></q-input>
@@ -226,7 +225,6 @@
               v-model="testData.receivedData"
               dense
               filled
-              readonly
               rows="5"
               type="textarea"
             ></q-input>
@@ -428,6 +426,8 @@
           const event = JSON.parse(data.event_json)[1]
           console.log('### event', event)
           await this.sendDataToWebSocket(data.event_json)
+          const subscription = JSON.stringify(["REQ", "test-dms", { "kinds": [4],  "#p": [event.pubkey]}])
+          this.testData.wsConnection.send(subscription)
         } catch (error) {
           LNbits.utils.notifyApiError(error)
         }
@@ -457,8 +457,8 @@
         const wsUrl = `${scheme}://${document.domain}${port}/nostrclient/api/v1/relay`
         this.testData.wsConnection = new WebSocket(wsUrl)
         const updateReciveData = async e => {
-          console.log('### updateReciveData', e.data)
-          this.testData.receivedData = e.data + '\n' +this.testData.receivedData
+          const separator = '='.repeat(80)
+          this.testData.receivedData = e.data + `\n\n${separator}\n` +this.testData.receivedData
         }
         
         this.testData.wsConnection.onmessage = updateReciveData
