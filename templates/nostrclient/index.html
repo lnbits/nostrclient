@@ -417,16 +417,18 @@
               message: this.testData.message
             }
           )
-          console.log('### data', data)
           this.testData.senderPrivateKey = data.private_key
           this.$q.localStorage.set(
             'lnbits.nostrclient.senderPrivateKey',
             data.private_key || ''
           )
           const event = JSON.parse(data.event_json)[1]
-          console.log('### event', event)
           await this.sendDataToWebSocket(data.event_json)
-          const subscription = JSON.stringify(["REQ", "test-dms", { "kinds": [4],  "#p": [event.pubkey]}])
+          const subscription = JSON.stringify([
+            'REQ',
+            'test-dms',
+            {kinds: [4], '#p': [event.pubkey]}
+          ])
           this.testData.wsConnection.send(subscription)
         } catch (error) {
           LNbits.utils.notifyApiError(error)
@@ -441,7 +443,8 @@
           }
           this.testData.wsConnection.send(data)
           const separator = '='.repeat(80)
-          this.testData.sentData = data + `\n\n${separator}\n` + this.testData.sentData
+          this.testData.sentData =
+            data + `\n\n${separator}\n` + this.testData.sentData
         } catch (error) {
           this.$q.notify({
             timeout: 5000,
@@ -458,9 +461,10 @@
         this.testData.wsConnection = new WebSocket(wsUrl)
         const updateReciveData = async e => {
           const separator = '='.repeat(80)
-          this.testData.receivedData = e.data + `\n\n${separator}\n` +this.testData.receivedData
+          this.testData.receivedData =
+            e.data + `\n\n${separator}\n` + this.testData.receivedData
         }
-        
+
         this.testData.wsConnection.onmessage = updateReciveData
         this.testData.wsConnection.onerror = updateReciveData
         this.testData.wsConnection.onclose = updateReciveData
@@ -469,7 +473,7 @@
         var self = this
         LNbits.utils.exportCSV(self.relayTable.columns, this.nostrLinks)
       },
-      sleep: (ms) => new Promise(r => setTimeout(r, ms))
+      sleep: ms => new Promise(r => setTimeout(r, ms))
     },
     created: function () {
       var self = this
