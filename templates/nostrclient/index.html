@@ -391,7 +391,7 @@
             LNbits.utils.notifyApiError(error)
           })
       },
-      sendTestMessage: async function(){
+      sendTestMessage: async function () {
         try {
           const {data} = await LNbits.api.request(
             'PUT',
@@ -405,7 +405,10 @@
           )
           console.log('### data', data)
           this.testData.senderPrivateKey = data.private_key
-          this.$q.localStorage.set('lnbits.nostrclient.senderPrivateKey', data.private_key || '')
+          this.$q.localStorage.set(
+            'lnbits.nostrclient.senderPrivateKey',
+            data.private_key || ''
+          )
           const event = JSON.parse(data.event_json)[1]
           console.log('### event', event)
           this.sendDataToWebSocket(data.event_json)
@@ -414,14 +417,14 @@
         }
       },
 
-      sendDataToWebSocket: async function (data){
+      sendDataToWebSocket: async function (data) {
         try {
-        if (!this.testData.wsConnection) {
-          this.connectToWebsocket()
-        }
-        this.testData.wsConnection.send(data)
-        this.testData.sentData = data + '\n' + this.testData.sentData
-      } catch (error) {
+          if (!this.testData.wsConnection) {
+            this.connectToWebsocket()
+          }
+          this.testData.wsConnection.send(data)
+          this.testData.sentData = data + '\n' + this.testData.sentData
+        } catch (error) {
           this.$q.notify({
             timeout: 5000,
             type: 'warning',
@@ -447,8 +450,7 @@
           // const data = JSON.parse(e.data)
           console.log('### onclose', e.data)
         }
-
-        },
+      },
       exportlnurldeviceCSV: function () {
         var self = this
         LNbits.utils.exportCSV(self.relayTable.columns, this.nostrLinks)
@@ -458,7 +460,9 @@
       var self = this
       this.getRelays()
       setInterval(this.getRelays, 5000)
-      this.testData.senderPrivateKey = this.$q.localStorage.getItem('lnbits.nostrclient.senderPrivateKey') || ''
+      this.testData.senderPrivateKey =
+        this.$q.localStorage.getItem('lnbits.nostrclient.senderPrivateKey') ||
+        ''
     }
   })
 </script>
