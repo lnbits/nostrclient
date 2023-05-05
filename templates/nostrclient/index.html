@@ -97,7 +97,8 @@
 
     </q-card>
     <q-card>
-        <div class="row q-pa-md">
+      <q-card-section>
+        <div class="row">
           <div class="col-9">
             <div class="text-weight-bold">
               Your endpoint:
@@ -112,6 +113,83 @@
             <q-btn unelevated color="primary" class="float-right" >Test Endpoint</q-btn>
           </div>
         </div>
+      </q-card-section>
+      <q-separator></q-separator>
+      <q-card-section>
+        <div class="row">
+          <div class="col-3">
+            <span>Private Key (optional):</span>
+          </div>
+          <div class="col-9">
+            <q-input
+              outlined
+              v-model="testData.senderPrivateKey"
+              dense
+              filled
+              label="Test Private Key (optional)"
+            ></q-input>
+          </div>
+        </div>
+        <div class="row q-mt-sm q-mb-lg">
+          <div class="col-3">
+          </div>
+          <div class="col-9">
+            <q-badge color="yellow" text-color="black">
+              <span>This should be a temp private (throw away). No not user your own private key! </span>
+            </q-badge>
+              
+              <q-badge color="yellow" text-color="black">
+              <span> It is optional. One can be generated for you!</span>
+            </q-badge>
+          </div>
+          
+        </div>
+        <div class="row q-mt-md">
+          <div class="col-3">
+              <span>Test Message:</span>
+          </div>
+          <div class="col-9">
+            <q-input
+              outlined
+              v-model="testData.message"
+              dense
+              filled
+              rows="3"
+              type="textarea"
+              label="Test Message"
+            ></q-input>
+          </div>
+          
+        </div>
+        <div class="row q-mt-md">
+          <div class="col-3">
+            <span>Public Key (hex or npub):</span>
+          </div>
+          <div class="col-9">
+            <q-input
+              outlined
+              v-model="testData.recieverPublicKey"
+              dense
+              filled
+              label="Public Key *"
+            ></q-input>
+          </div>
+        </div>
+        <div class="row q-mt-sm q-mb-lg">
+          <div class="col-3">
+          </div>
+          <div class="col-9">
+            <q-badge color="yellow" text-color="black">
+              <span>This is the recipient of the message</span>
+            </q-badge>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <q-btn :disabled="!testData.recieverPublicKey || !testData.message" unelevated color="primary" class="float-right" >Send Message</q-btn>
+          </div>
+        </div>
+      </q-card-section>
     </q-card>
   </div>
 
@@ -126,7 +204,6 @@
         </p>
 
         <p>
-          <!-- wss://{{host}}nostrclient/api/v1/relay -->
           <q-badge
             outline
             class="q-ml-sm text-subtitle2"
@@ -173,6 +250,11 @@
         relayToAdd: '',
         nostrrelayLinks: [],
         filter: '',
+        testData: {
+          senderPrivateKey: null,
+          recieverPublicKey: null,
+          message: null,
+        },
         relayTable: {
           columns: [
             {
