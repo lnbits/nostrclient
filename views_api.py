@@ -11,7 +11,7 @@ from lnbits.helpers import urlsafe_short_hash
 
 from . import nostrclient_ext, scheduled_tasks
 from .crud import add_relay, delete_relay, get_relays
-from .models import Relay, RelayList
+from .models import Relay, RelayList, TestMessage, TestMessageResponse
 from .services import NostrRouter, nostr
 from .tasks import init_relays
 
@@ -73,6 +73,26 @@ async def api_delete_relay(relay: Relay) -> None:
     # we can remove relays during runtime
     nostr.client.relay_manager.remove_relay(relay.url)
     await delete_relay(relay)
+
+
+@nostrclient_ext.put(
+    "/api/v1/relay/test", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
+)
+async def api_test_endpoint(test_message: TestMessage) -> TestMessageResponse:
+    try:
+        print("### api_test_endpoint", test_message)
+    except (ValueError, AssertionError) as ex:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=str(ex),
+        )
+    except Exception as ex:
+        logger.warning(ex)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Cannot generate test event",
+        )
+
 
 
 @nostrclient_ext.delete(

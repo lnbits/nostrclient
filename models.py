@@ -50,6 +50,16 @@ class Filters(BaseModel):
     __root__: List[Filter]
 
 
+class TestMessage(BaseModel):
+    sender_private_key: Optional[str]
+    reciever_public_key: str
+    message: str
+
+class TestMessageResponse(BaseModel):
+    private_key: str
+    public_key: str
+    event: Event
+
 # class nostrKeys(BaseModel):
 #     pubkey: str
 #     privkey: str
