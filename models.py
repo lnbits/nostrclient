@@ -58,7 +58,7 @@ class TestMessage(BaseModel):
 class TestMessageResponse(BaseModel):
     private_key: str
     public_key: str
-    event: Event
+    event_json: str
 
 # class nostrKeys(BaseModel):
 #     pubkey: str
