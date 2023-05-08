@@ -3,6 +3,26 @@
 <div class="row q-col-gutter-md">
   <div class="col-12 col-md-7 q-gutter-y-md">
     <q-card>
+      <q-form @submit="addRelay">
+        <div class="row q-pa-md">
+          <div class="col-9">
+            <q-input
+              outlined
+              v-model="relayToAdd"
+              dense
+              filled
+              label="Relay URL"
+            ></q-input>
+          </div>
+          <div class="col-3">
+            <q-btn unelevated color="primary" class="float-right" type="submit"
+              >Add relay
+            </q-btn>
+          </div>
+        </div>
+      </q-form>
+    </q-card>
+    <q-card>
       <q-card-section>
         <div class="row items-center no-wrap q-mb-md">
           <div class="col">
@@ -42,7 +62,6 @@
                 <div v-if="col.name == 'id'"></div>
                 <div v-else>{{ col.label }}</div>
               </q-th>
-              <!-- <q-th auto-width></q-th> -->
             </q-tr>
           </template>
 
@@ -76,36 +95,167 @@
           </template>
         </q-table>
       </q-card-section>
-      <q-card-section>
-        <div class="text-weight-bold">
-          Your endpoint:
-          <q-badge
-            outline
-            class="q-ml-sm text-subtitle2"
-            color="primary"
-            :label="`wss://${host}/nostrclient/api/v1/relay`"
-          />
-        </div>
-      </q-card-section>
     </q-card>
     <q-card>
-      <q-separator></q-separator>
-      <q-form class="q-gutter-md q-y-md" @submit="addRelay">
+      <q-card-section>
         <div class="row">
-          <div class="col q-mx-md q-my-sm">
-            <q-input
-              outlined
-              v-model="relayToAdd"
-              dense
-              filled
-              label="Relay URL"
-            ></q-input>
-          </div>
-          <div class="col q-mx-md items-align flex items-center justify-right">
-            <q-btn unelevated color="primary" type="submit">Add relay </q-btn>
+          <div class="col">
+            <div class="text-weight-bold">
+              <q-btn
+                flat
+                dense
+                size="0.6rem"
+                class="q-px-none q-mx-none"
+                color="grey"
+                icon="content_copy"
+                @click="copyText(`wss://${host}/nostrclient/api/v1/relay`)"
+                ><q-tooltip>Copy address</q-tooltip></q-btn
+              >
+              Your endpoint:
+              <q-badge
+                outline
+                class="q-ml-sm text-subtitle2"
+                :label="`wss://${host}/nostrclient/api/v1/relay`"
+              />
+            </div>
           </div>
         </div>
-      </q-form>
+      </q-card-section>
+      <q-expansion-item
+        group="advanced"
+        icon="settings"
+        label="Test this endpoint"
+        @click="toggleTestPanel"
+      >
+        <q-separator></q-separator>
+        <q-card-section>
+          <div class="row">
+            <div class="col-3">
+              <span>Sender Private Key:</span>
+            </div>
+            <div class="col-9">
+              <q-input
+                outlined
+                v-model="testData.senderPrivateKey"
+                dense
+                filled
+                label="Private Key (optional)"
+              ></q-input>
+            </div>
+          </div>
+          <div class="row q-mt-sm q-mb-lg">
+            <div class="col-3"></div>
+            <div class="col-9">
+              <q-badge color="yellow" text-color="black">
+                <span>
+                  No not use your real private key! Leave empty for a randomly
+                  generated key.</span
+                >
+              </q-badge>
+            </div>
+          </div>
+          <div v-if="testData.senderPublicKey" class="row">
+            <div class="col-3">
+              <span>Sender Public Key:</span>
+            </div>
+            <div class="col-9">
+              <q-input
+                outlined
+                v-model="testData.senderPublicKey"
+                dense
+                readonly
+                filled
+              ></q-input>
+            </div>
+          </div>
+          <div class="row q-mt-md">
+            <div class="col-3">
+              <span>Test Message:</span>
+            </div>
+            <div class="col-9">
+              <q-input
+                outlined
+                v-model="testData.message"
+                dense
+                filled
+                rows="3"
+                type="textarea"
+                label="Test Message *"
+              ></q-input>
+            </div>
+          </div>
+          <div class="row q-mt-md">
+            <div class="col-3">
+              <span>Receiver Public Key:</span>
+            </div>
+            <div class="col-9">
+              <q-input
+                outlined
+                v-model="testData.recieverPublicKey"
+                dense
+                filled
+                label="Public Key (hex or npub) *"
+              ></q-input>
+            </div>
+          </div>
+          <div class="row q-mt-sm q-mb-lg">
+            <div class="col-3"></div>
+            <div class="col-9">
+              <q-badge color="yellow" text-color="black">
+                <span
+                  >This is the recipient of the message. Field required.</span
+                >
+              </q-badge>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <q-btn
+                :disabled="!testData.recieverPublicKey || !testData.message"
+                @click="sendTestMessage"
+                unelevated
+                color="primary"
+                class="float-right"
+                >Send Message</q-btn
+              >
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator></q-separator>
+        <q-card-section>
+          <div class="row q-mt-md">
+            <div class="col-3">
+              <span>Sent Data:</span>
+            </div>
+            <div class="col-9">
+              <q-input
+                outlined
+                v-model="testData.sentData"
+                dense
+                filled
+                rows="5"
+                type="textarea"
+              ></q-input>
+            </div>
+          </div>
+          <div class="row q-mt-md">
+            <div class="col-3">
+              <span>Received Data:</span>
+            </div>
+            <div class="col-9">
+              <q-input
+                outlined
+                v-model="testData.receivedData"
+                dense
+                filled
+                rows="5"
+                type="textarea"
+              ></q-input>
+            </div>
+          </div>
+        </q-card-section>
+      </q-expansion-item>
     </q-card>
   </div>
 
@@ -120,7 +270,6 @@
         </p>
 
         <p>
-          <!-- wss://{{host}}nostrclient/api/v1/relay -->
           <q-badge
             outline
             class="q-ml-sm text-subtitle2"
@@ -167,6 +316,16 @@
         relayToAdd: '',
         nostrrelayLinks: [],
         filter: '',
+        testData: {
+          show: false,
+          wsConnection: null,
+          senderPrivateKey: null,
+          senderPublicKey: null,
+          recieverPublicKey: null,
+          message: null,
+          sentData: '',
+          receivedData: ''
+        },
         relayTable: {
           columns: [
             {
@@ -273,10 +432,121 @@
             LNbits.utils.notifyApiError(error)
           })
       },
+      toggleTestPanel: async function () {
+        if (this.testData.show) {
+          await this.hideTestPannel()
+        } else {
+          await this.showTestPanel()
+        }
+      },
+      showTestPanel: async function () {
+        this.testData = {
+          show: true,
+          wsConnection: null,
+          senderPrivateKey:
+            this.$q.localStorage.getItem(
+              'lnbits.nostrclient.senderPrivateKey'
+            ) || '',
+          recieverPublicKey: null,
+          message: null,
+          sentData: '',
+          receivedData: ''
+        }
+        await this.closeWebsocket()
+        this.connectToWebsocket()
+      },
+      hideTestPannel: async function () {
+        await this.closeWebsocket()
+        this.testData = {
+          show: false,
+          wsConnection: null,
+          senderPrivateKey: null,
+          recieverPublicKey: null,
+          message: null,
+          sentData: '',
+          receivedData: ''
+        }
+      },
+      sendTestMessage: async function () {
+        try {
+          const {data} = await LNbits.api.request(
+            'PUT',
+            '/nostrclient/api/v1/relay/test?usr=' + this.g.user.id,
+            this.g.user.wallets[0].adminkey,
+            {
+              sender_private_key: this.testData.senderPrivateKey,
+              reciever_public_key: this.testData.recieverPublicKey,
+              message: this.testData.message
+            }
+          )
+          this.testData.senderPrivateKey = data.private_key
+          this.$q.localStorage.set(
+            'lnbits.nostrclient.senderPrivateKey',
+            data.private_key || ''
+          )
+          const event = JSON.parse(data.event_json)[1]
+          this.testData.senderPublicKey = event.pubkey
+          await this.sendDataToWebSocket(data.event_json)
+          const subscription = JSON.stringify([
+            'REQ',
+            'test-dms',
+            {kinds: [4], '#p': [event.pubkey]}
+          ])
+          this.testData.wsConnection.send(subscription)
+        } catch (error) {
+          LNbits.utils.notifyApiError(error)
+        }
+      },
+
+      sendDataToWebSocket: async function (data) {
+        try {
+          if (!this.testData.wsConnection) {
+            this.connectToWebsocket()
+            await this.sleep(500)
+          }
+          this.testData.wsConnection.send(data)
+          const separator = '='.repeat(80)
+          this.testData.sentData =
+            data + `\n\n${separator}\n` + this.testData.sentData
+        } catch (error) {
+          this.$q.notify({
+            timeout: 5000,
+            type: 'warning',
+            message: 'Failed to connect to websocket',
+            caption: `${error}`
+          })
+        }
+      },
+      connectToWebsocket: function () {
+        const scheme = location.protocol === 'http:' ? 'ws' : 'wss'
+        const port = location.port ? `:${location.port}` : ''
+        const wsUrl = `${scheme}://${document.domain}${port}/nostrclient/api/v1/relay`
+        this.testData.wsConnection = new WebSocket(wsUrl)
+        const updateReciveData = async e => {
+          const separator = '='.repeat(80)
+          this.testData.receivedData =
+            e.data + `\n\n${separator}\n` + this.testData.receivedData
+        }
+
+        this.testData.wsConnection.onmessage = updateReciveData
+        this.testData.wsConnection.onerror = updateReciveData
+        this.testData.wsConnection.onclose = updateReciveData
+      },
+      closeWebsocket: async function () {
+        try {
+          if (this.testData.wsConnection) {
+            this.testData.wsConnection.close()
+            await this.sleep(100)
+          }
+        } catch (error) {
+          console.warn(error)
+        }
+      },
       exportlnurldeviceCSV: function () {
         var self = this
         LNbits.utils.exportCSV(self.relayTable.columns, this.nostrLinks)
-      }
+      },
+      sleep: ms => new Promise(r => setTimeout(r, ms))
     },
     created: function () {
       var self = this

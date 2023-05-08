@@ -4,6 +4,7 @@ from typing import List, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
+
 from lnbits.helpers import urlsafe_short_hash
 
 from .models import Event, Filter, Filters, Relay, RelayList

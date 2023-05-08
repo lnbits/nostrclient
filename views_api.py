@@ -1,4 +1,5 @@
 import asyncio
+import json
 from http import HTTPStatus
 from typing import Optional
 
@@ -11,7 +12,9 @@ from lnbits.helpers import urlsafe_short_hash
 
 from . import nostrclient_ext, scheduled_tasks
 from .crud import add_relay, delete_relay, get_relays
-from .models import Relay, RelayList
+from .helpers import normalize_public_key
+from .models import Relay, RelayList, TestMessage, TestMessageResponse
+from .nostr.key import EncryptedDirectMessage, PrivateKey
 from .services import NostrRouter, nostr
 from .tasks import init_relays
 
@@ -73,6 +76,36 @@ async def api_delete_relay(relay: Relay) -> None:
     # we can remove relays during runtime
     nostr.client.relay_manager.remove_relay(relay.url)
     await delete_relay(relay)
+
+
+@nostrclient_ext.put(
+    "/api/v1/relay/test", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
+)
+async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
+    try:
+        to_public_key = normalize_public_key(data.reciever_public_key)
+
+        pk = bytes.fromhex(data.sender_private_key) if data.sender_private_key else None
+        private_key = PrivateKey(pk)
+
+        dm = EncryptedDirectMessage(
+            recipient_pubkey=to_public_key, cleartext_content=data.message
+        )
+        private_key.sign_event(dm)
+
+        return TestMessageResponse(private_key=private_key.hex(), public_key=to_public_key, event_json=dm.to_message())
+    except (ValueError, AssertionError) as ex:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=str(ex),
+        )
+    except Exception as ex:
+        logger.warning(ex)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Cannot generate test event",
+        )
+
 
 
 @nostrclient_ext.delete(

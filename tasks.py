@@ -1,6 +1,6 @@
 import asyncio
-import ssl
 import json
+import ssl
 import threading
 
 from .crud import get_relays
@@ -11,8 +11,8 @@ from .nostr.relay_manager import RelayManager
 from .services import (
     nostr,
     received_subscription_eosenotices,
-    received_subscription_notices,
     received_subscription_events,
+    received_subscription_notices,
 )
 
 
