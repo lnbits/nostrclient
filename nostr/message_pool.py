@@ -1,8 +1,9 @@
 import json
 from queue import Queue
 from threading import Lock
-from .message_type import RelayMessageType
+
 from .event import Event
+from .message_type import RelayMessageType
 
 
 class EventMessage:
@@ -69,9 +70,18 @@ class MessagePool:
             )
             with self.lock:
                 if not event.id in self._unique_events:
-                    self.events.put(EventMessage(event, subscription_id, url))
-                    self._unique_events.add(event.id)
+                    self._accept_event(EventMessage(event, subscription_id, url))
         elif message_type == RelayMessageType.NOTICE:
             self.notices.put(NoticeMessage(message_json[1], url))
         elif message_type == RelayMessageType.END_OF_STORED_EVENTS:
             self.eose_notices.put(EndOfStoredEventsMessage(message_json[1], url))
+
+    def _accept_event(self, event_message: EventMessage):
+        """
+            Event uniqueness is considered per `subscription_id`. 
+            The `subscription_id` is rewritten to be unique and it is the same accross relays.
+            The same event can come from different subscriptions (from the same client or from different ones).
+            Clients that have joined later should receive older events.
+        """
+        self.events.put(event_message)
+        self._unique_events.add(f"{event_message.subscription_id}_{event_message.event.id}")
