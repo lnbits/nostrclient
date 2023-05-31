@@ -23,7 +23,7 @@ class RelayManager:
         self, url: str, read: bool = True, write: bool = True, subscriptions={}
     ):
         policy = RelayPolicy(read, write)
-        relay = Relay(url, policy, self.message_pool, subscriptions)
+        relay = Relay(url, policy, self.message_pool, subscriptions.copy())
         self.relays[url] = relay
 
     def remove_relay(self, url: str):
