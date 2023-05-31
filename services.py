@@ -48,16 +48,16 @@ class NostrRouter:
                 break
 
             # registers a subscription if the input was a REQ request
-            subscription_id, json_str_rewritten = await self._add_nostr_subscription(
+            subscription_id, json_str_rewritten = await self._handle_nostr_subscription(
                 json_str
             )
 
             if subscription_id and json_str_rewritten:
                 self.subscriptions.append(subscription_id)
-                json_str = json_str_rewritten
 
             # publish data
-            nostr.client.relay_manager.publish_message(json_str)
+            publish_data = json_str_rewritten or json_str
+            nostr.client.relay_manager.publish_message(publish_data)
 
     async def nostr_to_client(self):
         """Sends responses from relays back to the client. Polls the subscriptions of this client
@@ -139,7 +139,7 @@ class NostrRouter:
             )
         return NostrFilters(filter_list)
 
-    async def _add_nostr_subscription(self, json_str):
+    async def _handle_nostr_subscription(self, json_str):
         """Parses a (string) request from a client. If it is a subscription (REQ) or a CLOSE, it will
         register the subscription in the nostr client library that we're using so we can
         receive the callbacks on it later. Will rewrite the subscription id since we expect
@@ -147,7 +147,7 @@ class NostrRouter:
         """
         json_data = json.loads(json_str)
         assert len(json_data)
-        if json_data[0] in ["REQ", "CLOSE"]:
+        if json_data[0] == "REQ":
             subscription_id = json_data[1]
             subscription_id_rewritten = urlsafe_short_hash()
             self.oridinal_subscription_ids[subscription_id_rewritten] = subscription_id
@@ -160,4 +160,12 @@ class NostrRouter:
                 [json_data[0], subscription_id_rewritten, fltr]
             )
             return subscription_id_rewritten, request_rewritten
+        elif json_data[0] == "CLOSE":
+            subscription_id = json_data[1]
+            subscription_id_rewritten = next((k for k, v in self.oridinal_subscription_ids.items() if v == subscription_id), None)
+            if subscription_id_rewritten:
+                nostr.client.relay_manager.close_subscription(subscription_id_rewritten)
+                request_rewritten = json.dumps([json_data[0], subscription_id_rewritten])
+                return None, request_rewritten
+
         return None, None
