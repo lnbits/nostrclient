@@ -69,7 +69,7 @@ class MessagePool:
                 e["sig"],
             )
             with self.lock:
-                if not event.id in self._unique_events:
+                if not f"{subscription_id}_{event.id}" in self._unique_events:
                     self._accept_event(EventMessage(event, subscription_id, url))
         elif message_type == RelayMessageType.NOTICE:
             self.notices.put(NoticeMessage(message_json[1], url))
