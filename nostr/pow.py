@@ -1,6 +1,8 @@
 import time
+
 from .event import Event
 from .key import PrivateKey
+
 
 def zero_bits(b: int) -> int:
     n = 0
