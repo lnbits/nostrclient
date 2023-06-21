@@ -22,6 +22,8 @@ class RelayManager:
     def add_relay(
         self, url: str, read: bool = True, write: bool = True, subscriptions={}
     ):
+        if url in self.relays:
+            return
         policy = RelayPolicy(read, write)
         relay = Relay(url, policy, self.message_pool, subscriptions.copy())
         self.relays[url] = relay
@@ -42,21 +44,23 @@ class RelayManager:
 
     def open_connections(self, ssl_options: dict = None, proxy: dict = None):
         for relay in self.relays.values():
-            self.threads[relay.url] = threading.Thread(
-                target=relay.connect,
-                args=(ssl_options, proxy),
-                name=f"{relay.url}-thread",
-                daemon=True,
-            )
-            self.threads[relay.url].start()
+            if relay.url not in self.threads:            
+                self.threads[relay.url] = threading.Thread(
+                    target=relay.connect,
+                    args=(ssl_options, proxy),
+                    name=f"{relay.url}-thread",
+                    daemon=True,
+                )
 
-            self.queue_threads[relay.url] = threading.Thread(
-                target=relay.queue_worker,
-                args=(lambda: relay.shutdown,),
-                name=f"{relay.url}-queue",
-                daemon=True,
-            )
-            self.queue_threads[relay.url].start()
+                self.threads[relay.url].start()
+
+            if relay.url not in self.queue_threads:
+                self.queue_threads[relay.url] = threading.Thread(
+                    target=relay.queue_worker,
+                    name=f"{relay.url}-queue",
+                    daemon=True,
+                )
+                self.queue_threads[relay.url].start()
 
     def close_connections(self):
         for relay in self.relays.values():
