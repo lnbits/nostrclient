@@ -6,12 +6,7 @@ from ..subscription import Subscription
 
 
 class NostrClient:
-    relays = [
-        "wss://nostr-pub.wellorder.net",
-        "wss://nostr.zebedee.cloud",
-        "wss://nodestr.fmt.wiz.biz",
-        "wss://nostr.oxtr.dev",
-    ]
+    relays = [ ]
     relay_manager = RelayManager()
 
     def __init__(self, relays: List[str] = [], connect=True):
@@ -23,8 +18,6 @@ class NostrClient:
     async def connect(self):
         for relay in self.relays:
             self.relay_manager.add_relay(relay)
-
-
 
     def close(self):
         self.relay_manager.close_connections()

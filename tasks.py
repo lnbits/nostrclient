@@ -1,6 +1,4 @@
 import asyncio
-import json
-import ssl
 import threading
 
 from .crud import get_relays
