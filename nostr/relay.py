@@ -47,7 +47,6 @@ class Relay:
         self.queue = Queue()
 
     def connect(self, ssl_options: dict = None, proxy: dict = None):
-        print("### relay.connect", self.url)
         self.ws = WebSocketApp(
             self.url,
             on_open=self._on_open,
@@ -84,7 +83,6 @@ class Relay:
 
     @property
     def ping(self):
-        print("### ping: ", self.url)
         ping_ms = int((self.ws.last_pong_tm - self.ws.last_ping_tm) * 1000)
         return ping_ms if self.connected and ping_ms > 0 else 0
 
@@ -98,21 +96,17 @@ class Relay:
             self.publish(json_str)
 
     def queue_worker(self):
-        print("#### IN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.url)
         while True:
             if self.connected:
                 try:
                     message = self.queue.get(timeout=1)
-                    print("#### queue_worker", message)
                     self.num_sent_events += 1
                     self.ws.send(message)
                 except Exception as e:
                     if self.shutdown:
-                        print("#### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! e [", e, self.url, self.shutdown," ]###")
                         break
             else:
                 time.sleep(0.1)
-        print("#### OUT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.url)
 
     def add_subscription(self, id, filters: Filters):
         with self.lock:

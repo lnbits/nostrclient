@@ -1,5 +1,4 @@
 import asyncio
-import json
 from http import HTTPStatus
 from typing import List, Optional
 

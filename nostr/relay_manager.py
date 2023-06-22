@@ -2,7 +2,6 @@
 import ssl
 import threading
 
-from .event import Event
 from .filter import Filters
 from .message_pool import MessagePool
 from .relay import Relay, RelayPolicy

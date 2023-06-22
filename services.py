@@ -81,12 +81,10 @@ class NostrRouter:
 
 
     async def _handle_received_subscription_eosenotices(self, s):
-        my_event = received_subscription_eosenotices[s]
         s_original = self.original_subscription_ids[s]
         event_to_forward = ["EOSE", s_original]
         del received_subscription_eosenotices[s]
-        # send data back to client
-        # print("Sending EOSE", event_to_forward)
+        
         await self.websocket.send_text(json.dumps(event_to_forward))
 
     async def _handle_received_subscription_events(self, s):
@@ -114,7 +112,7 @@ class NostrRouter:
             my_event = received_subscription_notices.pop(0)
             event_to_forward = ["NOTICE", my_event.content]
             #  note: we don't send it to the user because we don't know who should receive it
-            logger.debug("Nostrclient: Received notice", event_to_forward[1])
+            logger.debug("Nostrclient: Received notice: ", event_to_forward[1])
         
 
 
