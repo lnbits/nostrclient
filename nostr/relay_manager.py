@@ -1,4 +1,5 @@
 
+from asyncio import Lock
 import ssl
 import threading
 
@@ -18,6 +19,8 @@ class RelayManager:
         self.threads: dict[str, threading.Thread] = {}
         self.queue_threads: dict[str, threading.Thread] = {}
         self.message_pool = MessagePool()
+        self._cached_subscriptions = dict[str, Subscription] = {}
+        self._subscriptions_lock = Lock()
 
     def add_relay(
         self, url: str, read: bool = True, write: bool = True, subscriptions: dict[str, Subscription] = {}
@@ -46,10 +49,16 @@ class RelayManager:
         self.relays.pop(url)
 
     def add_subscription(self, id: str, filters: Filters):
+        with self._subscriptions_lock:
+            self._cached_subscriptions[id] = Subscription(id, filters)
+
         for relay in self.relays.values():
             relay.add_subscription(id, filters)
 
     def close_subscription(self, id: str):
+        with self._subscriptions_lock:
+            self._cached_subscriptions.pop(id)
+
         for relay in self.relays.values():
             relay.close_subscription(id)
 

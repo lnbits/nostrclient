@@ -62,11 +62,9 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
 
     all_relays: List[NostrRelay] = nostr.client.relay_manager.relays.values()
     if len(all_relays):
-        subscriptions = all_relays[0].subscriptions
         nostr.client.relays.append(relay.url)
-        nostr.client.relay_manager.add_relay(subscriptions)
+        nostr.client.relay_manager.add_relay()
        
-        nostr.client.relay_manager.connect_relay(relay.url)
 
     return await get_relays()
 
