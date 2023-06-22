@@ -121,6 +121,7 @@ class Relay:
     def close_subscription(self, id: str) -> None:
         with self.lock:
             self.subscriptions.pop(id)
+            self.publish(json.dumps(["CLOSE", id]))
 
     def to_json_object(self) -> dict:
         return {
