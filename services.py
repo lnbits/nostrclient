@@ -68,7 +68,16 @@ class NostrRouter:
 
     async def stop(self):
         for t in self.tasks:
-            t.cancel()
+            try:
+                t.cancel()
+            except:
+                pass
+            
+        for s in self.subscriptions:
+            try:
+                nostr.client.relay_manager.close_subscription(s)
+            except:
+                pass
         self.connected = False
 
     async def _handle_subscriptions(self):

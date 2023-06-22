@@ -152,11 +152,6 @@ async def ws_relay(websocket: WebSocket) -> None:
     while True:
         await asyncio.sleep(10)
         if not router.connected:
-            for s in router.subscriptions:
-                try:
-                    nostr.client.relay_manager.close_subscription(s)
-                except:
-                    pass
             await router.stop()
             all_routers.remove(router)
             break
