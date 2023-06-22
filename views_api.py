@@ -17,7 +17,6 @@ from .models import Relay, RelayList, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
 from .nostr.relay import Relay as NostrRelay
 from .services import NostrRouter, nostr
-from .tasks import init_relays
 
 # we keep this in
 all_routers: list[NostrRouter] = []
