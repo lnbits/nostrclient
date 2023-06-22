@@ -23,6 +23,7 @@
 
 from enum import Enum
 
+
 class Encoding(Enum):
     """Enumeration type to list the various supported encodings."""
     BECH32 = 1
