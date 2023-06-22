@@ -122,11 +122,6 @@ class Relay:
         with self.lock:
             self.subscriptions.pop(id)
 
-    def update_subscription(self, id: str, filters: Filters) -> None:
-        with self.lock:
-            subscription = self.subscriptions[id]
-            subscription.filters = filters
-
     def to_json_object(self) -> dict:
         return {
             "url": self.url,

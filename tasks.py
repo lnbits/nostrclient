@@ -31,7 +31,6 @@ async def subscribe_events():
         await asyncio.sleep(2)
 
     def callback_events(eventMessage: EventMessage):
-        # print(f"From {event.public_key[:3]}..{event.public_key[-3:]}: {event.content}")
         if eventMessage.subscription_id in received_subscription_events:
             # do not add duplicate events (by event id)
             if eventMessage.event.id in set(
