@@ -60,10 +60,8 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
     relay.id = urlsafe_short_hash()
     await add_relay(relay)
 
-    all_relays: List[NostrRelay] = nostr.client.relay_manager.relays.values()
-    if len(all_relays):
-        nostr.client.relays.append(relay.url)
-        nostr.client.relay_manager.add_relay()
+    nostr.client.relays.append(relay.url)
+    nostr.client.relay_manager.add_relay(relay.url)
        
 
     return await get_relays()

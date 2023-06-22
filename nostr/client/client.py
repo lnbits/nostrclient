@@ -20,9 +20,9 @@ class NostrClient:
         if connect:
             self.connect()
 
-    async def connect(self, subscriptions: dict[str, Subscription] = {}):
+    async def connect(self):
         for relay in self.relays:
-            self.relay_manager.add_relay(relay, subscriptions)
+            self.relay_manager.add_relay(relay)
 
 
 
