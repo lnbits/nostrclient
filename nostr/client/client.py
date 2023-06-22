@@ -2,7 +2,6 @@ import time
 from typing import *
 
 from ..relay_manager import RelayManager
-from ..subscription import Subscription
 
 
 class NostrClient:
