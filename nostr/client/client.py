@@ -11,7 +11,7 @@ class NostrClient:
         "wss://nostr.zebedee.cloud",
         "wss://nodestr.fmt.wiz.biz",
         "wss://nostr.oxtr.dev",
-    ]  # ["wss://nostr.oxtr.dev"]  # ["wss://relay.nostr.info"] "wss://nostr-pub.wellorder.net"  "ws://91.237.88.218:2700", "wss://nostrrr.bublina.eu.org", ""wss://nostr-relay.freeberty.net"", , "wss://nostr.oxtr.dev", "wss://relay.nostr.info", "wss://nostr-pub.wellorder.net" , "wss://relayer.fiatjaf.com", "wss://nodestr.fmt.wiz.biz/", "wss://no.str.cr"
+    ]
     relay_manager = RelayManager()
 
     def __init__(self, relays: List[str] = [], connect=True):
