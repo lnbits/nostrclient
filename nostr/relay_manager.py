@@ -1,11 +1,12 @@
-import json
+
+import ssl
 import threading
 
 from .event import Event
 from .filter import Filters
 from .message_pool import MessagePool
-from .message_type import ClientMessageType
 from .relay import Relay, RelayPolicy
+from .subscription import Subscription
 
 
 class RelayException(Exception):
@@ -20,19 +21,30 @@ class RelayManager:
         self.message_pool = MessagePool()
 
     def add_relay(
-        self, url: str, read: bool = True, write: bool = True, subscriptions={}
-    ):
+        self, url: str, read: bool = True, write: bool = True, subscriptions: dict[str, Subscription] = {}
+    ) -> Relay:
         if url in self.relays:
             return
+        
         policy = RelayPolicy(read, write)
         relay = Relay(url, policy, self.message_pool, subscriptions.copy())
         self.relays[url] = relay
 
+        self.open_connection(
+            relay,
+            {"cert_reqs": ssl.CERT_NONE}
+        )  # NOTE: This disables ssl certificate verification
+
+        relay.publish_subscriptions()
+        return relay
+
     def remove_relay(self, url: str):
-        self.relays[url].close()
-        self.relays.pop(url)
         self.threads[url].join(timeout=1)
         self.threads.pop(url)
+        self.queue_threads[url].join(timeout=1)
+        self.queue_threads.pop(url)
+        self.relays[url].close()
+        self.relays.pop(url)
 
     def add_subscription(self, id: str, filters: Filters):
         for relay in self.relays.values():
@@ -42,25 +54,22 @@ class RelayManager:
         for relay in self.relays.values():
             relay.close_subscription(id)
 
-    def open_connections(self, ssl_options: dict = None, proxy: dict = None):
-        for relay in self.relays.values():
-            if relay.url not in self.threads:            
-                self.threads[relay.url] = threading.Thread(
-                    target=relay.connect,
-                    args=(ssl_options, proxy),
-                    name=f"{relay.url}-thread",
-                    daemon=True,
-                )
 
-                self.threads[relay.url].start()
+    def open_connection(self, relay: Relay, ssl_options: dict = None, proxy: dict = None):          
+        self.threads[relay.url] = threading.Thread(
+            target=relay.connect,
+            args=(ssl_options, proxy),
+            name=f"{relay.url}-thread",
+            daemon=True,
+        )
+        self.threads[relay.url].start()
 
-            if relay.url not in self.queue_threads:
-                self.queue_threads[relay.url] = threading.Thread(
-                    target=relay.queue_worker,
-                    name=f"{relay.url}-queue",
-                    daemon=True,
-                )
-                self.queue_threads[relay.url].start()
+        self.queue_threads[relay.url] = threading.Thread(
+            target=relay.queue_worker,
+            name=f"{relay.url}-queue",
+            daemon=True,
+        )
+        self.queue_threads[relay.url].start()
 
     def close_connections(self):
         for relay in self.relays.values():

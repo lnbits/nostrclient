@@ -1,7 +1,7 @@
 import asyncio
 import json
 from http import HTTPStatus
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import Depends, WebSocket
 from loguru import logger
@@ -15,6 +15,7 @@ from .crud import add_relay, delete_relay, get_relays
 from .helpers import normalize_public_key
 from .models import Relay, RelayList, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
+from .nostr.relay import Relay as NostrRelay
 from .services import NostrRouter, nostr
 from .tasks import init_relays
 
@@ -60,8 +61,15 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
         )
     relay.id = urlsafe_short_hash()
     await add_relay(relay)
-    # we can't add relays during runtime yet
-    await init_relays()
+
+    all_relays: List[NostrRelay] = nostr.client.relay_manager.relays.values()
+    if len(all_relays):
+        subscriptions = all_relays[0].subscriptions
+        nostr.client.relays.append(relay.url)
+        nostr.client.relay_manager.add_relay(subscriptions)
+       
+        nostr.client.relay_manager.connect_relay(relay.url)
+
     return await get_relays()
 
 

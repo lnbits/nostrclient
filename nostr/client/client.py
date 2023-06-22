@@ -1,19 +1,15 @@
-from typing import *
-import ssl
-import time
+import base64
 import json
 import os
-import base64
+import time
+from typing import *
 
-from ..event import Event
-from ..relay_manager import RelayManager
-from ..message_type import ClientMessageType
-from ..key import PrivateKey, PublicKey
-
+from ..event import EncryptedDirectMessage, Event, EventKind
 from ..filter import Filter, Filters
-from ..event import Event, EventKind, EncryptedDirectMessage
-from ..relay_manager import RelayManager
+from ..key import PrivateKey, PublicKey
 from ..message_type import ClientMessageType
+from ..relay_manager import RelayManager
+from ..subscription import Subscription
 
 # from aes import AESCipher
 from . import cbc
@@ -38,12 +34,11 @@ class NostrClient:
         if connect:
             self.connect()
 
-    def connect(self):
+    async def connect(self, subscriptions: dict[str, Subscription] = {}):
         for relay in self.relays:
-            self.relay_manager.add_relay(relay)
-        self.relay_manager.open_connections(
-            {"cert_reqs": ssl.CERT_NONE}
-        )  # NOTE: This disables ssl certificate verification
+            self.relay_manager.add_relay(relay, subscriptions)
+
+
 
     def close(self):
         self.relay_manager.close_connections()

@@ -91,6 +91,12 @@ class Relay:
     def publish(self, message: str):
         self.queue.put(message)
 
+    def publish_subscriptions(self):
+        for _, subscription in self.subscriptions.items():
+            s = subscription.to_json_object()
+            json_str = json.dumps(["REQ", s["id"], s["filters"][0]])
+            self.publish(json_str)
+
     def queue_worker(self):
         print("#### IN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.url)
         while True:
