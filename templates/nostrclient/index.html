@@ -59,7 +59,8 @@
                 </div>
               </q-td>
               <q-td auto-width>
-                <q-btn flat dense size="xs" @click="deleteRelay(props.row.url)" icon="cancel" color="pink"></q-btn>
+                <q-btn flat dense size="md" @click="showDeleteRelayDialog(props.row.url)" icon="cancel"
+                  color="pink"></q-btn>
               </q-td>
             </q-tr>
           </template>
@@ -255,6 +256,13 @@
               label: 'Ping',
               field: 'ping'
             }
+            ,
+            {
+              name: 'delete',
+              align: 'center',
+              label: '',
+              field: ''
+            }
           ],
           pagination: {
             rowsPerPage: 10
@@ -329,8 +337,14 @@
         this.relayToAdd = relayUrl
         await this.addRelay()
       },
+      showDeleteRelayDialog: function (url) {
+        LNbits.utils
+          .confirmDialog(' Are you sure you want to remove this relay?')
+          .onOk(async () => {
+            this.deleteRelay(url)
+          })
+      },
       deleteRelay(url) {
-        console.log('DELETE RELAY ' + url)
         LNbits.api
           .request(
             'DELETE',
@@ -338,12 +352,14 @@
             this.g.user.wallets[0].adminkey,
             { url: url }
           )
-          .then(function (response) {
-            if (response.data) {
-              console.log(response.data)
+          .then((response) => {
+            const relayIndex = this.nostrrelayLinks.indexOf(r => r.url === url)
+            if (relayIndex !== -1) {
+              this.nostrrelayLinks.splice(relayIndex, 1)
             }
           })
-          .catch(function (error) {
+          .catch((error) => {
+            console.error(error)
             LNbits.utils.notifyApiError(error)
           })
       },
