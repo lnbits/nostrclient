@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException
 from lnbits.decorators import check_admin
 from lnbits.helpers import urlsafe_short_hash
 
-from . import nostrclient_ext, scheduled_tasks
+from . import nostr, nostrclient_ext, scheduled_tasks
 from .crud import add_relay, delete_relay, get_relays
 from .helpers import normalize_public_key
 from .models import Relay, RelayList, TestMessage, TestMessageResponse

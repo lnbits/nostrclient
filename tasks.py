@@ -1,6 +1,7 @@
 import asyncio
 import threading
 
+from . import nostr
 from .crud import get_relays
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
 from .services import NostrRouter, nostr

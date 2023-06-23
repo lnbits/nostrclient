@@ -7,19 +7,11 @@ from loguru import logger
 
 from lnbits.helpers import urlsafe_short_hash
 
+from . import nostr
 from .models import Event, Filter
-from .nostr.client.client import NostrClient as NostrClientLib
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
 from .nostr.message_pool import EndOfStoredEventsMessage, NoticeMessage
-
-
-class NostrClient:
-    def __init__(self):
-        self.client: NostrClientLib = NostrClientLib(connect=False)
-
-
-nostr = NostrClient()
 
 
 class NostrRouter:
