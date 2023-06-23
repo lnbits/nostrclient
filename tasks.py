@@ -4,7 +4,7 @@ import threading
 from . import nostr
 from .crud import get_relays
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
-from .services import NostrRouter, nostr
+from .router import NostrRouter, nostr
 
 
 async def init_relays():
