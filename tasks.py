@@ -3,12 +3,7 @@ import threading
 
 from .crud import get_relays
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
-from .services import (
-    nostr,
-    received_subscription_eosenotices,
-    received_subscription_events,
-    received_subscription_notices,
-)
+from .services import NostrRouter, nostr
 
 
 async def init_relays():
@@ -26,33 +21,33 @@ async def subscribe_events():
         await asyncio.sleep(2)
 
     def callback_events(eventMessage: EventMessage):
-        if eventMessage.subscription_id in received_subscription_events:
+        if eventMessage.subscription_id in NostrRouter.received_subscription_events:
             # do not add duplicate events (by event id)
             if eventMessage.event.id in set(
                 [
                     e.id
-                    for e in received_subscription_events[eventMessage.subscription_id]
+                    for e in NostrRouter.received_subscription_events[eventMessage.subscription_id]
                 ]
             ):
                 return
 
-            received_subscription_events[eventMessage.subscription_id].append(
+            NostrRouter.received_subscription_events[eventMessage.subscription_id].append(
                 eventMessage.event
             )
         else:
-            received_subscription_events[eventMessage.subscription_id] = [
+            NostrRouter.received_subscription_events[eventMessage.subscription_id] = [
                 eventMessage.event
             ]
         return
 
     def callback_notices(noticeMessage: NoticeMessage):
-        if noticeMessage not in received_subscription_notices:
-            received_subscription_notices.append(noticeMessage)
+        if noticeMessage not in NostrRouter.received_subscription_notices:
+            NostrRouter.received_subscription_notices.append(noticeMessage)
         return
 
     def callback_eose_notices(eventMessage: EndOfStoredEventsMessage):
-        if eventMessage.subscription_id not in received_subscription_eosenotices:
-            received_subscription_eosenotices[
+        if eventMessage.subscription_id not in NostrRouter.received_subscription_eosenotices:
+            NostrRouter.received_subscription_eosenotices[
                 eventMessage.subscription_id
             ] = eventMessage
 

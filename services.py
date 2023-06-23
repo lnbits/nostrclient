@@ -13,10 +13,6 @@ from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
 from .nostr.message_pool import EndOfStoredEventsMessage, NoticeMessage
 
-received_subscription_events: dict[str, list[Event]] = {}
-received_subscription_notices: list[NoticeMessage] = []
-received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
-
 
 class NostrClient:
     def __init__(self):
@@ -27,6 +23,11 @@ nostr = NostrClient()
 
 
 class NostrRouter:
+
+    received_subscription_events: dict[str, list[Event]] = {}
+    received_subscription_notices: list[NoticeMessage] = []
+    received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
+
     def __init__(self, websocket):
         self.subscriptions: List[str] = []
         self.connected: bool = True
@@ -82,9 +83,9 @@ class NostrRouter:
 
     async def _handle_subscriptions(self):
         for s in self.subscriptions:
-            if s in received_subscription_events:
+            if s in NostrRouter.received_subscription_events:
                 await self._handle_received_subscription_events(s)
-            if s in received_subscription_eosenotices:
+            if s in NostrRouter.received_subscription_eosenotices:
                 await self._handle_received_subscription_eosenotices(s)
 
 
@@ -92,13 +93,13 @@ class NostrRouter:
     async def _handle_received_subscription_eosenotices(self, s):
         s_original = self.original_subscription_ids[s]
         event_to_forward = ["EOSE", s_original]
-        del received_subscription_eosenotices[s]
+        del NostrRouter.received_subscription_eosenotices[s]
         
         await self.websocket.send_text(json.dumps(event_to_forward))
 
     async def _handle_received_subscription_events(self, s):
-        while len(received_subscription_events[s]):
-            my_event = received_subscription_events[s].pop(0)
+        while len(NostrRouter.received_subscription_events[s]):
+            my_event = NostrRouter.received_subscription_events[s].pop(0)
             # event.to_message() does not include the subscription ID, we have to add it manually
             event_json = {
                             "id": my_event.id,
@@ -117,8 +118,8 @@ class NostrRouter:
             await self.websocket.send_text(json.dumps(event_to_forward))
 
     def _handle_notices(self):
-        while len(received_subscription_notices):
-            my_event = received_subscription_notices.pop(0)
+        while len(NostrRouter.received_subscription_notices):
+            my_event = NostrRouter.received_subscription_notices.pop(0)
             event_to_forward = ["NOTICE", my_event.content]
             #  note: we don't send it to the user because we don't know who should receive it
             logger.debug("Nostrclient: Received notice: ", event_to_forward[1])
