@@ -1,5 +1,5 @@
 import time
-from typing import *
+from typing import List
 
 from ..relay_manager import RelayManager
 

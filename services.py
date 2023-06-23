@@ -72,7 +72,7 @@ class NostrRouter:
                 t.cancel()
             except:
                 pass
-            
+
         for s in self.subscriptions:
             try:
                 nostr.client.relay_manager.close_subscription(s)
@@ -158,7 +158,7 @@ class NostrRouter:
             return
         
         if json_data[0] == "CLOSE":
-            self.handle_client_close(json_data[1])
+            self._handle_client_close(json_data[1])
             return
 
         if json_data[0] == "EVENT":
@@ -180,7 +180,7 @@ class NostrRouter:
         self.subscriptions.append(subscription_id_rewritten)
         nostr.client.relay_manager.publish_message(request_rewritten)
 
-    def handle_client_close(self, subscription_id):
+    def _handle_client_close(self, subscription_id):
         subscription_id_rewritten = next((k for k, v in self.original_subscription_ids.items() if v == subscription_id), None)
         if subscription_id_rewritten:
             nostr.client.relay_manager.close_subscription(subscription_id_rewritten)

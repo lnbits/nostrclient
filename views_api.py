@@ -1,6 +1,6 @@
 import asyncio
 from http import HTTPStatus
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import Depends, WebSocket
 from loguru import logger
@@ -14,7 +14,6 @@ from .crud import add_relay, delete_relay, get_relays
 from .helpers import normalize_public_key
 from .models import Relay, RelayList, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
-from .nostr.relay import Relay as NostrRelay
 from .services import NostrRouter, nostr
 
 # we keep this in
