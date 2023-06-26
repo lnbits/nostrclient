@@ -36,7 +36,7 @@ def nostr_renderer():
     return template_renderer(["lnbits/extensions/nostrclient/templates"])
 
 
-from .tasks import init_relays, subscribe_events
+from .tasks import check_relays, init_relays, subscribe_events
 from .views import *  # noqa
 from .views_api import *  # noqa
 
@@ -47,3 +47,5 @@ def nostrclient_start():
     scheduled_tasks.append(task1)
     task2 = loop.create_task(catch_everything_and_restart(subscribe_events))
     scheduled_tasks.append(task2)
+    task3 = loop.create_task(catch_everything_and_restart(check_relays))
+    scheduled_tasks.append(task3)

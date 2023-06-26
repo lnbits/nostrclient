@@ -2,6 +2,8 @@
 import ssl
 import threading
 
+from loguru import logger
+
 from .filter import Filters
 from .message_pool import MessagePool
 from .relay import Relay, RelayPolicy
@@ -22,7 +24,7 @@ class RelayManager:
         self._subscriptions_lock = threading.Lock()
 
     def add_relay(self, url: str, read: bool = True, write: bool = True) -> Relay:
-        if url in self.relays:
+        if url in list(self.relays.keys()):
             return
        
         with self._subscriptions_lock:
@@ -32,7 +34,7 @@ class RelayManager:
         relay = Relay(url, policy, self.message_pool, subscriptions)
         self.relays[url] = relay
 
-        self.open_connection(
+        self._open_connection(
             relay,
             {"cert_reqs": ssl.CERT_NONE}
         )  # NOTE: This disables ssl certificate verification
@@ -62,8 +64,23 @@ class RelayManager:
         for relay in self.relays.values():
             relay.close_subscription(id)
 
+    def check_and_restart_relays(self):
+        stopped_relays = [r for r in self.relays.values() if r.shutdown]
+        for relay in stopped_relays:
+            logger.info(f"Restarting connection to relay '{relay.url}'")
+            self._restart_relay(relay)
 
-    def open_connection(self, relay: Relay, ssl_options: dict = None, proxy: dict = None):          
+
+    def close_connections(self):
+        for relay in self.relays.values():
+            relay.close()
+
+    def publish_message(self, message: str):
+        for relay in self.relays.values():
+            if relay.policy.should_write:
+                relay.publish(message)
+
+    def _open_connection(self, relay: Relay, ssl_options: dict = None, proxy: dict = None):          
         self.threads[relay.url] = threading.Thread(
             target=relay.connect,
             args=(ssl_options, proxy),
@@ -79,11 +96,9 @@ class RelayManager:
         )
         self.queue_threads[relay.url].start()
 
-    def close_connections(self):
-        for relay in self.relays.values():
-            relay.close()
-
-    def publish_message(self, message: str):
-        for relay in self.relays.values():
-            if relay.policy.should_write:
-                relay.publish(message)
+    def _restart_relay(self, relay: Relay):
+        if relay.error_threshold_reached:
+            return
+        self.remove_relay(relay.url)
+        new_relay = self.add_relay(relay.url)
+        new_relay.error_counter = relay.error_counter

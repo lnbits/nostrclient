@@ -3,6 +3,7 @@ import time
 from queue import Queue
 from threading import Lock
 
+from loguru import logger
 from websocket import WebSocketApp
 
 from .event import Event
@@ -69,17 +70,12 @@ class Relay:
 
     def close(self):
         self.ws.close()
+        self.connected = False
         self.shutdown = True
 
-    def check_reconnect(self):
-        try:
-            self.close()
-        except:
-            pass
-        self.connected = False
-        if self.reconnect:
-            time.sleep(self.error_counter**2)
-            self.connect(self.ssl_options, self.proxy)
+    @property
+    def error_threshold_reached(self):
+        return self.error_threshold and self.error_counter > self.error_threshold
 
     @property
     def ping(self):
@@ -104,6 +100,7 @@ class Relay:
                     self.ws.send(message)
                 except Exception as e:
                     if self.shutdown:
+                        logger.warning(f"Closing queue worker for {self.url}")
                         break
             else:
                 time.sleep(0.1)
@@ -127,31 +124,34 @@ class Relay:
             ],
         }
 
-    def _on_open(self, class_obj):
+    def _on_open(self, _):
+        logger.info(f"Connected to relay: '{self.url}'.")
         self.connected = True
-        pass
+        
 
-    def _on_close(self, class_obj, status_code, message):
-        self.connected = False
-        if self.error_threshold and self.error_counter > self.error_threshold:
-            pass
-        else:
-            self.check_reconnect()
-        pass
+    def _on_close(self, _, status_code, message):
+        logger.warning(f"Connection to relay {self.url} closed. Status: '{status_code}'. Message: '{message}'.")
+        self.close()
 
-    def _on_message(self, class_obj, message: str):
+
+
+
+    def _on_message(self, _, message: str):
         if self._is_valid_message(message):
             self.num_received_events += 1
             self.message_pool.add_message(message, self.url)
+        else:
+            logger.debug(f"Invalid relay message: '{message}'.")
 
-    def _on_error(self, class_obj, error):
+    def _on_error(self, _, error):
+        logger.warning(f"Relay error: '{str(error)}'")
         self.connected = False
         self.error_counter += 1
 
-    def _on_ping(self, class_obj, message):
+    def _on_ping(self, _*):
         return
 
-    def _on_pong(self, class_obj, message):
+    def _on_pong(self, _*):
         return
 
     def _is_valid_message(self, message: str) -> bool:

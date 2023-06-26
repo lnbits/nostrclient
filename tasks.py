@@ -1,6 +1,8 @@
 import asyncio
 import threading
 
+from loguru import logger
+
 from . import nostr
 from .crud import get_relays
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
@@ -16,6 +18,16 @@ async def init_relays():
     nostr.client.relays = list(set([r.url for r in relays.__root__ if r.url]))
     await nostr.client.connect()
 
+
+async def check_relays():
+    """ Check relays that have been disconnected """
+    while True:
+        try:
+            await asyncio.sleep(20)
+            nostr.client.relay_manager.check_and_restart_relays()
+        except Exception as e:
+            logger.warning(f"Cannot restart relays: '{str(e)}'.")
+    
 
 async def subscribe_events():
     while not any([r.connected for r in nostr.client.relay_manager.relays.values()]):
