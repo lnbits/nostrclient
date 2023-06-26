@@ -24,10 +24,6 @@ all_routers: list[NostrRouter] = []
 async def api_get_relays() -> RelayList:
     relays = RelayList(__root__=[])
     for url, r in nostr.client.relay_manager.relays.items():
-        # status_text = (
-        #     f"⬆️ {r.num_sent_events} ⬇️ {r.num_received_events} ⚠️ {r.error_counter}"
-        # )
-        # connected_text = "🟢" if r.connected else "🔴"
         relay_id = urlsafe_short_hash()
         relays.__root__.append(
             Relay(
