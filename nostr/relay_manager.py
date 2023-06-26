@@ -67,7 +67,6 @@ class RelayManager:
     def check_and_restart_relays(self):
         stopped_relays = [r for r in self.relays.values() if r.shutdown]
         for relay in stopped_relays:
-            logger.info(f"Restarting connection to relay '{relay.url}'")
             self._restart_relay(relay)
 
 
@@ -99,6 +98,8 @@ class RelayManager:
     def _restart_relay(self, relay: Relay):
         if relay.error_threshold_reached:
             return
+        logger.info(f"Restarting connection to relay '{relay.url}'")
+
         self.remove_relay(relay.url)
         new_relay = self.add_relay(relay.url)
         new_relay.error_counter = relay.error_counter

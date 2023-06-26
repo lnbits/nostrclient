@@ -148,10 +148,10 @@ class Relay:
         self.connected = False
         self.error_counter += 1
 
-    def _on_ping(self, _*):
+    def _on_ping(self, *_):
         return
 
-    def _on_pong(self, _*):
+    def _on_pong(self, *_):
         return
 
     def _is_valid_message(self, message: str) -> bool:
