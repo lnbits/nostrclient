@@ -103,3 +103,4 @@ class RelayManager:
         self.remove_relay(relay.url)
         new_relay = self.add_relay(relay.url)
         new_relay.error_counter = relay.error_counter
+        new_relay.error_list = relay.error_list

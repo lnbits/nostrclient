@@ -51,6 +51,18 @@
             <q-tr :props="props">
               <q-td v-for="col in props.cols" :key="col.name" :props="props" auto-width>
                 <div v-if="col.name == 'id'"></div>
+                <div v-else-if="col.name == 'status'">
+                  <div>
+                    ⬆️ <span v-text="col.value.sentEvents"></span>
+                    ⬇️ <span v-text="col.value.receveidEvents"></span>
+                     ⚠️ <span v-text="col.value.errorCount">
+                      
+                     </span>
+                     <q-tooltip>
+                        <span v-for="e in col.value.errorList" v-text="e"></span><br>
+                     </q-tooltip>
+                    </div>
+                </div>
                 <div v-else>
                   <div v-if="col.value == true" style="background-color: green">
                     {{ col.value }}
@@ -196,6 +208,13 @@
     obj._data = _.clone(obj)
     obj.theTime = obj.time * 60 - (Date.now() / 1000 - obj.timestamp)
     obj.time = obj.time + 'mins'
+    obj.status = {
+      sentEvents: obj.status.num_sent_events,
+      receveidEvents: obj.status.num_received_events,
+      errorCount: obj.status.error_counter,
+      errorList: obj.status.error_list
+
+    }
 
     obj.ping = obj.ping + ' ms'
 

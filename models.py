@@ -8,12 +8,18 @@ from pydantic import BaseModel, Field
 from lnbits.helpers import urlsafe_short_hash
 
 
+class RelayStatus(BaseModel):
+    num_sent_events: Optional[int] = 0
+    num_received_events: Optional[int] = 0
+    error_counter: Optional[int] = 0
+    error_list: Optional[List] = []
+    
 class Relay(BaseModel):
     id: Optional[str] = None
     url: Optional[str] = None
     connected: Optional[bool] = None
     connected_string: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[RelayStatus] = None
     active: Optional[bool] = None
     ping: Optional[int] = None
 
