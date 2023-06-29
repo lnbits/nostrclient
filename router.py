@@ -39,7 +39,11 @@ class NostrRouter:
                 self.connected = False
                 break
 
-            await self._handle_client_to_nostr(json_str)
+            try:
+                await self._handle_client_to_nostr(json_str)
+            except Exception as e:
+                logger.debug(f"Failed to handle client message: '{str(e)}'.")
+
 
     async def nostr_to_client(self):
         """Sends responses from relays back to the client. Polls the subscriptions of this client
@@ -49,10 +53,13 @@ class NostrRouter:
         that we had previously rewritten in order to avoid collisions when multiple clients use the same id.
         """
         while True and self.connected:
-            await self._handle_subscriptions()
-            self._handle_notices()
-                   
-            await asyncio.sleep(0.1)
+            try:
+                await self._handle_subscriptions()
+                self._handle_notices()
+                await asyncio.sleep(0.1)
+            except Exception as e:
+                logger.debug(f"Failed to handle response for client: '{str(e)}'.")
+            
 
 
     async def start(self):
@@ -112,9 +119,8 @@ class NostrRouter:
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
             my_event = NostrRouter.received_subscription_notices.pop(0)
-            event_to_forward = ["NOTICE", my_event.content]
             #  note: we don't send it to the user because we don't know who should receive it
-            logger.debug("Nostrclient: Received notice: ", event_to_forward[1])
+            logger.info(f"Relay ('{my_event.url}') notice: '{my_event.content}']")
         
 
 
@@ -143,8 +149,10 @@ class NostrRouter:
         receive the callbacks on it later. Will rewrite the subscription id since we expect
         multiple clients to use the router and want to avoid subscription id collisions
         """
+
         json_data = json.loads(json_str)
         assert len(json_data)
+
 
         if json_data[0] == "REQ":
             self._handle_client_req(json_data)
@@ -176,4 +184,7 @@ class NostrRouter:
     def _handle_client_close(self, subscription_id):
         subscription_id_rewritten = next((k for k, v in self.original_subscription_ids.items() if v == subscription_id), None)
         if subscription_id_rewritten:
+            self.original_subscription_ids.pop(subscription_id_rewritten)
             nostr.client.relay_manager.close_subscription(subscription_id_rewritten)
+        else:
+            logger.debug(f"Failed to unsubscribe from '{subscription_id}.'")
