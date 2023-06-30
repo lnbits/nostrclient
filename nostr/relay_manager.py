@@ -99,7 +99,7 @@ class RelayManager:
     def _restart_relay(self, relay: Relay):
         if relay.error_threshold_reached:
             time_since_last_error = time.time() - relay.last_error_date
-            if time_since_last_error < 60 * 60 * 24: # last day
+            if time_since_last_error < 60 * 60 * 2: # last day
                 return
             relay.error_counter = 0
             relay.error_list = []
