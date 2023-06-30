@@ -56,10 +56,9 @@ class NostrRouter:
             try:
                 await self._handle_subscriptions()
                 self._handle_notices()
-                await asyncio.sleep(0.1)
             except Exception as e:
                 logger.debug(f"Failed to handle response for client: '{str(e)}'.")
-            
+            await asyncio.sleep(0.1)
 
 
     async def start(self):
