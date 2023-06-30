@@ -128,11 +128,13 @@ class Relay:
             ],
         }
 
+    def add_notice(self, notice: str):
+        self.notice_list = ([notice] + self.notice_list)[:20]
+
     def _on_open(self, _):
         logger.info(f"Connected to relay: '{self.url}'.")
         self.connected = True
         
-
     def _on_close(self, _, status_code, message):
         logger.warning(f"Connection to relay {self.url} closed. Status: '{status_code}'. Message: '{message}'.")
         self.close()

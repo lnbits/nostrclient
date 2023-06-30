@@ -121,6 +121,7 @@ class NostrRouter:
             my_event = NostrRouter.received_subscription_notices.pop(0)
             #  note: we don't send it to the user because we don't know who should receive it
             logger.info(f"Relay ('{my_event.url}') notice: '{my_event.content}']")
+            nostr.client.relay_manager.handle_notice(my_event)
         
 
 

@@ -34,7 +34,8 @@ async def api_get_relays() -> RelayList:
                     "num_sent_events": r.num_sent_events,
                     "num_received_events": r.num_received_events,
                     "error_counter": r.error_counter,
-                    "error_list": r.error_list
+                    "error_list": r.error_list,
+                    "notice_list": r.notice_list,
                 },
                 ping=r.ping,
                 active=True,

@@ -6,7 +6,7 @@ import time
 from loguru import logger
 
 from .filter import Filters
-from .message_pool import MessagePool
+from .message_pool import MessagePool, NoticeMessage
 from .relay import Relay, RelayPolicy
 from .subscription import Subscription
 
@@ -79,6 +79,11 @@ class RelayManager:
         for relay in self.relays.values():
             if relay.policy.should_write:
                 relay.publish(message)
+
+    def handle_notice(self, notice: NoticeMessage):
+        relay = next((r for r in self.relays.values() if r.url == notice.url))
+        if relay:
+            relay.add_notice(notice.content)
 
     def _open_connection(self, relay: Relay, ssl_options: dict = None, proxy: dict = None):          
         self.threads[relay.url] = threading.Thread(

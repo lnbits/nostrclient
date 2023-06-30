@@ -58,12 +58,15 @@
                   <div>
                     ⬆️ <span v-text="col.value.sentEvents"></span>
                     ⬇️ <span v-text="col.value.receveidEvents"></span>
-                    ⚠️ <span v-text="col.value.errorCount">
-
+                    <span @click="showLogDataDialog(col.value.errorList)" class="cursor-pointer">
+                      ⚠️ <span v-text="col.value.errorCount">
+                      </span>
                     </span>
-                    <q-tooltip>
-                      <span v-for="e in col.value.errorList" v-text="e"></span><br>
-                    </q-tooltip>
+                    <span @click="showLogDataDialog(col.value.noticeList)" class="cursor-pointer float-right">
+                      ⓘ
+                      </span>
+                    </span>
+
                   </div>
                 </div>
                 <div v-else-if="col.name == 'delete'">
@@ -198,6 +201,17 @@
       </q-card-section>
     </q-card>
   </div>
+
+  <q-dialog v-model="logData.show" position="top">
+    <q-card class="q-pa-lg q-pt-xl">
+      <q-input filled dense v-model.trim="logData.data" type="textarea" rows="25" cols="200" label="Log Data"></q-input>
+
+      <div class="row q-mt-lg">
+        <q-btn v-close-popup flat color="grey" class="q-ml-auto">Close</q-btn>
+      </div>
+    </q-card>
+  </q-dialog>
+
 </div>
 {% endraw %} {% endblock %} {% block scripts %} {{ window_vars(user) }}
 
@@ -212,8 +226,8 @@
       sentEvents: obj.status.num_sent_events,
       receveidEvents: obj.status.num_received_events,
       errorCount: obj.status.error_counter,
-      errorList: obj.status.error_list
-
+      errorList: obj.status.error_list,
+      noticeList: obj.status.notice_list
     }
 
     obj.ping = obj.ping + ' ms'
@@ -226,6 +240,7 @@
         'HH:mm:ss'
       )
     }
+    console.log('### obj', obj)
     return obj
   }
 
@@ -239,6 +254,10 @@
         relayToAdd: '',
         nostrrelayLinks: [],
         filter: '',
+        logData: {
+          show: false,
+          data: null
+        },
         testData: {
           show: false,
           wsConnection: null,
@@ -491,6 +510,11 @@
         } catch (error) {
           console.warn(error)
         }
+      },
+      showLogDataDialog: function (data = []) {
+        console.log('### showLogDataDialog', data)
+        this.logData.data = data.join('\n')
+        this.logData.show = true
       },
       exportlnurldeviceCSV: function () {
         var self = this

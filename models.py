@@ -13,6 +13,7 @@ class RelayStatus(BaseModel):
     num_received_events: Optional[int] = 0
     error_counter: Optional[int] = 0
     error_list: Optional[List] = []
+    notice_list: Optional[List] = []
     
 class Relay(BaseModel):
     id: Optional[str] = None
