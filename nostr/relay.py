@@ -41,6 +41,8 @@ class Relay:
         self.error_counter: int = 0
         self.error_threshold: int = 100
         self.error_list: List[str] = []
+        self.notice_list: List[str] = []
+        self.last_error_date: int = 0
         self.num_received_events: int = 0
         self.num_sent_events: int = 0
         self.num_subscriptions: int = 0
@@ -77,7 +79,7 @@ class Relay:
 
     @property
     def error_threshold_reached(self):
-        return self.error_threshold and self.error_counter > self.error_threshold
+        return self.error_threshold and self.error_counter >= self.error_threshold
 
     @property
     def ping(self):
@@ -213,3 +215,4 @@ class Relay:
     
     def _append_error_message(self, message):
         self.error_list = ([message] + self.error_list)[:20]
+        self.last_error_date = int(time.time())
