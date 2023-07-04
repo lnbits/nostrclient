@@ -8,12 +8,19 @@ from pydantic import BaseModel, Field
 from lnbits.helpers import urlsafe_short_hash
 
 
+class RelayStatus(BaseModel):
+    num_sent_events: Optional[int] = 0
+    num_received_events: Optional[int] = 0
+    error_counter: Optional[int] = 0
+    error_list: Optional[List] = []
+    notice_list: Optional[List] = []
+    
 class Relay(BaseModel):
     id: Optional[str] = None
     url: Optional[str] = None
     connected: Optional[bool] = None
     connected_string: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[RelayStatus] = None
     active: Optional[bool] = None
     ping: Optional[int] = None
 
@@ -59,43 +66,3 @@ class TestMessageResponse(BaseModel):
     private_key: str
     public_key: str
     event_json: str
-
-# class nostrKeys(BaseModel):
-#     pubkey: str
-#     privkey: str
-
-# class nostrNotes(BaseModel):
-#     id: str
-#     pubkey: str
-#     created_at: str
-#     kind: int
-#     tags: str
-#     content: str
-#     sig: str
-
-# class nostrCreateRelays(BaseModel):
-#     relay: str = Query(None)
-
-# class nostrCreateConnections(BaseModel):
-#     pubkey: str = Query(None)
-#     relayid: str = Query(None)
-
-# class nostrRelays(BaseModel):
-#     id: Optional[str]
-#     relay: Optional[str]
-#     status: Optional[bool] = False
-
-
-# class nostrRelaySetList(BaseModel):
-#     allowlist: Optional[str]
-#     denylist: Optional[str]
-
-# class nostrConnections(BaseModel):
-#     id: str
-#     pubkey: Optional[str]
-#     relayid: Optional[str]
-
-# class nostrSubscriptions(BaseModel):
-#     id: str
-#     userPubkey: Optional[str]
-#     subscribedPubkey: Optional[str]

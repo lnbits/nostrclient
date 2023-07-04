@@ -1,5 +1,4 @@
 import asyncio
-import json
 from http import HTTPStatus
 from typing import Optional
 
@@ -10,13 +9,12 @@ from starlette.exceptions import HTTPException
 from lnbits.decorators import check_admin
 from lnbits.helpers import urlsafe_short_hash
 
-from . import nostrclient_ext, scheduled_tasks
+from . import nostr, nostrclient_ext, scheduled_tasks
 from .crud import add_relay, delete_relay, get_relays
 from .helpers import normalize_public_key
 from .models import Relay, RelayList, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
-from .services import NostrRouter, nostr
-from .tasks import init_relays
+from .router import NostrRouter, nostr
 
 # we keep this in
 all_routers: list[NostrRouter] = []
@@ -26,19 +24,20 @@ all_routers: list[NostrRouter] = []
 async def api_get_relays() -> RelayList:
     relays = RelayList(__root__=[])
     for url, r in nostr.client.relay_manager.relays.items():
-        status_text = (
-            f"⬆️ {r.num_sent_events} ⬇️ {r.num_received_events} ⚠️ {r.error_counter}"
-        )
-        connected_text = "🟢" if r.connected else "🔴"
         relay_id = urlsafe_short_hash()
         relays.__root__.append(
             Relay(
                 id=relay_id,
                 url=url,
-                connected_string=connected_text,
-                status=status_text,
+                connected=r.connected,
+                status={
+                    "num_sent_events": r.num_sent_events,
+                    "num_received_events": r.num_received_events,
+                    "error_counter": r.error_counter,
+                    "error_list": r.error_list,
+                    "notice_list": r.notice_list,
+                },
                 ping=r.ping,
-                connected=True,
                 active=True,
             )
         )
@@ -60,8 +59,11 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
         )
     relay.id = urlsafe_short_hash()
     await add_relay(relay)
-    # we can't add relays during runtime yet
-    await init_relays()
+
+    nostr.client.relays.append(relay.url)
+    nostr.client.relay_manager.add_relay(relay.url)
+       
+
     return await get_relays()
 
 
@@ -146,11 +148,6 @@ async def ws_relay(websocket: WebSocket) -> None:
     while True:
         await asyncio.sleep(10)
         if not router.connected:
-            for s in router.subscriptions:
-                try:
-                    nostr.client.relay_manager.close_subscription(s)
-                except:
-                    pass
             await router.stop()
             all_routers.remove(router)
             break

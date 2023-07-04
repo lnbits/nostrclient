@@ -1,10 +1,11 @@
-import time
 import json
+import time
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import List
-from secp256k1 import PublicKey
 from hashlib import sha256
+from typing import List
+
+from secp256k1 import PublicKey
 
 from .message_type import ClientMessageType
 
