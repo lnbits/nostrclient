@@ -14,7 +14,7 @@ class NostrClient:
         if connect:
             self.connect()
 
-    def connect(self):
+    async def connect(self):
         for relay in self.relays:
             self.relay_manager.add_relay(relay)
 
