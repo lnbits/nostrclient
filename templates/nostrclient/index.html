@@ -240,7 +240,6 @@
         'HH:mm:ss'
       )
     }
-    console.log('### obj', obj)
     return obj
   }
 
@@ -512,7 +511,6 @@
         }
       },
       showLogDataDialog: function (data = []) {
-        console.log('### showLogDataDialog', data)
         this.logData.data = data.join('\n')
         this.logData.show = true
       },
