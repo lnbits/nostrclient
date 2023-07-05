@@ -44,12 +44,13 @@ class RelayManager:
         return relay
 
     def remove_relay(self, url: str):
-        self.threads[url].join(timeout=1)
-        self.threads.pop(url)
-        self.queue_threads[url].join(timeout=1)
-        self.queue_threads.pop(url)
         self.relays[url].close()
         self.relays.pop(url)
+        self.threads[url].join(timeout=5)
+        self.threads.pop(url)
+        self.queue_threads[url].join(timeout=5)
+        self.queue_threads.pop(url)
+ 
 
     def add_subscription(self, id: str, filters: Filters):
         with self._subscriptions_lock:

@@ -102,12 +102,14 @@ class Relay:
                     message = self.queue.get(timeout=1)
                     self.num_sent_events += 1
                     self.ws.send(message)
-                except Exception as e:
-                    if self.shutdown:
-                        logger.warning(f"Closing queue worker for '{self.url}'.")
-                        break
+                except:
+                    pass
             else:
                 time.sleep(0.1)
+            
+            if self.shutdown:
+                logger.warning(f"Closing queue worker for '{self.url}'.")
+                break
 
     def add_subscription(self, id, filters: Filters):
         with self.lock:
