@@ -1,4 +1,4 @@
-import time
+import asyncio
 from typing import List
 
 from ..relay_manager import RelayManager
@@ -21,7 +21,7 @@ class NostrClient:
     def close(self):
         self.relay_manager.close_connections()
 
-    def subscribe(
+    async def subscribe(
         self,
         callback_events_func=None,
         callback_notices_func=None,
@@ -41,4 +41,4 @@ class NostrClient:
                 if callback_eosenotices_func:
                     callback_eosenotices_func(event_msg)
 
-            time.sleep(0.1)
+            await asyncio.sleep(0.5)
