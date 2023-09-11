@@ -170,13 +170,13 @@ class NostrRouter:
         subscription_id = json_data[1]
         subscription_id_rewritten = urlsafe_short_hash()
         self.original_subscription_ids[subscription_id_rewritten] = subscription_id
-        fltr = json_data[2]
+        fltr = json_data[2:]
         filters = self._marshall_nostr_filters(fltr)
 
         nostr.client.relay_manager.add_subscription(
                 subscription_id_rewritten, filters
             )
-        request_rewritten = json.dumps([json_data[0], subscription_id_rewritten, fltr])
+        request_rewritten = json.dumps([json_data[0], subscription_id_rewritten] + fltr)
         
         self.subscriptions.append(subscription_id_rewritten)
         nostr.client.relay_manager.publish_message(request_rewritten)
