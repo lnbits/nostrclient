@@ -1,4 +1,5 @@
 
+import asyncio
 import ssl
 import threading
 import time
@@ -95,8 +96,11 @@ class RelayManager:
         )
         self.threads[relay.url].start()
 
+        def wrap_async_queue_worker():
+            asyncio.run(relay.queue_worker())
+            
         self.queue_threads[relay.url] = threading.Thread(
-            target=relay.queue_worker,
+            target=wrap_async_queue_worker,
             name=f"{relay.url}-queue",
             daemon=True,
         )
