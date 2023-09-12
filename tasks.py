@@ -66,13 +66,15 @@ async def subscribe_events():
 
         return
 
-    t = threading.Thread(
-        target=nostr.client.subscribe,
-        args=(
+    def wrap_async_subscribe():
+        asyncio.run(nostr.client.subscribe(
             callback_events,
             callback_notices,
             callback_eose_notices,
-        ),
+        ))
+
+    t = threading.Thread(
+        target=wrap_async_subscribe,
         name="Nostr-event-subscription",
         daemon=True,
     )

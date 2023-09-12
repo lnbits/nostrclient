@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 from queue import Queue
@@ -95,7 +96,7 @@ class Relay:
             json_str = json.dumps(["REQ", s["id"], s["filters"][0]])
             self.publish(json_str)
 
-    def queue_worker(self):
+    async def queue_worker(self):
         while True:
             if self.connected:
                 try:
@@ -105,7 +106,7 @@ class Relay:
                 except:
                     pass
             else:
-                time.sleep(0.1)
+                await asyncio.sleep(1)
             
             if self.shutdown:
                 logger.warning(f"Closing queue worker for '{self.url}'.")
