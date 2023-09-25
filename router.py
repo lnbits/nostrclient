@@ -126,14 +126,12 @@ class NostrRouter:
             logger.debug(e)
 
     def _handle_notices(self):
-        try:
-            while len(NostrRouter.received_subscription_notices):
-                my_event = NostrRouter.received_subscription_notices.pop(0)
-                #  note: we don't send it to the user because we don't know who should receive it
-                logger.info(f"Relay ('{my_event.url}') notice: '{my_event.content}']")
-                nostr.client.relay_manager.handle_notice(my_event)
-        except Exception as e:
-            logger.debug(e)
+        while len(NostrRouter.received_subscription_notices):
+            my_event = NostrRouter.received_subscription_notices.pop(0)
+            #  note: we don't send it to the user because we don't know who should receive it
+            logger.info(f"Relay ('{my_event.url}') notice: '{my_event.content}']")
+            nostr.client.relay_manager.handle_notice(my_event)
+
 
 
     def _marshall_nostr_filters(self, data: Union[dict, list]):
