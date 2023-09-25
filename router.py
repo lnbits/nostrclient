@@ -89,31 +89,41 @@ class NostrRouter:
 
 
     async def _handle_received_subscription_eosenotices(self, s):
-        s_original = self.original_subscription_ids[s]
-        event_to_forward = ["EOSE", s_original]
-        del NostrRouter.received_subscription_eosenotices[s]
-        
-        await self.websocket.send_text(json.dumps(event_to_forward))
+        try:
+            if s not in self.original_subscription_ids:
+                return
+            s_original = self.original_subscription_ids[s]
+            event_to_forward = ["EOSE", s_original]
+            del NostrRouter.received_subscription_eosenotices[s]
+            
+            await self.websocket.send_text(json.dumps(event_to_forward))
+        except Exception as e:
+            logger.debug(e)
 
     async def _handle_received_subscription_events(self, s):
-        while len(NostrRouter.received_subscription_events[s]):
-            my_event = NostrRouter.received_subscription_events[s].pop(0)
-            # event.to_message() does not include the subscription ID, we have to add it manually
-            event_json = {
-                            "id": my_event.id,
-                            "pubkey": my_event.public_key,
-                            "created_at": my_event.created_at,
-                            "kind": my_event.kind,
-                            "tags": my_event.tags,
-                            "content": my_event.content,
-                            "sig": my_event.signature,
-                        }
+        try:
+            if s not in NostrRouter.received_subscription_events:
+                return
+            while len(NostrRouter.received_subscription_events[s]):
+                my_event = NostrRouter.received_subscription_events[s].pop(0)
+                # event.to_message() does not include the subscription ID, we have to add it manually
+                event_json = {
+                                "id": my_event.id,
+                                "pubkey": my_event.public_key,
+                                "created_at": my_event.created_at,
+                                "kind": my_event.kind,
+                                "tags": my_event.tags,
+                                "content": my_event.content,
+                                "sig": my_event.signature,
+                            }
 
-            # this reconstructs the original response from the relay
-            # reconstruct original subscription id
-            s_original = self.original_subscription_ids[s]
-            event_to_forward = ["EVENT", s_original, event_json]
-            await self.websocket.send_text(json.dumps(event_to_forward))
+                # this reconstructs the original response from the relay
+                # reconstruct original subscription id
+                s_original = self.original_subscription_ids[s]
+                event_to_forward = ["EVENT", s_original, event_json]
+                await self.websocket.send_text(json.dumps(event_to_forward))
+        except Exception as e:
+            logger.debug(e)
 
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
@@ -121,7 +131,7 @@ class NostrRouter:
             #  note: we don't send it to the user because we don't know who should receive it
             logger.info(f"Relay ('{my_event.url}') notice: '{my_event.content}']")
             nostr.client.relay_manager.handle_notice(my_event)
-        
+
 
 
     def _marshall_nostr_filters(self, data: Union[dict, list]):
