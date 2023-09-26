@@ -2,7 +2,6 @@ import asyncio
 from typing import List
 
 from fastapi import APIRouter
-from starlette.staticfiles import StaticFiles
 
 from lnbits.db import Database
 from lnbits.helpers import template_renderer
@@ -15,7 +14,6 @@ db = Database("ext_nostrclient")
 nostrclient_static_files = [
     {
         "path": "/nostrclient/static",
-        "app": StaticFiles(directory="lnbits/extensions/nostrclient/static"),
         "name": "nostrclient_static",
     }
 ]
@@ -33,7 +31,7 @@ nostr = NostrClient()
 
 
 def nostr_renderer():
-    return template_renderer(["lnbits/extensions/nostrclient/templates"])
+    return template_renderer(["nostrclient/templates"])
 
 
 from .tasks import check_relays, init_relays, subscribe_events
