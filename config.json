@@ -3,5 +3,5 @@
   "short_description": "Nostr client for extensions",
   "tile": "/nostrclient/static/images/nostr-bitcoin.png",
   "contributors": ["calle"],
-  "min_lnbits_version": "0.XX.0"
+  "min_lnbits_version": "0.11.0"
 }
