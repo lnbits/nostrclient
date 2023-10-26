@@ -9,6 +9,7 @@ from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMe
 from .router import NostrRouter, nostr
 
 
+#### revisit
 async def init_relays():
     # reinitialize the entire client
     nostr.__init__()
@@ -27,7 +28,7 @@ async def check_relays():
             nostr.client.relay_manager.check_and_restart_relays()
         except Exception as e:
             logger.warning(f"Cannot restart relays: '{str(e)}'.")
-    
+
 
 async def subscribe_events():
     while not any([r.connected for r in nostr.client.relay_manager.relays.values()]):

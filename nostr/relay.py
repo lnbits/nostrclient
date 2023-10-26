@@ -107,9 +107,9 @@ class Relay:
                     pass
             else:
                 await asyncio.sleep(1)
-            
+
             if self.shutdown:
-                logger.warning(f"Closing queue worker for '{self.url}'.")
+                logger.warning(f"[Relay: {self.url}] Closing queue worker.")
                 break
 
     def add_subscription(self, id, filters: Filters):
@@ -135,11 +135,11 @@ class Relay:
         self.notice_list = ([notice] + self.notice_list)[:20]
 
     def _on_open(self, _):
-        logger.info(f"Connected to relay: '{self.url}'.")
+        logger.info(f"[Relay: {self.url}] Connected'.")
         self.connected = True
-        
+
     def _on_close(self, _, status_code, message):
-        logger.warning(f"Connection to relay {self.url} closed. Status: '{status_code}'. Message: '{message}'.")
+        logger.warning(f"[Relay: {self.url}] Connection closed. Status: '{status_code}'. Message: '{message}'.")
         self.close()
 
     def _on_message(self, _, message: str):
@@ -148,7 +148,7 @@ class Relay:
             self.message_pool.add_message(message, self.url)
 
     def _on_error(self, _, error):
-        logger.warning(f"Relay error: '{str(error)}'")
+        logger.warning(f"[Relay: {self.url}] Error: '{str(error)}'")
         self._append_error_message(str(error))
         self.connected = False
         self.error_counter += 1
@@ -169,10 +169,10 @@ class Relay:
 
         if not RelayMessageType.is_valid(message_type):
             return False
-        
+
         if message_type == RelayMessageType.EVENT:
             return self._is_valid_event_message(message_json)
-        
+
         if message_type == RelayMessageType.COMMAND_RESULT:
             return self._is_valid_command_result_message(message, message_json)
 
@@ -204,20 +204,20 @@ class Relay:
 
         if subscription.filters and not subscription.filters.match(event):
             return False
-        
+
         return True
-    
+
     def _is_valid_command_result_message(self, message,  message_json):
         if not len(message_json) < 3:
             return False
-        
+
         if message_json[2] != True:
-            logger.warning(f"Relay '{self.url}' negative command result: '{message}'")
+            logger.warning(f"[Relay: {self.url}] Negative command result: '{message}'")
             self._append_error_message(message)
             return False
 
         return True
-    
+
     def _append_error_message(self, message):
         self.error_list = ([message] + self.error_list)[:20]
         self.last_error_date = int(time.time())

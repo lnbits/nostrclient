@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import List, Union
 
-from fastapi import WebSocketDisconnect
+from fastapi import WebSocketDisconnect, WebSocket
 from loguru import logger
 
 from lnbits.helpers import urlsafe_short_hash
@@ -20,23 +20,25 @@ class NostrRouter:
     received_subscription_notices: list[NoticeMessage] = []
     received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
 
-    def __init__(self, websocket):
+    def __init__(self, websocket: WebSocket):
         self.subscriptions: List[str] = []
         self.connected: bool = True
-        self.websocket = websocket
-        self.tasks: List[asyncio.Task] = []
-        self.original_subscription_ids = {}
+        self.websocket: WebSocket = websocket
+        self.tasks: List[asyncio.Task] = [] # chek why state is needed
+        self.original_subscription_ids = {} # here
 
     async def client_to_nostr(self):
-        """Receives requests / data from the client and forwards it to relays. If the
+        """
+        Receives requests / data from the client and forwards it to relays. If the
         request was a subscription/filter, registers it with the nostr client lib.
         Remembers the subscription id so we can send back responses from the relay to this
-        client in `nostr_to_client`"""
-        while True:
+        client in `nostr_to_client`
+        """
+        while self.connected:
             try:
                 json_str = await self.websocket.receive_text()
             except WebSocketDisconnect:
-                self.connected = False
+                self.stop()
                 break
 
             try:
@@ -46,13 +48,14 @@ class NostrRouter:
 
 
     async def nostr_to_client(self):
-        """Sends responses from relays back to the client. Polls the subscriptions of this client
+        """
+        Sends responses from relays back to the client. Polls the subscriptions of this client
         stored in `my_subscriptions`. Then gets all responses for this subscription id from `received_subscription_events` which
         is filled in tasks.py. Takes one response after the other and relays it back to the client. Reconstructs
         the reponse manually because the nostr client lib we're using can't do it. Reconstructs the original subscription id
         that we had previously rewritten in order to avoid collisions when multiple clients use the same id.
         """
-        while True and self.connected:
+        while self.connected:
             try:
                 await self._handle_subscriptions()
                 self._handle_notices()
@@ -62,10 +65,11 @@ class NostrRouter:
 
 
     async def start(self):
+        self.connected = True
         self.tasks.append(asyncio.create_task(self.client_to_nostr()))
         self.tasks.append(asyncio.create_task(self.nostr_to_client()))
 
-    async def stop(self):
+    def stop(self):
         for t in self.tasks:
             try:
                 t.cancel()
@@ -77,6 +81,11 @@ class NostrRouter:
                 nostr.client.relay_manager.close_subscription(s)
             except:
                 pass
+
+        try:
+            self.websocket.close()
+        except:
+            pass
         self.connected = False
 
     async def _handle_subscriptions(self):
@@ -86,8 +95,6 @@ class NostrRouter:
             if s in NostrRouter.received_subscription_eosenotices:
                 await self._handle_received_subscription_eosenotices(s)
 
-
-
     async def _handle_received_subscription_eosenotices(self, s):
         try:
             if s not in self.original_subscription_ids:
@@ -95,7 +102,7 @@ class NostrRouter:
             s_original = self.original_subscription_ids[s]
             event_to_forward = ["EOSE", s_original]
             del NostrRouter.received_subscription_eosenotices[s]
-            
+
             await self.websocket.send_text(json.dumps(event_to_forward))
         except Exception as e:
             logger.debug(e)
@@ -104,9 +111,9 @@ class NostrRouter:
         try:
             if s not in NostrRouter.received_subscription_events:
                 return
+            
             while len(NostrRouter.received_subscription_events[s]):
                 my_event = NostrRouter.received_subscription_events[s].pop(0)
-                # event.to_message() does not include the subscription ID, we have to add it manually
                 event_json = {
                                 "id": my_event.id,
                                 "pubkey": my_event.public_key,
@@ -123,7 +130,7 @@ class NostrRouter:
                 event_to_forward = ["EVENT", s_original, event_json]
                 await self.websocket.send_text(json.dumps(event_to_forward))
         except Exception as e:
-            logger.debug(e)
+            logger.debug(e) # there are 2900 errors here
 
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
@@ -132,9 +139,9 @@ class NostrRouter:
             logger.info(f"Relay ('{my_event.url}') notice: '{my_event.content}']")
             nostr.client.relay_manager.handle_notice(my_event)
 
-
-
     def _marshall_nostr_filters(self, data: Union[dict, list]):
+        # todo: get rid of this
+        print("### _marshall_nostr_filters", data)
         filters = data if isinstance(data, list) else [data]
         filters = [Filter.parse_obj(f) for f in filters]
         filter_list: list[NostrFilter] = []
@@ -161,13 +168,12 @@ class NostrRouter:
         """
 
         json_data = json.loads(json_str)
-        assert len(json_data)
-
+        assert len(json_data), "Bad JSON array"
 
         if json_data[0] == "REQ":
             self._handle_client_req(json_data)
             return
-        
+
         if json_data[0] == "CLOSE":
             self._handle_client_close(json_data[1])
             return
@@ -181,15 +187,15 @@ class NostrRouter:
         subscription_id_rewritten = urlsafe_short_hash()
         self.original_subscription_ids[subscription_id_rewritten] = subscription_id
         fltr = json_data[2:]
-        filters = self._marshall_nostr_filters(fltr)
+        filters = self._marshall_nostr_filters(fltr) # revisit
 
         nostr.client.relay_manager.add_subscription(
                 subscription_id_rewritten, filters
             )
         request_rewritten = json.dumps([json_data[0], subscription_id_rewritten] + fltr)
-        
-        self.subscriptions.append(subscription_id_rewritten)
-        nostr.client.relay_manager.publish_message(request_rewritten)
+
+        self.subscriptions.append(subscription_id_rewritten) # why here also?
+        nostr.client.relay_manager.publish_message(request_rewritten) # both `add_subscription` and `publish_message`?
 
     def _handle_client_close(self, subscription_id):
         subscription_id_rewritten = next((k for k, v in self.original_subscription_ids.items() if v == subscription_id), None)

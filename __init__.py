@@ -9,6 +9,8 @@ from lnbits.tasks import catch_everything_and_restart
 
 from .nostr.client.client import NostrClient as NostrClientLib
 
+
+
 db = Database("ext_nostrclient")
 
 nostrclient_static_files = [
@@ -22,6 +24,7 @@ nostrclient_ext: APIRouter = APIRouter(prefix="/nostrclient", tags=["nostrclient
 
 scheduled_tasks: List[asyncio.Task] = []
 
+# remove!
 class NostrClient:
     def __init__(self):
         self.client: NostrClientLib = NostrClientLib(connect=False)

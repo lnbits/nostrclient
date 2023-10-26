@@ -45,6 +45,7 @@ class RelayManager:
         return relay
 
     def remove_relay(self, url: str):
+        # try-catch?
         self.relays[url].close()
         self.relays.pop(url)
         self.threads[url].join(timeout=5)
@@ -52,7 +53,6 @@ class RelayManager:
         self.queue_threads[url].join(timeout=5)
         self.queue_threads.pop(url)
  
-
     def add_subscription(self, id: str, filters: Filters):
         with self._subscriptions_lock:
             self._cached_subscriptions[id] = Subscription(id, filters)
@@ -71,7 +71,6 @@ class RelayManager:
         stopped_relays = [r for r in self.relays.values() if r.shutdown]
         for relay in stopped_relays:
             self._restart_relay(relay)
-
 
     def close_connections(self):
         for relay in self.relays.values():

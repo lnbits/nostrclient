@@ -62,7 +62,7 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
 
     nostr.client.relays.append(relay.url)
     nostr.client.relay_manager.add_relay(relay.url)
-       
+
 
     return await get_relays()
 
@@ -118,7 +118,8 @@ async def api_stop():
         try:
             for s in router.subscriptions:
                 nostr.client.relay_manager.close_subscription(s)
-            await router.stop()
+
+            router.stop()
             all_routers.remove(router)
         except Exception as e:
             logger.error(e)
@@ -148,6 +149,6 @@ async def ws_relay(websocket: WebSocket) -> None:
     while True:
         await asyncio.sleep(10)
         if not router.connected:
-            await router.stop()
+            router.stop()
             all_routers.remove(router)
             break
