@@ -26,7 +26,7 @@ scheduled_tasks: List[asyncio.Task] = []
 # remove!
 class NostrClient:
     def __init__(self):
-        self.client: NostrClientLib = NostrClientLib(connect=False)
+        self.client: NostrClientLib = NostrClientLib()
 
 
 nostr = NostrClient()

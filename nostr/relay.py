@@ -66,7 +66,7 @@ class Relay:
     def publish_subscriptions(self, subscriptions: List[Subscription] = []):
         for subscription in subscriptions:
             s = subscription.to_json_object()
-            json_str = json.dumps(["REQ", s["id"], s["filters"]])
+            json_str = json.dumps(["REQ", s["id"], s["filters"][0]])
             self.publish(json_str)
 
     async def queue_worker(self):

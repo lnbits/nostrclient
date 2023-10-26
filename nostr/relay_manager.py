@@ -26,7 +26,7 @@ class RelayManager:
         relay = Relay(url, self.message_pool)
         self.relays[url] = relay
 
-        self._open_connection()
+        self._open_connection(relay)
 
         relay.publish_subscriptions(self._cached_subscriptions.values())
         return relay
