@@ -9,11 +9,6 @@ from .message_pool import MessagePool, NoticeMessage
 from .relay import Relay
 from .subscription import Subscription
 
-
-class RelayException(Exception):
-    pass
-
-
 class RelayManager:
     def __init__(self) -> None:
         self.relays: dict[str, Relay] = {}
