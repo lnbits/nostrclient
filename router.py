@@ -111,7 +111,7 @@ class NostrRouter:
         try:
             if s not in NostrRouter.received_subscription_events:
                 return
-            
+
             while len(NostrRouter.received_subscription_events[s]):
                 my_event = NostrRouter.received_subscription_events[s].pop(0)
                 event_json = {
@@ -136,12 +136,11 @@ class NostrRouter:
         while len(NostrRouter.received_subscription_notices):
             my_event = NostrRouter.received_subscription_notices.pop(0)
             #  note: we don't send it to the user because we don't know who should receive it
-            logger.info(f"Relay ('{my_event.url}') notice: '{my_event.content}']")
+            logger.info(f"[Relay '{my_event.url}'] Notice: '{my_event.content}']")
             nostr.client.relay_manager.handle_notice(my_event)
 
     def _marshall_nostr_filters(self, data: Union[dict, list]):
         # todo: get rid of this
-        print("### _marshall_nostr_filters", data)
         filters = data if isinstance(data, list) else [data]
         filters = [Filter.parse_obj(f) for f in filters]
         filter_list: list[NostrFilter] = []
