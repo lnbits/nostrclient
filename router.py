@@ -7,7 +7,7 @@ from loguru import logger
 
 from lnbits.helpers import urlsafe_short_hash
 
-from . import nostr
+from . import nostr_client
 from .models import Event, Filter
 from .nostr.filter import Filter as NostrFilter
 from .nostr.filter import Filters as NostrFilters
@@ -75,7 +75,7 @@ class NostrRouter:
 
         for s in self.subscriptions:
             try:
-                nostr.client.relay_manager.close_subscription(s)
+                nostr_client.relay_manager.close_subscription(s)
             except Exception as _:
                 pass
 
@@ -134,7 +134,7 @@ class NostrRouter:
             my_event = NostrRouter.received_subscription_notices.pop(0)
             #  note: we don't send it to the user because we don't know who should receive it
             logger.info(f"[Relay '{my_event.url}'] Notice: '{my_event.content}']")
-            nostr.client.relay_manager.handle_notice(my_event)
+            nostr_client.relay_manager.handle_notice(my_event)
 
     def _marshall_nostr_filters(self, data: Union[dict, list]):
         # todo: get rid of this
@@ -175,7 +175,7 @@ class NostrRouter:
             return
 
         if json_data[0] == "EVENT":
-            nostr.client.relay_manager.publish_message(json_str)
+            nostr_client.relay_manager.publish_message(json_str)
             return
 
     def _handle_client_req(self, json_data):
@@ -185,11 +185,11 @@ class NostrRouter:
         fltr = json_data[2:]
         filters = self._marshall_nostr_filters(fltr)  # revisit
 
-        nostr.client.relay_manager.add_subscription(subscription_id_rewritten, filters)
+        nostr_client.relay_manager.add_subscription(subscription_id_rewritten, filters)
         request_rewritten = json.dumps([json_data[0], subscription_id_rewritten] + fltr)
 
         self.subscriptions.append(subscription_id_rewritten)  # why here also?
-        nostr.client.relay_manager.publish_message(
+        nostr_client.relay_manager.publish_message(
             request_rewritten
         )  # both `add_subscription` and `publish_message`?
 
@@ -204,6 +204,6 @@ class NostrRouter:
         )
         if subscription_id_rewritten:
             self.original_subscription_ids.pop(subscription_id_rewritten)
-            nostr.client.relay_manager.close_subscription(subscription_id_rewritten)
+            nostr_client.relay_manager.close_subscription(subscription_id_rewritten)
         else:
             logger.debug(f"Failed to unsubscribe from '{subscription_id}.'")

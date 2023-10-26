@@ -8,12 +8,16 @@ from ..relay_manager import RelayManager
 class NostrClient:
     relay_manager = RelayManager()
 
-    async def connect(self, relays):
+    def connect(self, relays):
         for relay in relays:
             try:
                 self.relay_manager.add_relay(relay)
             except Exception as e:
                 logger.debug(e)
+
+    def reconnect(self, relays):
+        self.relay_manager.remove_relays()
+        self.connect(relays)
 
     def close(self):
         self.relay_manager.close_connections()

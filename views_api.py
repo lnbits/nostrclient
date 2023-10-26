@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException
 from lnbits.decorators import check_admin
 from lnbits.helpers import urlsafe_short_hash
 
-from . import nostr, nostrclient_ext, scheduled_tasks
+from . import nostr_client, nostrclient_ext, scheduled_tasks
 from .crud import add_relay, delete_relay, get_relays
 from .helpers import normalize_public_key
 from .models import Relay, RelayList, TestMessage, TestMessageResponse
@@ -23,7 +23,7 @@ all_routers: list[NostrRouter] = []
 @nostrclient_ext.get("/api/v1/relays")
 async def api_get_relays() -> RelayList:
     relays = RelayList(__root__=[])
-    for url, r in nostr.client.relay_manager.relays.items():
+    for url, r in nostr_client.relay_manager.relays.items():
         relay_id = urlsafe_short_hash()
         relays.__root__.append(
             Relay(
@@ -52,7 +52,7 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail="Relay url not provided."
         )
-    if relay.url in nostr.client.relay_manager.relays:
+    if relay.url in nostr_client.relay_manager.relays:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail=f"Relay: {relay.url} already exists.",
@@ -60,7 +60,7 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
     relay.id = urlsafe_short_hash()
     await add_relay(relay)
 
-    nostr.client.relay_manager.add_relay(relay.url)
+    nostr_client.relay_manager.add_relay(relay.url)
 
     return await get_relays()
 
@@ -74,7 +74,7 @@ async def api_delete_relay(relay: Relay) -> None:
             status_code=HTTPStatus.BAD_REQUEST, detail="Relay url not provided."
         )
     # we can remove relays during runtime
-    nostr.client.relay_manager.remove_relay(relay.url)
+    nostr_client.relay_manager.remove_relay(relay.url)
     await delete_relay(relay)
 
 
@@ -118,14 +118,14 @@ async def api_stop():
     for router in all_routers:
         try:
             for s in router.subscriptions:
-                nostr.client.relay_manager.close_subscription(s)
+                nostr_client.relay_manager.close_subscription(s)
 
             router.stop()
             all_routers.remove(router)
         except Exception as e:
             logger.error(e)
     try:
-        nostr.client.relay_manager.close_connections()
+        nostr_client.relay_manager.close_connections()
     except Exception as e:
         logger.error(e)
 

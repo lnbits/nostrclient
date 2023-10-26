@@ -3,21 +3,19 @@ import threading
 
 from loguru import logger
 
-from . import nostr
+from . import nostr_client
 from .crud import get_relays
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
 from .router import NostrRouter
 
 
-#### revisit
 async def init_relays():
-    # reinitialize the entire client
-    nostr.__init__()
     # get relays from db
     relays = await get_relays()
     # set relays and connect to them
     valid_relays = list(set([r.url for r in relays.__root__ if r.url]))
-    await nostr.client.connect(valid_relays)
+
+    nostr_client.reconnect(valid_relays)
 
 
 async def check_relays():
@@ -25,13 +23,13 @@ async def check_relays():
     while True:
         try:
             await asyncio.sleep(20)
-            nostr.client.relay_manager.check_and_restart_relays()
+            nostr_client.relay_manager.check_and_restart_relays()
         except Exception as e:
             logger.warning(f"Cannot restart relays: '{str(e)}'.")
 
 
 async def subscribe_events():
-    while not any([r.connected for r in nostr.client.relay_manager.relays.values()]):
+    while not any([r.connected for r in nostr_client.relay_manager.relays.values()]):
         await asyncio.sleep(2)
 
     def callback_events(eventMessage: EventMessage):
@@ -74,7 +72,7 @@ async def subscribe_events():
 
     def wrap_async_subscribe():
         asyncio.run(
-            nostr.client.subscribe(
+            nostr_client.subscribe(
                 callback_events,
                 callback_notices,
                 callback_eose_notices,

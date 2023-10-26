@@ -57,6 +57,11 @@ class RelayManager:
         if url in self.queue_threads:
             self.queue_threads.pop(url)
 
+    def remove_relays(self):
+        relay_urls = list( self.relays.keys())
+        for url in relay_urls:
+            self.remove_relay(url)
+
     def add_subscription(self, id: str, filters: Filters):
         s = Subscription(id, filters)
         with self._subscriptions_lock:
