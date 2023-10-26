@@ -74,7 +74,10 @@ class Relay:
             )
 
     def close(self):
-        self.ws.close()
+        try:
+            self.ws.close()
+        except Exception as e:
+            logger.warning(f"[Relay: {self.url}] Failed to close websocket: {e}")
         self.connected = False
         self.shutdown = True
 
@@ -137,6 +140,7 @@ class Relay:
     def _on_open(self, _):
         logger.info(f"[Relay: {self.url}] Connected'.")
         self.connected = True
+        self.shutdown = False
 
     def _on_close(self, _, status_code, message):
         logger.warning(f"[Relay: {self.url}] Connection closed. Status: '{status_code}'. Message: '{message}'.")
