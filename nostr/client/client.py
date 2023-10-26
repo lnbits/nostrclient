@@ -7,17 +7,10 @@ from ..relay_manager import RelayManager
 
 
 class NostrClient:
-    relays = []
     relay_manager = RelayManager()
 
-    def __init__(self, relays: List[str] = [], connect=True):
-        if len(relays):
-            self.relays = relays
-        if connect:
-            self.connect()
-
-    async def connect(self):
-        for relay in self.relays:
+    async def connect(self, relays):
+        for relay in relays:
             try:
                 self.relay_manager.add_relay(relay)
             except Exception as e:
