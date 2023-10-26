@@ -101,7 +101,8 @@ class Relay:
 
     def _on_close(self, _, status_code, message):
         logger.warning(
-            f"[Relay: {self.url}] Connection closed. Status: '{status_code}'. Message: '{message}'."
+            f"[Relay: {self.url}] Connection closed."
+            + f" Status: '{status_code}'. Message: '{message}'."
         )
         self.close()
 

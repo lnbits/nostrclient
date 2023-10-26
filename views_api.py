@@ -146,7 +146,8 @@ async def ws_relay(websocket: WebSocket) -> None:
     await router.start()
     all_routers.append(router)
 
-    # we kill this websocket and the subscriptions if the user disconnects and thus `connected==False`
+    # we kill this websocket and the subscriptions
+    # if the user disconnects and thus `connected==False`
     while True:
         await asyncio.sleep(10)
         if not router.connected:

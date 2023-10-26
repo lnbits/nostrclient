@@ -58,7 +58,7 @@ class RelayManager:
             self.queue_threads.pop(url)
 
     def remove_relays(self):
-        relay_urls = list( self.relays.keys())
+        relay_urls = list(self.relays.keys())
         for url in relay_urls:
             self.remove_relay(url)
 

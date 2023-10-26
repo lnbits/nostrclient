@@ -1,6 +1,5 @@
 import base64
 import secrets
-from hashlib import sha256
 
 import secp256k1
 from cffi import FFI
@@ -114,7 +113,6 @@ class PrivateKey:
         if event.public_key is None:
             event.public_key = self.public_key.hex()
         event.signature = self.sign_message_hash(bytes.fromhex(event.id))
-
 
     def __eq__(self, other):
         return self.raw_secret == other.raw_secret

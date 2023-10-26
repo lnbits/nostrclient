@@ -24,6 +24,7 @@ scheduled_tasks: List[asyncio.Task] = []
 
 nostr_client = NostrClient()
 
+
 def nostr_renderer():
     return template_renderer(["nostrclient/templates"])
 

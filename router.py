@@ -30,8 +30,8 @@ class NostrRouter:
         """
         Receives requests / data from the client and forwards it to relays. If the
         request was a subscription/filter, registers it with the nostr client lib.
-        Remembers the subscription id so we can send back responses from the relay to this
-        client in `nostr_to_client`
+        Remembers the subscription id so we can send back responses from the relay
+        to this client in `nostr_to_client`.
         """
         while self.connected:
             try:
@@ -47,11 +47,7 @@ class NostrRouter:
 
     async def nostr_to_client(self):
         """
-        Sends responses from relays back to the client. Polls the subscriptions of this client
-        stored in `my_subscriptions`. Then gets all responses for this subscription id from `received_subscription_events` which
-        is filled in tasks.py. Takes one response after the other and relays it back to the client. Reconstructs
-        the reponse manually because the nostr client lib we're using can't do it. Reconstructs the original subscription id
-        that we had previously rewritten in order to avoid collisions when multiple clients use the same id.
+        Sends responses from relays back to the client.
         """
         while self.connected:
             try:
@@ -132,8 +128,9 @@ class NostrRouter:
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
             my_event = NostrRouter.received_subscription_notices.pop(0)
-            #  note: we don't send it to the user because we don't know who should receive it
             logger.info(f"[Relay '{my_event.url}'] Notice: '{my_event.content}']")
+            #  Note: we don't send it to the user because
+            #  we don't know who should receive it
             nostr_client.relay_manager.handle_notice(my_event)
 
     def _marshall_nostr_filters(self, data: Union[dict, list]):
@@ -157,12 +154,6 @@ class NostrRouter:
         return NostrFilters(filter_list)
 
     async def _handle_client_to_nostr(self, json_str):
-        """Parses a (string) request from a client. If it is a subscription (REQ) or a CLOSE, it will
-        register the subscription in the nostr client library that we're using so we can
-        receive the callbacks on it later. Will rewrite the subscription id since we expect
-        multiple clients to use the router and want to avoid subscription id collisions
-        """
-
         json_data = json.loads(json_str)
         assert len(json_data), "Bad JSON array"
 
