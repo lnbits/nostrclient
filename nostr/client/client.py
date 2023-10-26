@@ -7,7 +7,7 @@ from ..relay_manager import RelayManager
 
 
 class NostrClient:
-    relays = [ ]
+    relays = []
     relay_manager = RelayManager()
 
     def __init__(self, relays: List[str] = [], connect=True):

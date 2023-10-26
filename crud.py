@@ -1,9 +1,3 @@
-from typing import List, Optional, Union
-
-import shortuuid
-
-from lnbits.helpers import urlsafe_short_hash
-
 from . import db
 from .models import Relay, RelayList
 
@@ -15,7 +9,7 @@ async def get_relays() -> RelayList:
 
 async def add_relay(relay: Relay) -> None:
     await db.execute(
-        f"""
+        """
         INSERT INTO nostrclient.relays (
             id,
             url,

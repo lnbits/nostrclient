@@ -69,7 +69,7 @@ class MessagePool:
                 e["sig"],
             )
             with self.lock:
-                if not f"{subscription_id}_{event.id}" in self._unique_events:
+                if f"{subscription_id}_{event.id}" not in self._unique_events:
                     self._accept_event(EventMessage(event, subscription_id, url))
         elif message_type == RelayMessageType.NOTICE:
             self.notices.put(NoticeMessage(message_json[1], url))
@@ -78,10 +78,12 @@ class MessagePool:
 
     def _accept_event(self, event_message: EventMessage):
         """
-            Event uniqueness is considered per `subscription_id`. 
-            The `subscription_id` is rewritten to be unique and it is the same accross relays.
-            The same event can come from different subscriptions (from the same client or from different ones).
-            Clients that have joined later should receive older events.
+        Event uniqueness is considered per `subscription_id`.
+        The `subscription_id` is rewritten to be unique and it is the same accross relays.
+        The same event can come from different subscriptions (from the same client or from different ones).
+        Clients that have joined later should receive older events.
         """
         self.events.put(event_message)
-        self._unique_events.add(f"{event_message.subscription_id}_{event_message.event.id}")
+        self._unique_events.add(
+            f"{event_message.subscription_id}_{event_message.event.id}"
+        )

@@ -7,18 +7,12 @@ from typing import List
 from loguru import logger
 from websocket import WebSocketApp
 
-from .filter import Filters
 from .message_pool import MessagePool
 from .subscription import Subscription
 
 
-
 class Relay:
-    def __init__(
-        self,
-        url: str,
-        message_pool: MessagePool
-    ) -> None:
+    def __init__(self, url: str, message_pool: MessagePool) -> None:
         self.url = url
         self.message_pool = message_pool
         self.connected: bool = False
@@ -92,10 +86,10 @@ class Relay:
                 return
 
     def close_subscription(self, id: str) -> None:
-            self.publish(json.dumps(["CLOSE", id]))
+        self.publish(json.dumps(["CLOSE", id]))
 
     def add_notice(self, notice: str):
-        self.notice_list = ([notice] + self.notice_list)
+        self.notice_list = [notice] + self.notice_list
 
     def _on_open(self, _):
         logger.info(f"[Relay: {self.url}] Connected.")
@@ -103,7 +97,9 @@ class Relay:
         self.shutdown = False
 
     def _on_close(self, _, status_code, message):
-        logger.warning(f"[Relay: {self.url}] Connection closed. Status: '{status_code}'. Message: '{message}'.")
+        logger.warning(
+            f"[Relay: {self.url}] Connection closed. Status: '{status_code}'. Message: '{message}'."
+        )
         self.close()
 
     def _on_message(self, _, message: str):
@@ -114,7 +110,6 @@ class Relay:
         logger.warning(f"[Relay: {self.url}] Error: '{str(error)}'")
         self._append_error_message(str(error))
         self.close()
-
 
     def _on_ping(self, *_):
         return

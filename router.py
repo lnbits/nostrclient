@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import List, Union
 
-from fastapi import WebSocketDisconnect, WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from lnbits.helpers import urlsafe_short_hash
@@ -15,7 +15,6 @@ from .nostr.message_pool import EndOfStoredEventsMessage, NoticeMessage
 
 
 class NostrRouter:
-
     received_subscription_events: dict[str, list[Event]] = {}
     received_subscription_notices: list[NoticeMessage] = []
     received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
@@ -24,8 +23,8 @@ class NostrRouter:
         self.subscriptions: List[str] = []
         self.connected: bool = True
         self.websocket: WebSocket = websocket
-        self.tasks: List[asyncio.Task] = [] # chek why state is needed
-        self.original_subscription_ids = {} # here
+        self.tasks: List[asyncio.Task] = []  # chek why state is needed
+        self.original_subscription_ids = {}  # here
 
     async def client_to_nostr(self):
         """
@@ -46,7 +45,6 @@ class NostrRouter:
             except Exception as e:
                 logger.debug(f"Failed to handle client message: '{str(e)}'.")
 
-
     async def nostr_to_client(self):
         """
         Sends responses from relays back to the client. Polls the subscriptions of this client
@@ -62,7 +60,6 @@ class NostrRouter:
             except Exception as e:
                 logger.debug(f"Failed to handle response for client: '{str(e)}'.")
             await asyncio.sleep(0.1)
-
 
     async def start(self):
         self.connected = True
@@ -115,14 +112,14 @@ class NostrRouter:
             while len(NostrRouter.received_subscription_events[s]):
                 my_event = NostrRouter.received_subscription_events[s].pop(0)
                 event_json = {
-                                "id": my_event.id,
-                                "pubkey": my_event.public_key,
-                                "created_at": my_event.created_at,
-                                "kind": my_event.kind,
-                                "tags": my_event.tags,
-                                "content": my_event.content,
-                                "sig": my_event.signature,
-                            }
+                    "id": my_event.id,
+                    "pubkey": my_event.public_key,
+                    "created_at": my_event.created_at,
+                    "kind": my_event.kind,
+                    "tags": my_event.tags,
+                    "content": my_event.content,
+                    "sig": my_event.signature,
+                }
 
                 # this reconstructs the original response from the relay
                 # reconstruct original subscription id
@@ -130,7 +127,7 @@ class NostrRouter:
                 event_to_forward = ["EVENT", s_original, event_json]
                 await self.websocket.send_text(json.dumps(event_to_forward))
         except Exception as e:
-            logger.debug(e) # there are 2900 errors here
+            logger.debug(e)  # there are 2900 errors here
 
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
@@ -186,18 +183,25 @@ class NostrRouter:
         subscription_id_rewritten = urlsafe_short_hash()
         self.original_subscription_ids[subscription_id_rewritten] = subscription_id
         fltr = json_data[2:]
-        filters = self._marshall_nostr_filters(fltr) # revisit
+        filters = self._marshall_nostr_filters(fltr)  # revisit
 
-        nostr.client.relay_manager.add_subscription(
-                subscription_id_rewritten, filters
-            )
+        nostr.client.relay_manager.add_subscription(subscription_id_rewritten, filters)
         request_rewritten = json.dumps([json_data[0], subscription_id_rewritten] + fltr)
 
-        self.subscriptions.append(subscription_id_rewritten) # why here also?
-        nostr.client.relay_manager.publish_message(request_rewritten) # both `add_subscription` and `publish_message`?
+        self.subscriptions.append(subscription_id_rewritten)  # why here also?
+        nostr.client.relay_manager.publish_message(
+            request_rewritten
+        )  # both `add_subscription` and `publish_message`?
 
     def _handle_client_close(self, subscription_id):
-        subscription_id_rewritten = next((k for k, v in self.original_subscription_ids.items() if v == subscription_id), None)
+        subscription_id_rewritten = next(
+            (
+                k
+                for k, v in self.original_subscription_ids.items()
+                if v == subscription_id
+            ),
+            None,
+        )
         if subscription_id_rewritten:
             self.original_subscription_ids.pop(subscription_id_rewritten)
             nostr.client.relay_manager.close_subscription(subscription_id_rewritten)
