@@ -37,7 +37,7 @@ class PublicKey:
 
 class PrivateKey:
     def __init__(self, raw_secret: bytes = None) -> None:
-        if not raw_secret is None:
+        if raw_secret is not None:
             self.raw_secret = raw_secret
         else:
             self.raw_secret = secrets.token_bytes(32)

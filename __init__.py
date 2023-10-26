@@ -22,6 +22,8 @@ nostrclient_ext: APIRouter = APIRouter(prefix="/nostrclient", tags=["nostrclient
 
 scheduled_tasks: List[asyncio.Task] = []
 
+
+# remove!
 class NostrClient:
     def __init__(self):
         self.client: NostrClientLib = NostrClientLib(connect=False)

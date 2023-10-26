@@ -1,11 +1,13 @@
 import asyncio
 from typing import List
 
+from loguru import logger
+
 from ..relay_manager import RelayManager
 
 
 class NostrClient:
-    relays = [ ]
+    relays = []
     relay_manager = RelayManager()
 
     def __init__(self, relays: List[str] = [], connect=True):
@@ -16,7 +18,10 @@ class NostrClient:
 
     async def connect(self):
         for relay in self.relays:
-            self.relay_manager.add_relay(relay)
+            try:
+                self.relay_manager.add_relay(relay)
+            except Exception as e:
+                logger.debug(e)
 
     def close(self):
         self.relay_manager.close_connections()

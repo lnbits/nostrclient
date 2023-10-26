@@ -1,8 +1,5 @@
-from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from fastapi import Request
-from fastapi.param_functions import Query
 from pydantic import BaseModel, Field
 
 from lnbits.helpers import urlsafe_short_hash
@@ -14,7 +11,8 @@ class RelayStatus(BaseModel):
     error_counter: Optional[int] = 0
     error_list: Optional[List] = []
     notice_list: Optional[List] = []
-    
+
+
 class Relay(BaseModel):
     id: Optional[str] = None
     url: Optional[str] = None
@@ -61,6 +59,7 @@ class TestMessage(BaseModel):
     sender_private_key: Optional[str]
     reciever_public_key: str
     message: str
+
 
 class TestMessageResponse(BaseModel):
     private_key: str

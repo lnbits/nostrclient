@@ -50,7 +50,7 @@ async def api_get_relays() -> RelayList:
 async def api_add_relay(relay: Relay) -> Optional[RelayList]:
     if not relay.url:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail=f"Relay url not provided."
+            status_code=HTTPStatus.BAD_REQUEST, detail="Relay url not provided."
         )
     if relay.url in nostr.client.relay_manager.relays:
         raise HTTPException(
@@ -62,7 +62,6 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
 
     nostr.client.relays.append(relay.url)
     nostr.client.relay_manager.add_relay(relay.url)
-       
 
     return await get_relays()
 
@@ -73,7 +72,7 @@ async def api_add_relay(relay: Relay) -> Optional[RelayList]:
 async def api_delete_relay(relay: Relay) -> None:
     if not relay.url:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail=f"Relay url not provided."
+            status_code=HTTPStatus.BAD_REQUEST, detail="Relay url not provided."
         )
     # we can remove relays during runtime
     nostr.client.relay_manager.remove_relay(relay.url)
@@ -95,7 +94,11 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
         )
         private_key.sign_event(dm)
 
-        return TestMessageResponse(private_key=private_key.hex(), public_key=to_public_key, event_json=dm.to_message())
+        return TestMessageResponse(
+            private_key=private_key.hex(),
+            public_key=to_public_key,
+            event_json=dm.to_message(),
+        )
     except (ValueError, AssertionError) as ex:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -109,7 +112,6 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
         )
 
 
-
 @nostrclient_ext.delete(
     "/api/v1", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
@@ -118,7 +120,8 @@ async def api_stop():
         try:
             for s in router.subscriptions:
                 nostr.client.relay_manager.close_subscription(s)
-            await router.stop()
+
+            router.stop()
             all_routers.remove(router)
         except Exception as e:
             logger.error(e)
@@ -148,6 +151,6 @@ async def ws_relay(websocket: WebSocket) -> None:
     while True:
         await asyncio.sleep(10)
         if not router.connected:
-            await router.stop()
+            router.stop()
             all_routers.remove(router)
             break

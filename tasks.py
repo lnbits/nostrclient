@@ -9,6 +9,7 @@ from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMe
 from .router import NostrRouter, nostr
 
 
+#### revisit
 async def init_relays():
     # reinitialize the entire client
     nostr.__init__()
@@ -20,14 +21,14 @@ async def init_relays():
 
 
 async def check_relays():
-    """ Check relays that have been disconnected """
+    """Check relays that have been disconnected"""
     while True:
         try:
             await asyncio.sleep(20)
             nostr.client.relay_manager.check_and_restart_relays()
         except Exception as e:
             logger.warning(f"Cannot restart relays: '{str(e)}'.")
-    
+
 
 async def subscribe_events():
     while not any([r.connected for r in nostr.client.relay_manager.relays.values()]):
@@ -39,14 +40,16 @@ async def subscribe_events():
             if eventMessage.event.id in set(
                 [
                     e.id
-                    for e in NostrRouter.received_subscription_events[eventMessage.subscription_id]
+                    for e in NostrRouter.received_subscription_events[
+                        eventMessage.subscription_id
+                    ]
                 ]
             ):
                 return
 
-            NostrRouter.received_subscription_events[eventMessage.subscription_id].append(
-                eventMessage.event
-            )
+            NostrRouter.received_subscription_events[
+                eventMessage.subscription_id
+            ].append(eventMessage.event)
         else:
             NostrRouter.received_subscription_events[eventMessage.subscription_id] = [
                 eventMessage.event
@@ -59,7 +62,10 @@ async def subscribe_events():
         return
 
     def callback_eose_notices(eventMessage: EndOfStoredEventsMessage):
-        if eventMessage.subscription_id not in NostrRouter.received_subscription_eosenotices:
+        if (
+            eventMessage.subscription_id
+            not in NostrRouter.received_subscription_eosenotices
+        ):
             NostrRouter.received_subscription_eosenotices[
                 eventMessage.subscription_id
             ] = eventMessage
@@ -67,11 +73,13 @@ async def subscribe_events():
         return
 
     def wrap_async_subscribe():
-        asyncio.run(nostr.client.subscribe(
-            callback_events,
-            callback_notices,
-            callback_eose_notices,
-        ))
+        asyncio.run(
+            nostr.client.subscribe(
+                callback_events,
+                callback_notices,
+                callback_eose_notices,
+            )
+        )
 
     t = threading.Thread(
         target=wrap_async_subscribe,
