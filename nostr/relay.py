@@ -86,7 +86,10 @@ class Relay:
                 return
 
     def close_subscription(self, id: str) -> None:
-        self.publish(json.dumps(["CLOSE", id]))
+        try:
+            self.publish(json.dumps(["CLOSE", id]))
+        except Exception as e:
+            logger.debug(f"[Relay: {self.url}] Failed to close subscription: {e}")
 
     def add_notice(self, notice: str):
         self.notice_list = [notice] + self.notice_list

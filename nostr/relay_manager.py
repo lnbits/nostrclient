@@ -26,26 +26,41 @@ class RelayManager:
 
     def add_relay(self, url: str) -> Relay:
         if url in list(self.relays.keys()):
+            logger.debug(f"Relay '{url}' already present.")
             return
 
         relay = Relay(url, self.message_pool)
         self.relays[url] = relay
 
-        self._open_connection(
-            relay, {"cert_reqs": ssl.CERT_NONE}
-        )  # NOTE: This disables ssl certificate verification
+        self._open_connection()
 
         relay.publish_subscriptions(self._cached_subscriptions.values())
         return relay
 
     def remove_relay(self, url: str):
-        # try-catch?
-        self.relays[url].close()
-        self.relays.pop(url)
-        self.threads[url].join(timeout=5)
-        self.threads.pop(url)
-        self.queue_threads[url].join(timeout=5)
-        self.queue_threads.pop(url)
+        try:
+            self.relays[url].close()
+        except Exception as e:
+            logger.debug(e)
+
+        if url in self.relays:
+            self.relays.pop(url)
+
+        try:
+            self.threads[url].join(timeout=5)
+        except Exception as e:
+            logger.debug(e)
+
+        if url in self.threads:
+            self.threads.pop(url)
+
+        try:
+            self.queue_threads[url].join(timeout=5)
+        except Exception as e:
+            logger.debug(e)
+
+        if url in self.queue_threads:
+            self.queue_threads.pop(url)
 
     def add_subscription(self, id: str, filters: Filters):
         s = Subscription(id, filters)
@@ -57,7 +72,8 @@ class RelayManager:
 
     def close_subscription(self, id: str):
         with self._subscriptions_lock:
-            self._cached_subscriptions.pop(id)
+            if id in self._cached_subscriptions:
+                self._cached_subscriptions.pop(id)
 
         for relay in self.relays.values():
             relay.close_subscription(id)
@@ -80,12 +96,9 @@ class RelayManager:
         if relay:
             relay.add_notice(notice.content)
 
-    def _open_connection(
-        self, relay: Relay, ssl_options: dict = None, proxy: dict = None
-    ):
+    def _open_connection( self, relay: Relay ):
         self.threads[relay.url] = threading.Thread(
             target=relay.connect,
-            args=(ssl_options, proxy),
             name=f"{relay.url}-thread",
             daemon=True,
         )
@@ -105,8 +118,8 @@ class RelayManager:
         time_since_last_error = time.time() - relay.last_error_date
 
         min_wait_time = min(
-            60 * relay.error_counter, 60 * 60 * 24
-        )  # try at least once a day
+            60 * relay.error_counter, 60 * 60
+        )  # try at least once an hour
         if time_since_last_error < min_wait_time:
             return
 
