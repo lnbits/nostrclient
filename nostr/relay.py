@@ -28,12 +28,10 @@ class Relay:
     def __init__(
         self,
         url: str,
-        policy: RelayPolicy,
         message_pool: MessagePool,
         subscriptions: dict[str, Subscription] = {},
     ) -> None:
         self.url = url
-        self.policy = policy
         self.message_pool = message_pool
         self.subscriptions = subscriptions
         self.connected: bool = False
@@ -47,12 +45,11 @@ class Relay:
         self.num_received_events: int = 0
         self.num_sent_events: int = 0
         self.num_subscriptions: int = 0
-        self.ssl_options: dict = {}
-        self.proxy: dict = {}
+
         self.lock = Lock()
         self.queue = Queue()
 
-    def connect(self, ssl_options: dict = None, proxy: dict = None):
+    def connect(self):
         self.ws = WebSocketApp(
             self.url,
             on_open=self._on_open,
@@ -62,16 +59,8 @@ class Relay:
             on_ping=self._on_ping,
             on_pong=self._on_pong,
         )
-        self.ssl_options = ssl_options
-        self.proxy = proxy
         if not self.connected:
-            self.ws.run_forever(
-                sslopt=ssl_options,
-                http_proxy_host=None if proxy is None else proxy.get("host"),
-                http_proxy_port=None if proxy is None else proxy.get("port"),
-                proxy_type=None if proxy is None else proxy.get("type"),
-                ping_interval=5,
-            )
+            self.ws.run_forever(ping_interval=10)
 
     def close(self):
         try:
@@ -127,7 +116,6 @@ class Relay:
     def to_json_object(self) -> dict:
         return {
             "url": self.url,
-            "policy": self.policy.to_json_object(),
             "subscriptions": [
                 subscription.to_json_object()
                 for subscription in self.subscriptions.values()

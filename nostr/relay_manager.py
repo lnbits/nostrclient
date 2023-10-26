@@ -28,12 +28,11 @@ class RelayManager:
     def add_relay(self, url: str, read: bool = True, write: bool = True) -> Relay:
         if url in list(self.relays.keys()):
             return
-       
+
         with self._subscriptions_lock:
             subscriptions = self._cached_subscriptions.copy()
 
-        policy = RelayPolicy(read, write)
-        relay = Relay(url, policy, self.message_pool, subscriptions)
+        relay = Relay(url, self.message_pool, subscriptions)
         self.relays[url] = relay
 
         self._open_connection(
@@ -52,7 +51,7 @@ class RelayManager:
         self.threads.pop(url)
         self.queue_threads[url].join(timeout=5)
         self.queue_threads.pop(url)
- 
+
     def add_subscription(self, id: str, filters: Filters):
         with self._subscriptions_lock:
             self._cached_subscriptions[id] = Subscription(id, filters)
@@ -78,7 +77,6 @@ class RelayManager:
 
     def publish_message(self, message: str):
         for relay in self.relays.values():
-            if relay.policy.should_write:
                 relay.publish(message)
 
     def handle_notice(self, notice: NoticeMessage):
@@ -86,7 +84,7 @@ class RelayManager:
         if relay:
             relay.add_notice(notice.content)
 
-    def _open_connection(self, relay: Relay, ssl_options: dict = None, proxy: dict = None):          
+    def _open_connection(self, relay: Relay, ssl_options: dict = None, proxy: dict = None):
         self.threads[relay.url] = threading.Thread(
             target=relay.connect,
             args=(ssl_options, proxy),
@@ -97,7 +95,7 @@ class RelayManager:
 
         def wrap_async_queue_worker():
             asyncio.run(relay.queue_worker())
-            
+
         self.queue_threads[relay.url] = threading.Thread(
             target=wrap_async_queue_worker,
             name=f"{relay.url}-queue",
@@ -107,11 +105,11 @@ class RelayManager:
 
     def _restart_relay(self, relay: Relay):
         time_since_last_error = time.time() - relay.last_error_date
-        
+
         min_wait_time = min(60 * relay.error_counter, 60 * 60 * 24) # try at least once a day
         if time_since_last_error < min_wait_time:
             return
-            
+
         logger.info(f"Restarting connection to relay '{relay.url}'")
 
         self.remove_relay(relay.url)
