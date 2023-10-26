@@ -29,6 +29,7 @@ class Relay:
         self.connected: bool = False
         self.reconnect: bool = True
         self.shutdown: bool = False
+        # todo: extract stats
         self.error_counter: int = 0
         self.error_threshold: int = 100
         self.error_list: List[str] = []
@@ -105,17 +106,8 @@ class Relay:
             self.subscriptions.pop(id)
             self.publish(json.dumps(["CLOSE", id]))
 
-    def to_json_object(self) -> dict:
-        return {
-            "url": self.url,
-            "subscriptions": [
-                subscription.to_json_object()
-                for subscription in self.subscriptions.values()
-            ],
-        }
-
     def add_notice(self, notice: str):
-        self.notice_list = ([notice] + self.notice_list)[:20]
+        self.notice_list = ([notice] + self.notice_list)
 
     def _on_open(self, _):
         logger.info(f"[Relay: {self.url}] Connected.")
@@ -127,15 +119,14 @@ class Relay:
         self.close()
 
     def _on_message(self, _, message: str):
-        if self._is_valid_message(message):
-            self.num_received_events += 1
-            self.message_pool.add_message(message, self.url)
+        self.num_received_events += 1
+        self.message_pool.add_message(message, self.url)
 
     def _on_error(self, _, error):
         logger.warning(f"[Relay: {self.url}] Error: '{str(error)}'")
         self._append_error_message(str(error))
-        self.connected = False
-        self.error_counter += 1
+        self.close()
+
 
     def _on_ping(self, *_):
         return
@@ -143,65 +134,7 @@ class Relay:
     def _on_pong(self, *_):
         return
 
-    def _is_valid_message(self, message: str) -> bool:
-        message = message.strip("\n")
-        if not message or message[0] != "[" or message[-1] != "]":
-            return False
-
-        message_json = json.loads(message)
-        message_type = message_json[0]
-
-        if not RelayMessageType.is_valid(message_type):
-            return False
-
-        if message_type == RelayMessageType.EVENT:
-            return self._is_valid_event_message(message_json)
-
-        if message_type == RelayMessageType.COMMAND_RESULT:
-            return self._is_valid_command_result_message(message, message_json)
-
-        return True
-
-    def _is_valid_event_message(self, message_json):
-        if not len(message_json) == 3:
-            return False
-
-        subscription_id = message_json[1]
-        with self.lock:
-            if subscription_id not in self.subscriptions:
-                return False
-
-        e = message_json[2]
-        event = Event(
-            e["content"],
-            e["pubkey"],
-            e["created_at"],
-            e["kind"],
-            e["tags"],
-            e["sig"],
-        )
-        if not event.verify():
-            return False
-
-        with self.lock:
-            subscription = self.subscriptions[subscription_id]
-
-        if subscription.filters and not subscription.filters.match(event):
-            return False
-
-        return True
-
-    def _is_valid_command_result_message(self, message,  message_json):
-        if not len(message_json) < 3:
-            return False
-
-        if message_json[2] != True:
-            logger.warning(f"[Relay: {self.url}] Negative command result: '{message}'")
-            self._append_error_message(message)
-            return False
-
-        return True
-
     def _append_error_message(self, message):
-        self.error_list = ([message] + self.error_list)[:20]
+        self.error_counter += 1
+        self.error_list = [message] + self.error_list
         self.last_error_date = int(time.time())
