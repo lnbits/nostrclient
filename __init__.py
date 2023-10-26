@@ -36,7 +36,7 @@ def nostr_renderer():
     return template_renderer(["nostrclient/templates"])
 
 
-from .tasks import check_relays, init_relays, subscribe_events
+from .tasks import check_relays, init_relays, subscribe_events  # noqa
 from .views import *  # noqa
 from .views_api import *  # noqa
 
