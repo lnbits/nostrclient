@@ -15,14 +15,6 @@ from .message_type import RelayMessageType
 from .subscription import Subscription
 
 
-class RelayPolicy:
-    def __init__(self, should_read: bool = True, should_write: bool = True) -> None:
-        self.should_read = should_read
-        self.should_write = should_write
-
-    def to_json_object(self) -> dict[str, bool]:
-        return {"read": self.should_read, "write": self.should_write}
-
 
 class Relay:
     def __init__(

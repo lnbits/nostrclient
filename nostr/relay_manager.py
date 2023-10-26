@@ -8,7 +8,7 @@ from loguru import logger
 
 from .filter import Filters
 from .message_pool import MessagePool, NoticeMessage
-from .relay import Relay, RelayPolicy
+from .relay import Relay
 from .subscription import Subscription
 
 
