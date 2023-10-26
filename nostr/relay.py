@@ -96,7 +96,7 @@ class Relay:
     def publish_subscriptions(self):
         for _, subscription in self.subscriptions.items():
             s = subscription.to_json_object()
-            json_str = json.dumps(["REQ", s["id"], s["filters"][0]])
+            json_str = json.dumps(["REQ", s["id"], s["filters"]])
             self.publish(json_str)
 
     async def queue_worker(self):
@@ -113,7 +113,7 @@ class Relay:
 
             if self.shutdown:
                 logger.warning(f"[Relay: {self.url}] Closing queue worker.")
-                break
+                return
 
     def add_subscription(self, id, filters: Filters):
         with self.lock:
@@ -138,7 +138,7 @@ class Relay:
         self.notice_list = ([notice] + self.notice_list)[:20]
 
     def _on_open(self, _):
-        logger.info(f"[Relay: {self.url}] Connected'.")
+        logger.info(f"[Relay: {self.url}] Connected.")
         self.connected = True
         self.shutdown = False
 
