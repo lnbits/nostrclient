@@ -1,5 +1,4 @@
 import asyncio
-import ssl
 import threading
 import time
 
@@ -96,7 +95,7 @@ class RelayManager:
         if relay:
             relay.add_notice(notice.content)
 
-    def _open_connection( self, relay: Relay ):
+    def _open_connection(self, relay: Relay):
         self.threads[relay.url] = threading.Thread(
             target=relay.connect,
             name=f"{relay.url}-thread",
