@@ -70,18 +70,18 @@ class NostrRouter:
         for t in self.tasks:
             try:
                 t.cancel()
-            except:
+            except Exception as _:
                 pass
 
         for s in self.subscriptions:
             try:
                 nostr.client.relay_manager.close_subscription(s)
-            except:
+            except Exception as _:
                 pass
 
         try:
             self.websocket.close()
-        except:
+        except Exception as _:
             pass
         self.connected = False
 
