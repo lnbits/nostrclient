@@ -14,7 +14,7 @@ from .crud import add_relay, delete_relay, get_relays
 from .helpers import normalize_public_key
 from .models import Relay, RelayList, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
-from .router import NostrRouter, nostr
+from .router import NostrRouter
 
 # we keep this in
 all_routers: list[NostrRouter] = []
