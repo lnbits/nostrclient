@@ -6,7 +6,7 @@ from loguru import logger
 from . import nostr
 from .crud import get_relays
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
-from .router import NostrRouter, nostr
+from .router import NostrRouter
 
 
 #### revisit
