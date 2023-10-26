@@ -25,14 +25,11 @@ class RelayManager:
         self._cached_subscriptions: dict[str, Subscription] = {}
         self._subscriptions_lock = threading.Lock()
 
-    def add_relay(self, url: str, read: bool = True, write: bool = True) -> Relay:
+    def add_relay(self, url: str) -> Relay:
         if url in list(self.relays.keys()):
             return
-
-        with self._subscriptions_lock:
-            subscriptions = self._cached_subscriptions.copy()
-
-        relay = Relay(url, self.message_pool, subscriptions)
+        
+        relay = Relay(url, self.message_pool)
         self.relays[url] = relay
 
         self._open_connection(
@@ -40,7 +37,7 @@ class RelayManager:
             {"cert_reqs": ssl.CERT_NONE}
         )  # NOTE: This disables ssl certificate verification
 
-        relay.publish_subscriptions()
+        relay.publish_subscriptions(self._cached_subscriptions.values())
         return relay
 
     def remove_relay(self, url: str):
@@ -53,11 +50,12 @@ class RelayManager:
         self.queue_threads.pop(url)
 
     def add_subscription(self, id: str, filters: Filters):
+        s = Subscription(id, filters)
         with self._subscriptions_lock:
-            self._cached_subscriptions[id] = Subscription(id, filters)
+            self._cached_subscriptions[id] = s
 
         for relay in self.relays.values():
-            relay.add_subscription(id, filters)
+            relay.publish_subscriptions([s])
 
     def close_subscription(self, id: str):
         with self._subscriptions_lock:

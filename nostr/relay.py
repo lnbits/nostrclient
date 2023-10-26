@@ -2,16 +2,13 @@ import asyncio
 import json
 import time
 from queue import Queue
-from threading import Lock
 from typing import List
 
 from loguru import logger
 from websocket import WebSocketApp
 
-from .event import Event
 from .filter import Filters
 from .message_pool import MessagePool
-from .message_type import RelayMessageType
 from .subscription import Subscription
 
 
@@ -20,12 +17,10 @@ class Relay:
     def __init__(
         self,
         url: str,
-        message_pool: MessagePool,
-        subscriptions: dict[str, Subscription] = {},
+        message_pool: MessagePool
     ) -> None:
         self.url = url
         self.message_pool = message_pool
-        self.subscriptions = subscriptions
         self.connected: bool = False
         self.reconnect: bool = True
         self.shutdown: bool = False
@@ -39,7 +34,6 @@ class Relay:
         self.num_sent_events: int = 0
         self.num_subscriptions: int = 0
 
-        self.lock = Lock()
         self.queue = Queue()
 
     def connect(self):
@@ -75,8 +69,8 @@ class Relay:
     def publish(self, message: str):
         self.queue.put(message)
 
-    def publish_subscriptions(self):
-        for _, subscription in self.subscriptions.items():
+    def publish_subscriptions(self, subscriptions: List[Subscription] = []):
+        for subscription in subscriptions:
             s = subscription.to_json_object()
             json_str = json.dumps(["REQ", s["id"], s["filters"]])
             self.publish(json_str)
@@ -97,13 +91,7 @@ class Relay:
                 logger.warning(f"[Relay: {self.url}] Closing queue worker.")
                 return
 
-    def add_subscription(self, id, filters: Filters):
-        with self.lock:
-            self.subscriptions[id] = Subscription(id, filters)
-
     def close_subscription(self, id: str) -> None:
-        with self.lock:
-            self.subscriptions.pop(id)
             self.publish(json.dumps(["CLOSE", id]))
 
     def add_notice(self, notice: str):
