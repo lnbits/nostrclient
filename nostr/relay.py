@@ -76,7 +76,7 @@ class Relay:
                     message = self.queue.get(timeout=1)
                     self.num_sent_events += 1
                     self.ws.send(message)
-                except:
+                except Exception as _:
                     pass
             else:
                 await asyncio.sleep(1)
