@@ -30,17 +30,35 @@ class NostrClient:
         callback_eosenotices_func=None,
     ):
         while True:
+            self._check_events(callback_events_func)
+            self._check_notices(callback_notices_func)
+            self._check_eos_notices(callback_eosenotices_func)
+
+            await asyncio.sleep(0.5)
+
+    def _check_events(self, callback_events_func = None):
+        try:
             while self.relay_manager.message_pool.has_events():
                 event_msg = self.relay_manager.message_pool.get_event()
                 if callback_events_func:
                     callback_events_func(event_msg)
+        except Exception as e:
+            logger.debug(e)
+
+    def _check_notices(self, callback_notices_func = None):
+        try:
             while self.relay_manager.message_pool.has_notices():
                 event_msg = self.relay_manager.message_pool.get_notice()
                 if callback_notices_func:
                     callback_notices_func(event_msg)
+        except Exception as e:
+            logger.debug(e)
+
+    def _check_eos_notices(self, callback_eosenotices_func = None):
+        try:
             while self.relay_manager.message_pool.has_eose_notices():
                 event_msg = self.relay_manager.message_pool.get_eose_notice()
                 if callback_eosenotices_func:
                     callback_eosenotices_func(event_msg)
-
-            await asyncio.sleep(0.5)
+        except Exception as e:
+            logger.debug(e)
