@@ -1,10 +1,12 @@
+from typing import List
+
 from . import db
-from .models import Relay, RelayList
+from .models import Relay
 
 
-async def get_relays() -> RelayList:
-    row = await db.fetchall("SELECT * FROM nostrclient.relays")
-    return RelayList(__root__=row)
+async def get_relays() -> List[Relay]:
+    rows = await db.fetchall("SELECT * FROM nostrclient.relays")
+    return [Relay.from_row(r) for r in rows]
 
 
 async def add_relay(relay: Relay) -> None:

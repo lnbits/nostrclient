@@ -13,7 +13,7 @@ async def init_relays():
     # get relays from db
     relays = await get_relays()
     # set relays and connect to them
-    valid_relays = list(set([r.url for r in relays.__root__ if r.url]))
+    valid_relays = list(set([r.url for r in relays if r.url]))
 
     nostr_client.reconnect(valid_relays)
 

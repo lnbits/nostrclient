@@ -1,3 +1,4 @@
+from sqlite3 import Row
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -26,9 +27,9 @@ class Relay(BaseModel):
         if not self.id:
             self.id = urlsafe_short_hash()
 
-
-class RelayList(BaseModel):
-    __root__: List[Relay]
+    @classmethod
+    def from_row(cls, row: Row) -> "Relay":
+        return cls(**dict(row))
 
 
 class Event(BaseModel):

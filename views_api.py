@@ -1,6 +1,6 @@
 import asyncio
 from http import HTTPStatus
-from typing import Optional
+from typing import List
 
 from fastapi import Depends, WebSocket
 from loguru import logger
@@ -12,7 +12,7 @@ from lnbits.helpers import urlsafe_short_hash
 from . import nostr_client, nostrclient_ext, scheduled_tasks
 from .crud import add_relay, delete_relay, get_relays
 from .helpers import normalize_public_key
-from .models import Relay, RelayList, TestMessage, TestMessageResponse
+from .models import Relay, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
 from .router import NostrRouter
 
@@ -21,11 +21,11 @@ all_routers: list[NostrRouter] = []
 
 
 @nostrclient_ext.get("/api/v1/relays")
-async def api_get_relays() -> RelayList:
-    relays = RelayList(__root__=[])
+async def api_get_relays() -> List[Relay]:
+    relays = []
     for url, r in nostr_client.relay_manager.relays.items():
         relay_id = urlsafe_short_hash()
-        relays.__root__.append(
+        relays.append(
             Relay(
                 id=relay_id,
                 url=url,
@@ -47,7 +47,7 @@ async def api_get_relays() -> RelayList:
 @nostrclient_ext.post(
     "/api/v1/relay", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
-async def api_add_relay(relay: Relay) -> Optional[RelayList]:
+async def api_add_relay(relay: Relay) -> List[Relay]:
     if not relay.url:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail="Relay url not provided."
