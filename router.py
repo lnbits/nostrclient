@@ -8,12 +8,11 @@ from loguru import logger
 from lnbits.helpers import urlsafe_short_hash
 
 from . import nostr_client
-from .models import Event
-from .nostr.message_pool import EndOfStoredEventsMessage, NoticeMessage
+from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
 
 
 class NostrRouter:
-    received_subscription_events: dict[str, list[Event]] = {}
+    received_subscription_events: dict[str, List[EventMessage]] = {}
     received_subscription_notices: list[NoticeMessage] = []
     received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
 
@@ -103,22 +102,14 @@ class NostrRouter:
                 return
 
             while len(NostrRouter.received_subscription_events[s]):
-                my_event = NostrRouter.received_subscription_events[s].pop(0)
-                event_json = {
-                    "id": my_event.id,
-                    "pubkey": my_event.public_key,
-                    "created_at": my_event.created_at,
-                    "kind": my_event.kind,
-                    "tags": my_event.tags,
-                    "content": my_event.content,
-                    "sig": my_event.signature,
-                }
+                event_message = NostrRouter.received_subscription_events[s].pop(0)
+                event_json = event_message.event
 
                 # this reconstructs the original response from the relay
                 # reconstruct original subscription id
                 s_original = self.original_subscription_ids[s]
-                event_to_forward = ["EVENT", s_original, event_json]
-                await self.websocket.send_text(json.dumps(event_to_forward))
+                event_to_forward = f"""["EVENT", "{s_original}", {event_json}]"""
+                await self.websocket.send_text(event_to_forward)
         except Exception as e:
             logger.debug(e)  # there are 2900 errors here
 

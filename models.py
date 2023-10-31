@@ -32,15 +32,6 @@ class Relay(BaseModel):
         return cls(**dict(row))
 
 
-class Event(BaseModel):
-    content: str
-    pubkey: str
-    created_at: Optional[int]
-    kind: int
-    tags: Optional[List[List[str]]]
-    sig: str
-
-
 class TestMessage(BaseModel):
     sender_private_key: Optional[str]
     reciever_public_key: str

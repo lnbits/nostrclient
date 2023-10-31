@@ -35,15 +35,15 @@ async def subscribe_events():
     def callback_events(eventMessage: EventMessage):
         sub_id = eventMessage.subscription_id
         if sub_id not in NostrRouter.received_subscription_events:
-            NostrRouter.received_subscription_events[sub_id] = [eventMessage.event]
+            NostrRouter.received_subscription_events[sub_id] = [eventMessage]
             return
 
         # do not add duplicate events (by event id)
-        ids = set([e.id for e in NostrRouter.received_subscription_events[sub_id]])
-        if eventMessage.event.id in ids:
+        ids = set([e.event_id for e in NostrRouter.received_subscription_events[sub_id]])
+        if eventMessage.event_id in ids:
             return
 
-        NostrRouter.received_subscription_events[sub_id].append(eventMessage.event)
+        NostrRouter.received_subscription_events[sub_id].append(eventMessage)
 
     def callback_notices(noticeMessage: NoticeMessage):
         if noticeMessage not in NostrRouter.received_subscription_notices:
