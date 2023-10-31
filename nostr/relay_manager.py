@@ -1,10 +1,10 @@
 import asyncio
 import threading
 import time
+from typing import List
 
 from loguru import logger
 
-from .filter import Filters
 from .message_pool import MessagePool, NoticeMessage
 from .relay import Relay
 from .subscription import Subscription
@@ -62,7 +62,7 @@ class RelayManager:
         for url in relay_urls:
             self.remove_relay(url)
 
-    def add_subscription(self, id: str, filters: Filters):
+    def add_subscription(self, id: str, filters: List[str]):
         s = Subscription(id, filters)
         with self._subscriptions_lock:
             self._cached_subscriptions[id] = s

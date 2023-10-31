@@ -1,7 +1,7 @@
 from sqlite3 import Row
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from lnbits.helpers import urlsafe_short_hash
 
@@ -39,21 +39,6 @@ class Event(BaseModel):
     kind: int
     tags: Optional[List[List[str]]]
     sig: str
-
-
-class Filter(BaseModel):
-    ids: Optional[List[str]]
-    kinds: Optional[List[int]]
-    authors: Optional[List[str]]
-    since: Optional[int]
-    until: Optional[int]
-    e: Optional[List[str]] = Field(alias="#e")
-    p: Optional[List[str]] = Field(alias="#p")
-    limit: Optional[int]
-
-
-class Filters(BaseModel):
-    __root__: List[Filter]
 
 
 class TestMessage(BaseModel):

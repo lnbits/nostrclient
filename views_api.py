@@ -124,7 +124,6 @@ async def api_stop():
 
     nostr_client.close()
 
-
     for scheduled_task in scheduled_tasks:
         try:
             scheduled_task.cancel()

@@ -46,7 +46,7 @@ class NostrClient:
 
             await asyncio.sleep(0.2)
 
-    def _check_events(self, callback_events_func = None):
+    def _check_events(self, callback_events_func=None):
         try:
             while self.relay_manager.message_pool.has_events():
                 event_msg = self.relay_manager.message_pool.get_event()
@@ -55,7 +55,7 @@ class NostrClient:
         except Exception as e:
             logger.debug(e)
 
-    def _check_notices(self, callback_notices_func = None):
+    def _check_notices(self, callback_notices_func=None):
         try:
             while self.relay_manager.message_pool.has_notices():
                 event_msg = self.relay_manager.message_pool.get_notice()
@@ -64,7 +64,7 @@ class NostrClient:
         except Exception as e:
             logger.debug(e)
 
-    def _check_eos_notices(self, callback_eosenotices_func = None):
+    def _check_eos_notices(self, callback_eosenotices_func=None):
         try:
             while self.relay_manager.message_pool.has_eose_notices():
                 event_msg = self.relay_manager.message_pool.get_eose_notice()

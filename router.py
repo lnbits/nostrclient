@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import List, Union
+from typing import List
 
 from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
@@ -8,9 +8,7 @@ from loguru import logger
 from lnbits.helpers import urlsafe_short_hash
 
 from . import nostr_client
-from .models import Event, Filter
-from .nostr.filter import Filter as NostrFilter
-from .nostr.filter import Filters as NostrFilters
+from .models import Event
 from .nostr.message_pool import EndOfStoredEventsMessage, NoticeMessage
 
 
@@ -46,7 +44,7 @@ class NostrRouter:
                 logger.debug(f"Failed to handle client message: '{str(e)}'.")
 
     async def nostr_to_client(self):
-        """ Sends responses from relays back to the client. """
+        """Sends responses from relays back to the client."""
         while self.connected:
             try:
                 await self._handle_subscriptions()
@@ -132,26 +130,6 @@ class NostrRouter:
             #  we don't know who should receive it
             nostr_client.relay_manager.handle_notice(my_event)
 
-    def _marshall_nostr_filters(self, data: Union[dict, list]):
-        # todo: get rid of this
-        filters = data if isinstance(data, list) else [data]
-        filters = [Filter.parse_obj(f) for f in filters]
-        filter_list: list[NostrFilter] = []
-        for filter in filters:
-            filter_list.append(
-                NostrFilter(
-                    event_ids=filter.ids,  # type: ignore
-                    kinds=filter.kinds,  # type: ignore
-                    authors=filter.authors,  # type: ignore
-                    since=filter.since,  # type: ignore
-                    until=filter.until,  # type: ignore
-                    event_refs=filter.e,  # type: ignore
-                    pubkey_refs=filter.p,  # type: ignore
-                    limit=filter.limit,  # type: ignore
-                )
-            )
-        return NostrFilters(filter_list)
-
     async def _handle_client_to_nostr(self, json_str):
         json_data = json.loads(json_str)
         assert len(json_data), "Bad JSON array"
@@ -172,11 +150,12 @@ class NostrRouter:
         subscription_id = json_data[1]
         subscription_id_rewritten = urlsafe_short_hash()
         self.original_subscription_ids[subscription_id_rewritten] = subscription_id
-        fltr = json_data[2:]
-        filters = self._marshall_nostr_filters(fltr)  # revisit
+        filters = json_data[2:]
 
         nostr_client.relay_manager.add_subscription(subscription_id_rewritten, filters)
-        request_rewritten = json.dumps([json_data[0], subscription_id_rewritten] + fltr)
+        request_rewritten = json.dumps(
+            [json_data[0], subscription_id_rewritten] + filters
+        )
 
         self.subscriptions.append(subscription_id_rewritten)  # why here also?
         nostr_client.relay_manager.publish_message(
