@@ -117,17 +117,13 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
 async def api_stop():
     for router in all_routers:
         try:
-            for s in router.subscriptions:
-                nostr_client.relay_manager.close_subscription(s)
-
             router.stop()
             all_routers.remove(router)
         except Exception as e:
             logger.error(e)
-    try:
-        nostr_client.relay_manager.close_connections()
-    except Exception as e:
-        logger.error(e)
+
+    nostr_client.close()
+
 
     for scheduled_task in scheduled_tasks:
         try:
@@ -143,7 +139,7 @@ async def ws_relay(websocket: WebSocket) -> None:
     """Relay multiplexer: one client (per endpoint) <-> multiple relays"""
     await websocket.accept()
     router = NostrRouter(websocket)
-    await router.start()
+    router.start()
     all_routers.append(router)
 
     # we kill this websocket and the subscriptions

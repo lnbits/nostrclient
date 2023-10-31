@@ -9,19 +9,29 @@ from ..relay_manager import RelayManager
 class NostrClient:
     relay_manager = RelayManager()
 
+    def __init__(self):
+        self.running = True
+
     def connect(self, relays):
         for relay in relays:
             try:
                 self.relay_manager.add_relay(relay)
             except Exception as e:
                 logger.debug(e)
+        self.running = True
 
     def reconnect(self, relays):
         self.relay_manager.remove_relays()
         self.connect(relays)
 
     def close(self):
-        self.relay_manager.close_connections()
+        try:
+            self.relay_manager.close_subscriptions()
+            self.relay_manager.close_connections()
+
+            self.running = False
+        except Exception as e:
+            logger.error(e)
 
     async def subscribe(
         self,
@@ -29,12 +39,12 @@ class NostrClient:
         callback_notices_func=None,
         callback_eosenotices_func=None,
     ):
-        while True:
+        while self.running:
             self._check_events(callback_events_func)
             self._check_notices(callback_notices_func)
             self._check_eos_notices(callback_eosenotices_func)
 
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
 
     def _check_events(self, callback_events_func = None):
         try:

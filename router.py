@@ -46,9 +46,7 @@ class NostrRouter:
                 logger.debug(f"Failed to handle client message: '{str(e)}'.")
 
     async def nostr_to_client(self):
-        """
-        Sends responses from relays back to the client.
-        """
+        """ Sends responses from relays back to the client. """
         while self.connected:
             try:
                 await self._handle_subscriptions()
@@ -57,7 +55,7 @@ class NostrRouter:
                 logger.debug(f"Failed to handle response for client: '{str(e)}'.")
             await asyncio.sleep(0.1)
 
-    async def start(self):
+    def start(self):
         self.connected = True
         self.tasks.append(asyncio.create_task(self.client_to_nostr()))
         self.tasks.append(asyncio.create_task(self.nostr_to_client()))
@@ -83,6 +81,7 @@ class NostrRouter:
 
     async def _handle_subscriptions(self):
         for s in self.subscriptions:
+            # print("### _handle_subscriptions for each")
             if s in NostrRouter.received_subscription_events:
                 await self._handle_received_subscription_events(s)
             if s in NostrRouter.received_subscription_eosenotices:

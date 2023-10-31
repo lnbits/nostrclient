@@ -71,12 +71,20 @@ class RelayManager:
             relay.publish_subscriptions([s])
 
     def close_subscription(self, id: str):
-        with self._subscriptions_lock:
-            if id in self._cached_subscriptions:
-                self._cached_subscriptions.pop(id)
+        try:
+            with self._subscriptions_lock:
+                if id in self._cached_subscriptions:
+                    self._cached_subscriptions.pop(id)
 
-        for relay in self.relays.values():
-            relay.close_subscription(id)
+            for relay in self.relays.values():
+                relay.close_subscription(id)
+        except Exception as e:
+            logger.debug(e)
+
+    def close_subscriptions(self):
+        all_subscriptions = list(self._cached_subscriptions.keys())
+        for id in all_subscriptions:
+            self.close_subscription(id)
 
     def check_and_restart_relays(self):
         stopped_relays = [r for r in self.relays.values() if r.shutdown]
