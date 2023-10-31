@@ -19,32 +19,32 @@ class NostrRouter:
     def __init__(self, websocket: WebSocket):
         self.connected: bool = True
         self.websocket: WebSocket = websocket
-        self.tasks: List[asyncio.Task] = []  # chek why state is needed
+        self.tasks: List[asyncio.Task] = []
         self.original_subscription_ids: Dict[str, str] = {}
 
     @property
     def subscriptions(self) -> List[str]:
         return list(self.original_subscription_ids.keys())
-    
+
     def start(self):
         self.connected = True
         self.tasks.append(asyncio.create_task(self._client_to_nostr()))
         self.tasks.append(asyncio.create_task(self._nostr_to_client()))
 
     def stop(self):
+        nostr_client.relay_manager.close_subscriptions(self.subscriptions)
+        self.connected = False
+
         for t in self.tasks:
             try:
                 t.cancel()
             except Exception as _:
                 pass
 
-        nostr_client.relay_manager.close_subscriptions(self.subscriptions)
-
         try:
             self.websocket.close()
         except Exception as _:
             pass
-        self.connected = False
 
     async def _client_to_nostr(self):
         """
@@ -71,7 +71,6 @@ class NostrRouter:
             except Exception as e:
                 logger.debug(f"Failed to handle response for client: '{str(e)}'.")
             await asyncio.sleep(0.1)
-
 
 
     async def _handle_subscriptions(self):
