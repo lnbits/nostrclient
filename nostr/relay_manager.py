@@ -22,14 +22,14 @@ class RelayManager:
     def add_relay(self, url: str) -> Relay:
         if url in list(self.relays.keys()):
             logger.debug(f"Relay '{url}' already present.")
-            return
+            return self.relays[url]
 
         relay = Relay(url, self.message_pool)
         self.relays[url] = relay
 
         self._open_connection(relay)
 
-        relay.publish_subscriptions(self._cached_subscriptions.values())
+        relay.publish_subscriptions(list(self._cached_subscriptions.values()))
         return relay
 
     def remove_relay(self, url: str):
