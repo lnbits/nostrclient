@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import List
+from typing import Dict, List
 
 from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
@@ -21,7 +21,7 @@ class NostrRouter:
         self.connected: bool = True
         self.websocket: WebSocket = websocket
         self.tasks: List[asyncio.Task] = []  # chek why state is needed
-        self.original_subscription_ids = {}  # here
+        self.original_subscription_ids: Dict[str, str] = {}  # here
 
     async def client_to_nostr(self):
         """
