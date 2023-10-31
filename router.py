@@ -17,11 +17,14 @@ class NostrRouter:
     received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
 
     def __init__(self, websocket: WebSocket):
-        self.subscriptions: List[str] = []
         self.connected: bool = True
         self.websocket: WebSocket = websocket
         self.tasks: List[asyncio.Task] = []  # chek why state is needed
-        self.original_subscription_ids: Dict[str, str] = {}  # here
+        self.original_subscription_ids: Dict[str, str] = {}
+
+    @property
+    def subscriptions(self) -> List[str]:
+        return self.original_subscription_ids.keys()
 
     async def client_to_nostr(self):
         """
@@ -78,7 +81,6 @@ class NostrRouter:
 
     async def _handle_subscriptions(self):
         for s in self.subscriptions:
-            # print("### _handle_subscriptions for each")
             if s in NostrRouter.received_subscription_events:
                 await self._handle_received_subscription_events(s)
             if s in NostrRouter.received_subscription_eosenotices:
@@ -147,11 +149,6 @@ class NostrRouter:
         request_rewritten = json.dumps(
             [json_data[0], subscription_id_rewritten] + filters
         )
-
-        self.subscriptions.append(subscription_id_rewritten)  # why here also?
-        nostr_client.relay_manager.publish_message(
-            request_rewritten
-        )  # both `add_subscription` and `publish_message`?
 
     def _handle_client_close(self, subscription_id):
         subscription_id_rewritten = next(

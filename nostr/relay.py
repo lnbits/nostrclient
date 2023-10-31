@@ -18,7 +18,7 @@ class Relay:
         self.connected: bool = False
         self.reconnect: bool = True
         self.shutdown: bool = False
-        # todo: extract stats
+
         self.error_counter: int = 0
         self.error_threshold: int = 100
         self.error_list: List[str] = []
@@ -64,9 +64,8 @@ class Relay:
         self.queue.put(message)
 
     def publish_subscriptions(self, subscriptions: List[Subscription] = []):
-        for subscription in subscriptions:
-            s = subscription.to_json_object()
-            json_str = json.dumps(["REQ", s["id"], s["filters"][0]])
+        for s in subscriptions:
+            json_str = json.dumps(["REQ", s.id] + s.filters)
             self.publish(json_str)
 
     async def queue_worker(self):
