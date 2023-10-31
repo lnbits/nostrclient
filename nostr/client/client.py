@@ -4,6 +4,7 @@ from loguru import logger
 
 from ..relay_manager import RelayManager
 
+
 class NostrClient:
     relay_manager = RelayManager()
 

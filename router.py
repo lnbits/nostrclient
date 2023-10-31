@@ -24,7 +24,7 @@ class NostrRouter:
 
     @property
     def subscriptions(self) -> List[str]:
-        return self.original_subscription_ids.keys()
+        return list(self.original_subscription_ids.keys())
 
     async def client_to_nostr(self):
         """
@@ -146,9 +146,6 @@ class NostrRouter:
         filters = json_data[2:]
 
         nostr_client.relay_manager.add_subscription(subscription_id_rewritten, filters)
-        request_rewritten = json.dumps(
-            [json_data[0], subscription_id_rewritten] + filters
-        )
 
     def _handle_client_close(self, subscription_id):
         subscription_id_rewritten = next(

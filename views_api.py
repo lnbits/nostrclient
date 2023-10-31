@@ -86,7 +86,7 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
         to_public_key = normalize_public_key(data.reciever_public_key)
 
         pk = bytes.fromhex(data.sender_private_key) if data.sender_private_key else None
-        private_key = PrivateKey(pk)
+        private_key = PrivateKey(pk) if pk else PrivateKey()
 
         dm = EncryptedDirectMessage(
             recipient_pubkey=to_public_key, cleartext_content=data.message
