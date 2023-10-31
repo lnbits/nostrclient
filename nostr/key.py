@@ -77,7 +77,10 @@ class PrivateKey:
         encryptor = cipher.encryptor()
         encrypted_message = encryptor.update(padded_data) + encryptor.finalize()
 
-        return f"{base64.b64encode(encrypted_message).decode()}?iv={base64.b64encode(iv).decode()}"
+        return (
+            f"{base64.b64encode(encrypted_message).decode()}"
+            + f"?iv={base64.b64encode(iv).decode()}"
+        )
 
     def encrypt_dm(self, dm: EncryptedDirectMessage) -> None:
         dm.content = self.encrypt_message(

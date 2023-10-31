@@ -6,7 +6,9 @@ from .message_type import RelayMessageType
 
 
 class EventMessage:
-    def __init__(self, event: str, event_id: str, subscription_id: str, url: str) -> None:
+    def __init__(
+        self, event: str, event_id: str, subscription_id: str, url: str
+    ) -> None:
         self.event = event
         self.event_id = event_id
         self.subscription_id = subscription_id
@@ -66,7 +68,9 @@ class MessagePool:
 
             with self.lock:
                 if f"{subscription_id}_{event_id}" not in self._unique_events:
-                    self._accept_event(EventMessage(json.dumps(event), event_id, subscription_id, url))
+                    self._accept_event(
+                        EventMessage(json.dumps(event), event_id, subscription_id, url)
+                    )
         elif message_type == RelayMessageType.NOTICE:
             self.notices.put(NoticeMessage(message_json[1], url))
         elif message_type == RelayMessageType.END_OF_STORED_EVENTS:
@@ -74,9 +78,9 @@ class MessagePool:
 
     def _accept_event(self, event_message: EventMessage):
         """
-        Event uniqueness is considered per `subscription_id`.
-        The `subscription_id` is rewritten to be unique and it is the same accross relays.
-        The same event can come from different subscriptions (from the same client or from different ones).
+        Event uniqueness is considered per `subscription_id`.  The `subscription_id` is
+        rewritten to be unique and it is the same accross relays. The same event can
+        come from different subscriptions (from the same client or from different ones).
         Clients that have joined later should receive older events.
         """
         self.events.put(event_message)

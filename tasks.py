@@ -39,7 +39,9 @@ async def subscribe_events():
             return
 
         # do not add duplicate events (by event id)
-        ids = set([e.event_id for e in NostrRouter.received_subscription_events[sub_id]])
+        ids = set(
+            [e.event_id for e in NostrRouter.received_subscription_events[sub_id]]
+        )
         if eventMessage.event_id in ids:
             return
 
