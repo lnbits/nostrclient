@@ -117,7 +117,7 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
 async def api_stop():
     for router in all_routers:
         try:
-            router.stop()
+            await router.stop()
             all_routers.remove(router)
         except Exception as e:
             logger.error(e)
@@ -146,6 +146,6 @@ async def ws_relay(websocket: WebSocket) -> None:
     while router.connected:
         await asyncio.sleep(10)
 
-    router.stop()
+    await router.stop()
     all_routers.remove(router)
 

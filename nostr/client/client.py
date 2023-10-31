@@ -25,7 +25,7 @@ class NostrClient:
 
     def close(self):
         try:
-            self.relay_manager.close_subscriptions()
+            self.relay_manager.close_all_subscriptions()
             self.relay_manager.close_connections()
 
             self.running = False

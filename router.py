@@ -31,7 +31,7 @@ class NostrRouter:
         self.tasks.append(asyncio.create_task(self._client_to_nostr()))
         self.tasks.append(asyncio.create_task(self._nostr_to_client()))
 
-    def stop(self):
+    async def stop(self):
         nostr_client.relay_manager.close_subscriptions(self.subscriptions)
         self.connected = False
 
@@ -42,7 +42,7 @@ class NostrRouter:
                 pass
 
         try:
-            self.websocket.close()
+            await self.websocket.close()
         except Exception as _:
             pass
 
@@ -53,8 +53,9 @@ class NostrRouter:
         while self.connected:
             try:
                 json_str = await self.websocket.receive_text()
-            except WebSocketDisconnect:
-                self.stop()
+            except WebSocketDisconnect as e:
+                logger.debug(e)
+                await self.stop()
                 break
 
             try:

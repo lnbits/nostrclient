@@ -81,10 +81,13 @@ class RelayManager:
         except Exception as e:
             logger.debug(e)
 
-    def close_subscriptions(self):
-        all_subscriptions = list(self._cached_subscriptions.keys())
-        for id in all_subscriptions:
+    def close_subscriptions(self, subscriptions: List[str]):
+        for id in subscriptions:
             self.close_subscription(id)
+
+    def close_all_subscriptions(self):
+        all_subscriptions = list(self._cached_subscriptions.keys())
+        self.close_subscriptions(all_subscriptions)
 
     def check_and_restart_relays(self):
         stopped_relays = [r for r in self.relays.values() if r.shutdown]
