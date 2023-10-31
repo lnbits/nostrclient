@@ -67,11 +67,7 @@ class NostrRouter:
             except Exception as _:
                 pass
 
-        for s in self.subscriptions:
-            try:
-                nostr_client.relay_manager.close_subscription(s)
-            except Exception as _:
-                pass
+        nostr_client.relay_manager.close_subscriptions(self.subscriptions)
 
         try:
             self.websocket.close()
