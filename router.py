@@ -25,40 +25,11 @@ class NostrRouter:
     @property
     def subscriptions(self) -> List[str]:
         return list(self.original_subscription_ids.keys())
-
-    async def client_to_nostr(self):
-        """
-        Receives requests / data from the client and forwards it to relays. If the
-        request was a subscription/filter, registers it with the nostr client lib.
-        Remembers the subscription id so we can send back responses from the relay
-        to this client in `nostr_to_client`.
-        """
-        while self.connected:
-            try:
-                json_str = await self.websocket.receive_text()
-            except WebSocketDisconnect:
-                self.stop()
-                break
-
-            try:
-                await self._handle_client_to_nostr(json_str)
-            except Exception as e:
-                logger.debug(f"Failed to handle client message: '{str(e)}'.")
-
-    async def nostr_to_client(self):
-        """Sends responses from relays back to the client."""
-        while self.connected:
-            try:
-                await self._handle_subscriptions()
-                self._handle_notices()
-            except Exception as e:
-                logger.debug(f"Failed to handle response for client: '{str(e)}'.")
-            await asyncio.sleep(0.1)
-
+    
     def start(self):
         self.connected = True
-        self.tasks.append(asyncio.create_task(self.client_to_nostr()))
-        self.tasks.append(asyncio.create_task(self.nostr_to_client()))
+        self.tasks.append(asyncio.create_task(self._client_to_nostr()))
+        self.tasks.append(asyncio.create_task(self._nostr_to_client()))
 
     def stop(self):
         for t in self.tasks:
@@ -74,6 +45,34 @@ class NostrRouter:
         except Exception as _:
             pass
         self.connected = False
+
+    async def _client_to_nostr(self):
+        """
+        Receives requests / data from the client and forwards it to relays.
+        """
+        while self.connected:
+            try:
+                json_str = await self.websocket.receive_text()
+            except WebSocketDisconnect:
+                self.stop()
+                break
+
+            try:
+                await self._handle_client_to_nostr(json_str)
+            except Exception as e:
+                logger.debug(f"Failed to handle client message: '{str(e)}'.")
+
+    async def _nostr_to_client(self):
+        """Sends responses from relays back to the client."""
+        while self.connected:
+            try:
+                await self._handle_subscriptions()
+                self._handle_notices()
+            except Exception as e:
+                logger.debug(f"Failed to handle response for client: '{str(e)}'.")
+            await asyncio.sleep(0.1)
+
+
 
     async def _handle_subscriptions(self):
         for s in self.subscriptions:
