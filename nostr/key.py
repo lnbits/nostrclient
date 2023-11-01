@@ -1,6 +1,5 @@
 import base64
 import secrets
-from hashlib import sha256
 
 import secp256k1
 from cffi import FFI
@@ -8,7 +7,6 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from . import bech32
-from .delegation import Delegation
 from .event import EncryptedDirectMessage, Event, EventKind
 
 
@@ -37,7 +35,7 @@ class PublicKey:
 
 class PrivateKey:
     def __init__(self, raw_secret: bytes = None) -> None:
-        if not raw_secret is None:
+        if raw_secret is not None:
             self.raw_secret = raw_secret
         else:
             self.raw_secret = secrets.token_bytes(32)
@@ -79,7 +77,10 @@ class PrivateKey:
         encryptor = cipher.encryptor()
         encrypted_message = encryptor.update(padded_data) + encryptor.finalize()
 
-        return f"{base64.b64encode(encrypted_message).decode()}?iv={base64.b64encode(iv).decode()}"
+        return (
+            f"{base64.b64encode(encrypted_message).decode()}"
+            + f"?iv={base64.b64encode(iv).decode()}"
+        )
 
     def encrypt_dm(self, dm: EncryptedDirectMessage) -> None:
         dm.content = self.encrypt_message(
@@ -115,11 +116,6 @@ class PrivateKey:
         if event.public_key is None:
             event.public_key = self.public_key.hex()
         event.signature = self.sign_message_hash(bytes.fromhex(event.id))
-
-    def sign_delegation(self, delegation: Delegation) -> None:
-        delegation.signature = self.sign_message_hash(
-            sha256(delegation.delegation_token.encode()).digest()
-        )
 
     def __eq__(self, other):
         return self.raw_secret == other.raw_secret

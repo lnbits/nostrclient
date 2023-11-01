@@ -7,7 +7,7 @@ from lnbits.db import Database
 from lnbits.helpers import template_renderer
 from lnbits.tasks import catch_everything_and_restart
 
-from .nostr.client.client import NostrClient as NostrClientLib
+from .nostr.client.client import NostrClient
 
 db = Database("ext_nostrclient")
 
@@ -22,19 +22,14 @@ nostrclient_ext: APIRouter = APIRouter(prefix="/nostrclient", tags=["nostrclient
 
 scheduled_tasks: List[asyncio.Task] = []
 
-class NostrClient:
-    def __init__(self):
-        self.client: NostrClientLib = NostrClientLib(connect=False)
-
-
-nostr = NostrClient()
+nostr_client = NostrClient()
 
 
 def nostr_renderer():
     return template_renderer(["nostrclient/templates"])
 
 
-from .tasks import check_relays, init_relays, subscribe_events
+from .tasks import check_relays, init_relays, subscribe_events  # noqa
 from .views import *  # noqa
 from .views_api import *  # noqa
 

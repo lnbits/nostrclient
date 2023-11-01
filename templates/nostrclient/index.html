@@ -6,13 +6,30 @@
       <q-form @submit="addRelay">
         <div class="row q-pa-md">
           <div class="col-9">
-            <q-input outlined v-model="relayToAdd" dense filled label="Relay URL"></q-input>
+            <q-input
+              outlined
+              v-model="relayToAdd"
+              dense
+              filled
+              label="Relay URL"
+            ></q-input>
           </div>
           <div class="col-3">
-
-            <q-btn-dropdown unelevated split color="primary" class="float-right" type="submit" label="Add Relay">
-              <q-item v-for="relay in predefinedRelays" :key="relay" @click="addCustomRelay(relay)" clickable
-                v-close-popup>
+            <q-btn-dropdown
+              unelevated
+              split
+              color="primary"
+              class="float-right"
+              type="submit"
+              label="Add Relay X"
+            >
+              <q-item
+                v-for="relay in predefinedRelays"
+                :key="relay"
+                @click="addCustomRelay(relay)"
+                clickable
+                v-close-popup
+              >
                 <q-item-section>
                   <q-item-label><span v-text="relay"></span></q-item-label>
                 </q-item-section>
@@ -29,18 +46,36 @@
             <h5 class="text-subtitle1 q-my-none">Nostrclient</h5>
           </div>
           <div class="col-auto">
-            <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
+            <q-input
+              borderless
+              dense
+              debounce="300"
+              v-model="filter"
+              placeholder="Search"
+            >
               <template v-slot:append>
                 <q-icon name="search"></q-icon>
               </template>
             </q-input>
           </div>
         </div>
-        <q-table flat dense :data="nostrrelayLinks" row-key="id" :columns="relayTable.columns"
-          :pagination.sync="relayTable.pagination" :filter="filter">
+        <q-table
+          flat
+          dense
+          :data="nostrrelayLinks"
+          row-key="id"
+          :columns="relayTable.columns"
+          :pagination.sync="relayTable.pagination"
+          :filter="filter"
+        >
           <template v-slot:header="props">
             <q-tr :props="props">
-              <q-th v-for="col in props.cols" :key="col.name" :props="props" auto-width>
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                auto-width
+              >
                 <div v-if="col.name == 'id'"></div>
                 <div v-else>{{ col.label }}</div>
               </q-th>
@@ -49,29 +84,43 @@
 
           <template v-slot:body="props">
             <q-tr :props="props">
-              <q-td v-for="col in props.cols" :key="col.name" :props="props" auto-width>
+              <q-td
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                auto-width
+              >
                 <div v-if="col.name == 'connected'">
                   <div v-if="col.value">🟢</div>
-                  <div v-else> 🔴 </div>
+                  <div v-else>🔴</div>
                 </div>
                 <div v-else-if="col.name == 'status'">
                   <div>
-                    ⬆️ <span v-text="col.value.sentEvents"></span>
-                    ⬇️ <span v-text="col.value.receveidEvents"></span>
-                    <span @click="showLogDataDialog(col.value.errorList)" class="cursor-pointer">
-                      ⚠️ <span v-text="col.value.errorCount">
-                      </span>
+                    ⬆️ <span v-text="col.value.sentEvents"></span> ⬇️
+                    <span v-text="col.value.receveidEvents"></span>
+                    <span
+                      @click="showLogDataDialog(col.value.errorList)"
+                      class="cursor-pointer"
+                    >
+                      ⚠️ <span v-text="col.value.errorCount"> </span>
                     </span>
-                    <span @click="showLogDataDialog(col.value.noticeList)" class="cursor-pointer float-right">
+                    <span
+                      @click="showLogDataDialog(col.value.noticeList)"
+                      class="cursor-pointer float-right"
+                    >
                       ⓘ
-                      </span>
                     </span>
-
                   </div>
                 </div>
                 <div v-else-if="col.name == 'delete'">
-                  <q-btn flat dense size="md" @click="showDeleteRelayDialog(props.row.url)" icon="cancel"
-                    color="pink"></q-btn>
+                  <q-btn
+                    flat
+                    dense
+                    size="md"
+                    @click="showDeleteRelayDialog(props.row.url)"
+                    icon="cancel"
+                    color="pink"
+                  ></q-btn>
                 </div>
                 <div v-else>
                   <div>{{ col.value }}</div>
@@ -87,15 +136,32 @@
         <div class="row">
           <div class="col">
             <div class="text-weight-bold">
-              <q-btn flat dense size="0.6rem" class="q-px-none q-mx-none" color="grey" icon="content_copy"
-                @click="copyText(`wss://${host}/nostrclient/api/v1/relay`)"><q-tooltip>Copy address</q-tooltip></q-btn>
+              <q-btn
+                flat
+                dense
+                size="0.6rem"
+                class="q-px-none q-mx-none"
+                color="grey"
+                icon="content_copy"
+                @click="copyText(`wss://${host}/nostrclient/api/v1/relay`)"
+                ><q-tooltip>Copy address</q-tooltip></q-btn
+              >
               Your endpoint:
-              <q-badge outline class="q-ml-sm text-subtitle2" :label="`wss://${host}/nostrclient/api/v1/relay`" />
+              <q-badge
+                outline
+                class="q-ml-sm text-subtitle2"
+                :label="`wss://${host}/nostrclient/api/v1/relay`"
+              />
             </div>
           </div>
         </div>
       </q-card-section>
-      <q-expansion-item group="advanced" icon="settings" label="Test this endpoint" @click="toggleTestPanel">
+      <q-expansion-item
+        group="advanced"
+        icon="settings"
+        label="Test this endpoint"
+        @click="toggleTestPanel"
+      >
         <q-separator></q-separator>
         <q-card-section>
           <div class="row">
@@ -103,8 +169,13 @@
               <span>Sender Private Key:</span>
             </div>
             <div class="col-9">
-              <q-input outlined v-model="testData.senderPrivateKey" dense filled
-                label="Private Key (optional)"></q-input>
+              <q-input
+                outlined
+                v-model="testData.senderPrivateKey"
+                dense
+                filled
+                label="Private Key (optional)"
+              ></q-input>
             </div>
           </div>
           <div class="row q-mt-sm q-mb-lg">
@@ -113,7 +184,8 @@
               <q-badge color="yellow" text-color="black">
                 <span>
                   No not use your real private key! Leave empty for a randomly
-                  generated key.</span>
+                  generated key.</span
+                >
               </q-badge>
             </div>
           </div>
@@ -122,7 +194,13 @@
               <span>Sender Public Key:</span>
             </div>
             <div class="col-9">
-              <q-input outlined v-model="testData.senderPublicKey" dense readonly filled></q-input>
+              <q-input
+                outlined
+                v-model="testData.senderPublicKey"
+                dense
+                readonly
+                filled
+              ></q-input>
             </div>
           </div>
           <div class="row q-mt-md">
@@ -130,8 +208,15 @@
               <span>Test Message:</span>
             </div>
             <div class="col-9">
-              <q-input outlined v-model="testData.message" dense filled rows="3" type="textarea"
-                label="Test Message *"></q-input>
+              <q-input
+                outlined
+                v-model="testData.message"
+                dense
+                filled
+                rows="3"
+                type="textarea"
+                label="Test Message *"
+              ></q-input>
             </div>
           </div>
           <div class="row q-mt-md">
@@ -139,22 +224,35 @@
               <span>Receiver Public Key:</span>
             </div>
             <div class="col-9">
-              <q-input outlined v-model="testData.recieverPublicKey" dense filled
-                label="Public Key (hex or npub) *"></q-input>
+              <q-input
+                outlined
+                v-model="testData.recieverPublicKey"
+                dense
+                filled
+                label="Public Key (hex or npub) *"
+              ></q-input>
             </div>
           </div>
           <div class="row q-mt-sm q-mb-lg">
             <div class="col-3"></div>
             <div class="col-9">
               <q-badge color="yellow" text-color="black">
-                <span>This is the recipient of the message. Field required.</span>
+                <span
+                  >This is the recipient of the message. Field required.</span
+                >
               </q-badge>
             </div>
           </div>
           <div class="row">
             <div class="col-12">
-              <q-btn :disabled="!testData.recieverPublicKey || !testData.message" @click="sendTestMessage" unelevated
-                color="primary" class="float-right">Send Message</q-btn>
+              <q-btn
+                :disabled="!testData.recieverPublicKey || !testData.message"
+                @click="sendTestMessage"
+                unelevated
+                color="primary"
+                class="float-right"
+                >Send Message</q-btn
+              >
             </div>
           </div>
         </q-card-section>
@@ -166,7 +264,14 @@
               <span>Sent Data:</span>
             </div>
             <div class="col-9">
-              <q-input outlined v-model="testData.sentData" dense filled rows="5" type="textarea"></q-input>
+              <q-input
+                outlined
+                v-model="testData.sentData"
+                dense
+                filled
+                rows="5"
+                type="textarea"
+              ></q-input>
             </div>
           </div>
           <div class="row q-mt-md">
@@ -174,7 +279,14 @@
               <span>Received Data:</span>
             </div>
             <div class="col-9">
-              <q-input outlined v-model="testData.receivedData" dense filled rows="5" type="textarea"></q-input>
+              <q-input
+                outlined
+                v-model="testData.receivedData"
+                dense
+                filled
+                rows="5"
+                type="textarea"
+              ></q-input>
             </div>
           </div>
         </q-card-section>
@@ -193,8 +305,12 @@
         </p>
 
         <p>
-          <q-badge outline class="q-ml-sm text-subtitle2" color="primary"
-            :label="`wss://${host}/nostrclient/api/v1/relay`" />
+          <q-badge
+            outline
+            class="q-ml-sm text-subtitle2"
+            color="primary"
+            :label="`wss://${host}/nostrclient/api/v1/relay`"
+          />
         </p>
         Only Admin users can manage this extension.
         <q-card-section></q-card-section>
@@ -204,14 +320,21 @@
 
   <q-dialog v-model="logData.show" position="top">
     <q-card class="q-pa-lg q-pt-xl">
-      <q-input filled dense v-model.trim="logData.data" type="textarea" rows="25" cols="200" label="Log Data"></q-input>
+      <q-input
+        filled
+        dense
+        v-model.trim="logData.data"
+        type="textarea"
+        rows="25"
+        cols="200"
+        label="Log Data"
+      ></q-input>
 
       <div class="row q-mt-lg">
         <q-btn v-close-popup flat color="grey" class="q-ml-auto">Close</q-btn>
       </div>
     </q-card>
   </q-dialog>
-
 </div>
 {% endraw %} {% endblock %} {% block scripts %} {{ window_vars(user) }}
 
@@ -292,8 +415,7 @@
               align: 'center',
               label: 'Ping',
               field: 'ping'
-            }
-            ,
+            },
             {
               name: 'delete',
               align: 'center',
@@ -306,13 +428,13 @@
           }
         },
         predefinedRelays: [
-          "wss://relay.damus.io",
-          "wss://nostr-pub.wellorder.net",
-          "wss://nostr.zebedee.cloud",
-          "wss://nodestr.fmt.wiz.biz",
-          "wss://nostr.oxtr.dev",
-          "wss://nostr.wine"
-        ],
+          'wss://relay.damus.io',
+          'wss://nostr-pub.wellorder.net',
+          'wss://nostr.zebedee.cloud',
+          'wss://nodestr.fmt.wiz.biz',
+          'wss://nostr.oxtr.dev',
+          'wss://nostr.wine'
+        ]
       }
     },
     methods: {
@@ -355,7 +477,7 @@
             'POST',
             '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
             this.g.user.wallets[0].adminkey,
-            { url: this.relayToAdd }
+            {url: this.relayToAdd}
           )
           .then(function (response) {
             console.log('response:', response)
@@ -387,15 +509,15 @@
             'DELETE',
             '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
             this.g.user.wallets[0].adminkey,
-            { url: url }
+            {url: url}
           )
-          .then((response) => {
+          .then(response => {
             const relayIndex = this.nostrrelayLinks.indexOf(r => r.url === url)
             if (relayIndex !== -1) {
               this.nostrrelayLinks.splice(relayIndex, 1)
             }
           })
-          .catch((error) => {
+          .catch(error => {
             console.error(error)
             LNbits.utils.notifyApiError(error)
           })
@@ -437,7 +559,7 @@
       },
       sendTestMessage: async function () {
         try {
-          const { data } = await LNbits.api.request(
+          const {data} = await LNbits.api.request(
             'PUT',
             '/nostrclient/api/v1/relay/test?usr=' + this.g.user.id,
             this.g.user.wallets[0].adminkey,
@@ -458,7 +580,7 @@
           const subscription = JSON.stringify([
             'REQ',
             'test-dms',
-            { kinds: [4], '#p': [event.pubkey] }
+            {kinds: [4], '#p': [event.pubkey]}
           ])
           this.testData.wsConnection.send(subscription)
         } catch (error) {

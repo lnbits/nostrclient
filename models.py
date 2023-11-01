@@ -1,9 +1,7 @@
-from dataclasses import dataclass
-from typing import Dict, List, Optional
+from sqlite3 import Row
+from typing import List, Optional
 
-from fastapi import Request
-from fastapi.param_functions import Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from lnbits.helpers import urlsafe_short_hash
 
@@ -14,7 +12,8 @@ class RelayStatus(BaseModel):
     error_counter: Optional[int] = 0
     error_list: Optional[List] = []
     notice_list: Optional[List] = []
-    
+
+
 class Relay(BaseModel):
     id: Optional[str] = None
     url: Optional[str] = None
@@ -28,39 +27,16 @@ class Relay(BaseModel):
         if not self.id:
             self.id = urlsafe_short_hash()
 
-
-class RelayList(BaseModel):
-    __root__: List[Relay]
-
-
-class Event(BaseModel):
-    content: str
-    pubkey: str
-    created_at: Optional[int]
-    kind: int
-    tags: Optional[List[List[str]]]
-    sig: str
-
-
-class Filter(BaseModel):
-    ids: Optional[List[str]]
-    kinds: Optional[List[int]]
-    authors: Optional[List[str]]
-    since: Optional[int]
-    until: Optional[int]
-    e: Optional[List[str]] = Field(alias="#e")
-    p: Optional[List[str]] = Field(alias="#p")
-    limit: Optional[int]
-
-
-class Filters(BaseModel):
-    __root__: List[Filter]
+    @classmethod
+    def from_row(cls, row: Row) -> "Relay":
+        return cls(**dict(row))
 
 
 class TestMessage(BaseModel):
     sender_private_key: Optional[str]
     reciever_public_key: str
     message: str
+
 
 class TestMessageResponse(BaseModel):
     private_key: str
