@@ -20,7 +20,7 @@ from .router import NostrRouter
 all_routers: list[NostrRouter] = []
 
 
-@nostrclient_ext.get("/api/v1/relays")
+@nostrclient_ext.get("/api/v1/relays",  dependencies=[Depends(check_admin)])
 async def api_get_relays() -> List[Relay]:
     relays = []
     for url, r in nostr_client.relay_manager.relays.items():
@@ -136,6 +136,7 @@ async def api_stop():
 @nostrclient_ext.websocket("/api/v1/relay")
 async def ws_relay(websocket: WebSocket) -> None:
     """Relay multiplexer: one client (per endpoint) <-> multiple relays"""
+    logger.info("New websocket connection at: '/api/v1/relay'")
     await websocket.accept()
     router = NostrRouter(websocket)
     router.start()
@@ -146,6 +147,10 @@ async def ws_relay(websocket: WebSocket) -> None:
     while router.connected:
         await asyncio.sleep(10)
 
-    await router.stop()
+    try:
+        await router.stop()
+    except Exception as e:
+        logger.debug(e)
+
     all_routers.remove(router)
 
