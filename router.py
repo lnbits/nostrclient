@@ -113,7 +113,7 @@ class NostrRouter:
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
             my_event = NostrRouter.received_subscription_notices.pop(0)
-            logger.info(f"[Relay '{my_event.url}'] Notice: '{my_event.content}']")
+            logger.debug(f"[Relay '{my_event.url}'] Notice: '{my_event.content}']")
             #  Note: we don't send it to the user because
             #  we don't know who should receive it
             nostr_client.relay_manager.handle_notice(my_event)
@@ -136,6 +136,7 @@ class NostrRouter:
 
     def _handle_client_req(self, json_data):
         subscription_id = json_data[1]
+        logger.info(f"New subscription: '{subscription_id}']")
         subscription_id_rewritten = urlsafe_short_hash()
         self.original_subscription_ids[subscription_id_rewritten] = subscription_id
         filters = json_data[2:]
@@ -155,4 +156,4 @@ class NostrRouter:
             self.original_subscription_ids.pop(subscription_id_rewritten)
             nostr_client.relay_manager.close_subscription(subscription_id_rewritten)
         else:
-            logger.debug(f"Failed to unsubscribe from '{subscription_id}.'")
+            logger.info(f"Failed to unsubscribe from '{subscription_id}.'")
