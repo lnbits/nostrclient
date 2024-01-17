@@ -42,3 +42,8 @@ class TestMessageResponse(BaseModel):
     private_key: str
     public_key: str
     event_json: str
+
+
+class Config(BaseModel):
+    private_ws: bool = True
+    public_ws: bool = False
