@@ -150,7 +150,7 @@ async def ws_relay(id: str, websocket: WebSocket) -> None:
         else:
             if not config.private_ws:
                 raise ValueError("Private websocket connections not accepted.")
-            if decrypt_internal_message(id) == "relay":
+            if decrypt_internal_message(id) != "relay":
                 raise ValueError("Invalid websocket endpoint.")
 
 
@@ -171,8 +171,12 @@ async def ws_relay(id: str, websocket: WebSocket) -> None:
 
         all_routers.remove(router)
         logger.info("Closed websocket connection at: '/api/v1/relay'")
+    except ValueError as ex:
+        logger.warning(ex)
+        await websocket.close(reason=str(ex))
     except Exception as ex:
         logger.warning(ex)
+        await websocket.close(reason="Websocket connection unexpected closed")
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Cannot accept websocket connection",
