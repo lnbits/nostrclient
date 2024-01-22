@@ -155,5 +155,6 @@ class NostrRouter:
         if subscription_id_rewritten:
             self.original_subscription_ids.pop(subscription_id_rewritten)
             nostr_client.relay_manager.close_subscription(subscription_id_rewritten)
+            logger.info(f"Unsubscribe from '{subscription_id_rewritten}'. Original id: '{subscription_id}.'")
         else:
             logger.info(f"Failed to unsubscribe from '{subscription_id}.'")
