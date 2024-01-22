@@ -42,7 +42,7 @@ class NostrRouter:
                 pass
 
         try:
-            await self.websocket.close()
+            await self.websocket.close(reason="Websocket connection closed")
         except Exception as _:
             pass
 
@@ -136,7 +136,7 @@ class NostrRouter:
 
     def _handle_client_req(self, json_data):
         subscription_id = json_data[1]
-        logger.info(f"New subscription: '{subscription_id}']")
+        logger.info(f"New subscription: '{subscription_id}'")
         subscription_id_rewritten = urlsafe_short_hash()
         self.original_subscription_ids[subscription_id_rewritten] = subscription_id
         filters = json_data[2:]
