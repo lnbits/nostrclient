@@ -72,6 +72,7 @@ class RelayManager:
 
     def close_subscription(self, id: str):
         try:
+            logger.info(f"Closing subscription: '{id}'.")
             with self._subscriptions_lock:
                 if id in self._cached_subscriptions:
                     self._cached_subscriptions.pop(id)

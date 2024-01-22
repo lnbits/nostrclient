@@ -11,3 +11,15 @@ async def m001_initial(db):
         );
     """
     )
+
+
+async def m002_create_config_table(db):
+    """
+    Allow the extension to persist and retrieve any number of config values.
+    """
+
+    await db.execute(
+        """CREATE TABLE nostrclient.config (
+            json_data TEXT NOT NULL
+        );"""
+    )

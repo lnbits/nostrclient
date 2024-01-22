@@ -7,12 +7,12 @@ from loguru import logger
 from starlette.exceptions import HTTPException
 
 from lnbits.decorators import check_admin
-from lnbits.helpers import urlsafe_short_hash
+from lnbits.helpers import decrypt_internal_message, urlsafe_short_hash
 
 from . import nostr_client, nostrclient_ext, scheduled_tasks
-from .crud import add_relay, delete_relay, get_relays
+from .crud import add_relay, create_config, delete_relay, get_config, get_relays, update_config
 from .helpers import normalize_public_key
-from .models import Relay, TestMessage, TestMessageResponse
+from .models import Config, Relay, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
 from .router import NostrRouter
 
@@ -20,7 +20,7 @@ from .router import NostrRouter
 all_routers: list[NostrRouter] = []
 
 
-@nostrclient_ext.get("/api/v1/relays")
+@nostrclient_ext.get("/api/v1/relays",  dependencies=[Depends(check_admin)])
 async def api_get_relays() -> List[Relay]:
     relays = []
     for url, r in nostr_client.relay_manager.relays.items():
@@ -133,19 +133,68 @@ async def api_stop():
     return {"success": True}
 
 
-@nostrclient_ext.websocket("/api/v1/relay")
-async def ws_relay(websocket: WebSocket) -> None:
+@nostrclient_ext.websocket("/api/v1/{id}")
+async def ws_relay(id: str, websocket: WebSocket) -> None:
     """Relay multiplexer: one client (per endpoint) <-> multiple relays"""
-    await websocket.accept()
-    router = NostrRouter(websocket)
-    router.start()
-    all_routers.append(router)
 
-    # we kill this websocket and the subscriptions
-    # if the user disconnects and thus `connected==False`
-    while router.connected:
-        await asyncio.sleep(10)
+    logger.info("New websocket connection at: '/api/v1/relay'")
+    try:
+        config = await get_config()
 
-    await router.stop()
-    all_routers.remove(router)
+        if not config.private_ws and not config.public_ws:
+            raise ValueError("Websocket connections not accepted.")
 
+        if id == "relay":
+            if not config.public_ws:
+                raise ValueError("Public websocket connections not accepted.")
+        else:
+            if not config.private_ws:
+                raise ValueError("Private websocket connections not accepted.")
+            if decrypt_internal_message(id) != "relay":
+                raise ValueError("Invalid websocket endpoint.")
+
+
+        await websocket.accept()
+        router = NostrRouter(websocket)
+        router.start()
+        all_routers.append(router)
+
+        # we kill this websocket and the subscriptions
+        # if the user disconnects and thus `connected==False`
+        while router.connected:
+            await asyncio.sleep(10)
+
+        try:
+            await router.stop()
+        except Exception as e:
+            logger.debug(e)
+
+        all_routers.remove(router)
+        logger.info("Closed websocket connection at: '/api/v1/relay'")
+    except ValueError as ex:
+        logger.warning(ex)
+        await websocket.close(reason=str(ex))
+    except Exception as ex:
+        logger.warning(ex)
+        await websocket.close(reason="Websocket connection unexpected closed")
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Cannot accept websocket connection",
+        )
+
+
+@nostrclient_ext.get("/api/v1/config",  dependencies=[Depends(check_admin)])
+async def api_get_relays() -> Config:
+    config = await get_config()
+    if not config:
+        await create_config()
+
+    return config
+
+@nostrclient_ext.put("/api/v1/config", dependencies=[Depends(check_admin)])
+async def api_update_config(
+    data: Config
+):
+    config = await update_config(data)
+    assert config
+    return config.dict()

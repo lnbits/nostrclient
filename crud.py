@@ -1,7 +1,9 @@
-from typing import List
+from typing import List, Optional
+
+import json
 
 from . import db
-from .models import Relay
+from .models import Config, Relay
 
 
 async def get_relays() -> List[Relay]:
@@ -25,3 +27,37 @@ async def add_relay(relay: Relay) -> None:
 
 async def delete_relay(relay: Relay) -> None:
     await db.execute("DELETE FROM nostrclient.relays WHERE url = ?", (relay.url,))
+
+
+######################CONFIG#######################
+async def create_config() -> Config:
+    config = Config()
+    await db.execute(
+        """
+        INSERT INTO nostrclient.config (json_data)
+        VALUES (?)
+        """,
+        (json.dumps(config.dict())),
+    )
+    row = await db.fetchone(
+        "SELECT json_data FROM nostrclient.config", ()
+    )
+    return json.loads(row[0], object_hook=lambda d: Config(**d))
+
+
+async def update_config(config: Config) -> Optional[Config]:
+    await db.execute(
+        """UPDATE nostrclient.config SET json_data = ?""",
+        (json.dumps(config.dict())),
+    )
+    row = await db.fetchone(
+        "SELECT json_data FROM nostrclient.config", ()
+    )
+    return json.loads(row[0], object_hook=lambda d: Config(**d))
+
+
+async def get_config() -> Optional[Config]:
+    row = await db.fetchone(
+        "SELECT json_data FROM nostrclient.config", ()
+    )
+    return json.loads(row[0], object_hook=lambda d: Config(**d)) if row else None
