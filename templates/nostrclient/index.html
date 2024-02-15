@@ -9,7 +9,7 @@
             <q-input outlined v-model="relayToAdd" dense filled label="Relay URL"></q-input>
           </div>
           <div class="col-6 col-md-3  q-pa-md">
-            <q-btn-dropdown unelevated split color="primary" class="float-left" type="submit" label="Add Relay Y">
+            <q-btn-dropdown unelevated split color="primary" class="float-left" type="submit" label="Add Relay">
               <q-item v-for="relay in predefinedRelays" :key="relay" @click="addCustomRelay(relay)" clickable
                 v-close-popup>
                 <q-item-section>
