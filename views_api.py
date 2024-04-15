@@ -9,15 +9,12 @@ from starlette.exceptions import HTTPException
 from lnbits.decorators import check_admin
 from lnbits.helpers import decrypt_internal_message, urlsafe_short_hash
 
-from . import nostr_client, nostrclient_ext, scheduled_tasks
+from . import all_routers, nostr_client, nostrclient_ext
 from .crud import add_relay, create_config, delete_relay, get_config, get_relays, update_config
 from .helpers import normalize_public_key
 from .models import Config, Relay, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
 from .router import NostrRouter
-
-# we keep this in
-all_routers: list[NostrRouter] = []
 
 
 @nostrclient_ext.get("/api/v1/relays",  dependencies=[Depends(check_admin)])
@@ -109,28 +106,6 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Cannot generate test event",
         )
-
-
-@nostrclient_ext.delete(
-    "/api/v1", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
-)
-async def api_stop():
-    for router in all_routers:
-        try:
-            await router.stop()
-            all_routers.remove(router)
-        except Exception as e:
-            logger.error(e)
-
-    nostr_client.close()
-
-    for scheduled_task in scheduled_tasks:
-        try:
-            scheduled_task.cancel()
-        except Exception as ex:
-            logger.warning(ex)
-
-    return {"success": True}
 
 
 @nostrclient_ext.websocket("/api/v1/{id}")

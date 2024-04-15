@@ -2,12 +2,14 @@ import asyncio
 from typing import List
 
 from fastapi import APIRouter
+from loguru import logger
 
 from lnbits.db import Database
 from lnbits.helpers import template_renderer
-from lnbits.tasks import catch_everything_and_restart
+from lnbits.tasks import create_permanent_unique_task
 
 from .nostr.client.client import NostrClient
+from .router import NostrRouter
 
 db = Database("ext_nostrclient")
 
@@ -20,9 +22,11 @@ nostrclient_static_files = [
 
 nostrclient_ext: APIRouter = APIRouter(prefix="/nostrclient", tags=["nostrclient"])
 
-scheduled_tasks: List[asyncio.Task] = []
+nostr_client: NostrClient = NostrClient()
 
-nostr_client = NostrClient()
+# we keep this in
+all_routers: list[NostrRouter] = []
+scheduled_tasks: list[asyncio.Task] = []
 
 
 def nostr_renderer():
@@ -34,11 +38,27 @@ from .views import *  # noqa
 from .views_api import *  # noqa
 
 
+async def nostrclient_stop():
+    for task in scheduled_tasks:
+        try:
+            task.cancel()
+        except Exception as ex:
+            logger.warning(ex)
+
+    for router in all_routers:
+        try:
+            await router.stop()
+            all_routers.remove(router)
+        except Exception as e:
+            logger.error(e)
+
+    nostr_client.close()
+
+
 def nostrclient_start():
-    loop = asyncio.get_event_loop()
-    task1 = loop.create_task(catch_everything_and_restart(init_relays))
+    task1 = create_permanent_unique_task("ext_nostrclient_init_relays", init_relays)
     scheduled_tasks.append(task1)
-    task2 = loop.create_task(catch_everything_and_restart(subscribe_events))
+    task2 = create_permanent_unique_task("ext_nostrclient_subscrive_events", subscribe_events)
     scheduled_tasks.append(task2)
-    task3 = loop.create_task(catch_everything_and_restart(check_relays))
+    task3 = create_permanent_unique_task("ext_nostrclient_check_relays", check_relays)
     scheduled_tasks.append(task3)
