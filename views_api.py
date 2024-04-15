@@ -159,12 +159,13 @@ async def ws_relay(id: str, websocket: WebSocket) -> None:
 
 
 @nostrclient_ext.get("/api/v1/config",  dependencies=[Depends(check_admin)])
-async def api_get_relays() -> Config:
+async def api_get_config() -> Config:
     config = await get_config()
     if not config:
-        await create_config()
-
+        config = await create_config()
+        assert config, "Failed to create config"
     return config
+
 
 @nostrclient_ext.put("/api/v1/config", dependencies=[Depends(check_admin)])
 async def api_update_config(
