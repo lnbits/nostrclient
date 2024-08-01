@@ -3,9 +3,8 @@ import json
 from typing import Dict, List
 
 from fastapi import WebSocket, WebSocketDisconnect
-from loguru import logger
-
 from lnbits.helpers import urlsafe_short_hash
+from loguru import logger
 
 from . import nostr_client
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
@@ -61,7 +60,7 @@ class NostrRouter:
             try:
                 await self._handle_client_to_nostr(json_str)
             except Exception as e:
-                logger.debug(f"Failed to handle client message: '{str(e)}'.")
+                logger.debug(f"Failed to handle client message: '{e!s}'.")
 
     async def _nostr_to_client(self):
         """Sends responses from relays back to the client."""
@@ -70,7 +69,7 @@ class NostrRouter:
                 await self._handle_subscriptions()
                 self._handle_notices()
             except Exception as e:
-                logger.debug(f"Failed to handle response for client: '{str(e)}'.")
+                logger.debug(f"Failed to handle response for client: '{e!s}'.")
             await asyncio.sleep(0.1)
 
     async def _handle_subscriptions(self):

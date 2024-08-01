@@ -1,6 +1,5 @@
-from typing import List, Optional
-
 import json
+from typing import List, Optional
 
 from . import db
 from .models import Config, Relay

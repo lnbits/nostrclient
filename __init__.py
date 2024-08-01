@@ -2,11 +2,10 @@ import asyncio
 from typing import List
 
 from fastapi import APIRouter
-from loguru import logger
-
 from lnbits.db import Database
 from lnbits.helpers import template_renderer
 from lnbits.tasks import create_permanent_unique_task
+from loguru import logger
 
 from .nostr.client.client import NostrClient
 from .router import NostrRouter

@@ -1,9 +1,8 @@
 from fastapi import Depends, Request
 from fastapi.templating import Jinja2Templates
-from starlette.responses import HTMLResponse
-
 from lnbits.core.models import User
 from lnbits.decorators import check_admin
+from starlette.responses import HTMLResponse
 
 from . import nostr_renderer, nostrclient_ext
 

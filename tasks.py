@@ -25,7 +25,7 @@ async def check_relays():
             await asyncio.sleep(20)
             nostr_client.relay_manager.check_and_restart_relays()
         except Exception as e:
-            logger.warning(f"Cannot restart relays: '{str(e)}'.")
+            logger.warning(f"Cannot restart relays: '{e!s}'.")
 
 
 async def subscribe_events():
