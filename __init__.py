@@ -57,6 +57,8 @@ async def nostrclient_stop():
 
 def nostrclient_start():
     task1 = create_permanent_unique_task("ext_nostrclient_init_relays", init_relays)
-    task2 = create_permanent_unique_task("ext_nostrclient_subscrive_events", subscribe_events)
+    task2 = create_permanent_unique_task(
+        "ext_nostrclient_subscrive_events", subscribe_events
+    )
     task3 = create_permanent_unique_task("ext_nostrclient_check_relays", check_relays)
     scheduled_tasks.extend([task1, task2, task3])

@@ -10,14 +10,21 @@ from lnbits.decorators import check_admin
 from lnbits.helpers import decrypt_internal_message, urlsafe_short_hash
 
 from . import all_routers, nostr_client, nostrclient_ext
-from .crud import add_relay, create_config, delete_relay, get_config, get_relays, update_config
+from .crud import (
+    add_relay,
+    create_config,
+    delete_relay,
+    get_config,
+    get_relays,
+    update_config,
+)
 from .helpers import normalize_public_key
 from .models import Config, Relay, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
 from .router import NostrRouter
 
 
-@nostrclient_ext.get("/api/v1/relays",  dependencies=[Depends(check_admin)])
+@nostrclient_ext.get("/api/v1/relays", dependencies=[Depends(check_admin)])
 async def api_get_relays() -> List[Relay]:
     relays = []
     for url, r in nostr_client.relay_manager.relays.items():
@@ -128,7 +135,6 @@ async def ws_relay(id: str, websocket: WebSocket) -> None:
             if decrypt_internal_message(id) != "relay":
                 raise ValueError("Invalid websocket endpoint.")
 
-
         await websocket.accept()
         router = NostrRouter(websocket)
         router.start()
@@ -158,7 +164,7 @@ async def ws_relay(id: str, websocket: WebSocket) -> None:
         )
 
 
-@nostrclient_ext.get("/api/v1/config",  dependencies=[Depends(check_admin)])
+@nostrclient_ext.get("/api/v1/config", dependencies=[Depends(check_admin)])
 async def api_get_config() -> Config:
     config = await get_config()
     if not config:
@@ -168,9 +174,7 @@ async def api_get_config() -> Config:
 
 
 @nostrclient_ext.put("/api/v1/config", dependencies=[Depends(check_admin)])
-async def api_update_config(
-    data: Config
-):
+async def api_update_config(data: Config):
     config = await update_config(data)
     assert config
     return config.dict()

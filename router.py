@@ -73,7 +73,6 @@ class NostrRouter:
                 logger.debug(f"Failed to handle response for client: '{str(e)}'.")
             await asyncio.sleep(0.1)
 
-
     async def _handle_subscriptions(self):
         for s in self.subscriptions:
             if s in NostrRouter.received_subscription_events:
@@ -155,6 +154,8 @@ class NostrRouter:
         if subscription_id_rewritten:
             self.original_subscription_ids.pop(subscription_id_rewritten)
             nostr_client.relay_manager.close_subscription(subscription_id_rewritten)
-            logger.info(f"Unsubscribe from '{subscription_id_rewritten}'. Original id: '{subscription_id}.'")
+            logger.info(
+                f"Unsubscribe from '{subscription_id_rewritten}'. Original id: '{subscription_id}.'"
+            )
         else:
             logger.info(f"Failed to unsubscribe from '{subscription_id}.'")

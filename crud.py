@@ -39,9 +39,7 @@ async def create_config() -> Config:
         """,
         (json.dumps(config.dict())),
     )
-    row = await db.fetchone(
-        "SELECT json_data FROM nostrclient.config", ()
-    )
+    row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
     return json.loads(row[0], object_hook=lambda d: Config(**d))
 
 
@@ -50,14 +48,10 @@ async def update_config(config: Config) -> Optional[Config]:
         """UPDATE nostrclient.config SET json_data = ?""",
         (json.dumps(config.dict())),
     )
-    row = await db.fetchone(
-        "SELECT json_data FROM nostrclient.config", ()
-    )
+    row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
     return json.loads(row[0], object_hook=lambda d: Config(**d))
 
 
 async def get_config() -> Optional[Config]:
-    row = await db.fetchone(
-        "SELECT json_data FROM nostrclient.config", ()
-    )
+    row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
     return json.loads(row[0], object_hook=lambda d: Config(**d)) if row else None
