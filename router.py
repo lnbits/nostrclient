@@ -11,9 +11,9 @@ from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMe
 
 
 class NostrRouter:
-    received_subscription_events: dict[str, List[EventMessage]] = {}
-    received_subscription_notices: list[NoticeMessage] = []
-    received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage] = {}
+    received_subscription_events: dict[str, List[EventMessage]]
+    received_subscription_notices: list[NoticeMessage]
+    received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage]
 
     def __init__(self, websocket: WebSocket):
         self.connected: bool = True
@@ -154,7 +154,10 @@ class NostrRouter:
             self.original_subscription_ids.pop(subscription_id_rewritten)
             nostr_client.relay_manager.close_subscription(subscription_id_rewritten)
             logger.info(
-                f"Unsubscribe from '{subscription_id_rewritten}'. Original id: '{subscription_id}.'"
+                f"""
+            Unsubscribe from '{subscription_id_rewritten}'.
+            Original id: '{subscription_id}.'
+            """
             )
         else:
             logger.info(f"Failed to unsubscribe from '{subscription_id}.'")

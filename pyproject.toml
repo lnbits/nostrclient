@@ -22,8 +22,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 exclude = "(nostr/*)"
+
 [[tool.mypy.overrides]]
 module = [
+  "nostr.*",
   "lnbits.*",
   "lnurl.*",
   "loguru.*",
@@ -32,7 +34,9 @@ module = [
   "pyqrcode.*",
   "shortuuid.*",
   "httpx.*",
+  "secp256k1.*",
 ]
+follow_imports = "skip"
 ignore_missing_imports = "True"
 
 [tool.pytest.ini_options]

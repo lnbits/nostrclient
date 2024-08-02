@@ -1,11 +1,14 @@
 import json
-from typing import List, Optional
+from typing import Optional
 
-from . import db
+from lnbits.db import Database
+
 from .models import Config, Relay
 
+db = Database("ext_nostrclient")
 
-async def get_relays() -> List[Relay]:
+
+async def get_relays() -> list[Relay]:
     rows = await db.fetchall("SELECT * FROM nostrclient.relays")
     return [Relay.from_row(r) for r in rows]
 
