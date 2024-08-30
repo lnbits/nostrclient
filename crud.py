@@ -39,7 +39,7 @@ async def create_config() -> Config:
         INSERT INTO nostrclient.config (json_data)
         VALUES (?)
         """,
-        (json.dumps(config.dict())),
+        (json.dumps(config.dict()),),
     )
     row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
     return json.loads(row[0], object_hook=lambda d: Config(**d))
@@ -48,7 +48,7 @@ async def create_config() -> Config:
 async def update_config(config: Config) -> Optional[Config]:
     await db.execute(
         """UPDATE nostrclient.config SET json_data = ?""",
-        (json.dumps(config.dict())),
+        (json.dumps(config.dict()),),
     )
     row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
     return json.loads(row[0], object_hook=lambda d: Config(**d))

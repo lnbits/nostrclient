@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass, field
 from enum import IntEnum
 from hashlib import sha256
-from typing import List
+from typing import Optional
 
 from secp256k1 import PublicKey
 
@@ -21,14 +21,14 @@ class EventKind(IntEnum):
 
 @dataclass
 class Event:
-    content: str = None
-    public_key: str = None
-    created_at: int = None
+    content: Optional[str] = None
+    public_key: Optional[str] = None
+    created_at: Optional[int] = None
     kind: int = EventKind.TEXT_NOTE
-    tags: List[List[str]] = field(
+    tags: list[list[str]] = field(
         default_factory=list
     )  # Dataclasses require special handling when the default value is a mutable type
-    signature: str = None
+    signature: Optional[str] = None
 
     def __post_init__(self):
         if self.content is not None and not isinstance(self.content, str):
@@ -40,7 +40,7 @@ class Event:
 
     @staticmethod
     def serialize(
-        public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str
+        public_key: str, created_at: int, kind: int, tags: list[list[str]], content: str
     ) -> bytes:
         data = [0, public_key, created_at, kind, tags, content]
         data_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
@@ -48,7 +48,7 @@ class Event:
 
     @staticmethod
     def compute_id(
-        public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str
+        public_key: str, created_at: int, kind: int, tags: list[list[str]], content: str
     ):
         return sha256(
             Event.serialize(public_key, created_at, kind, tags, content)
@@ -57,6 +57,9 @@ class Event:
     @property
     def id(self) -> str:
         # Always recompute the id to reflect the up-to-date state of the Event
+        assert self.public_key
+        assert self.created_at
+        assert self.content
         return Event.compute_id(
             self.public_key, self.created_at, self.kind, self.tags, self.content
         )
@@ -70,6 +73,8 @@ class Event:
         self.tags.append(["e", event_id])
 
     def verify(self) -> bool:
+        assert self.public_key
+        assert self.signature
         pub_key = PublicKey(
             bytes.fromhex("02" + self.public_key), True
         )  # add 02 for schnorr (bip340)
@@ -96,9 +101,9 @@ class Event:
 
 @dataclass
 class EncryptedDirectMessage(Event):
-    recipient_pubkey: str = None
-    cleartext_content: str = None
-    reference_event_id: str = None
+    recipient_pubkey: Optional[str] = None
+    cleartext_content: Optional[str] = None
+    reference_event_id: Optional[str] = None
 
     def __post_init__(self):
         if self.content is not None:

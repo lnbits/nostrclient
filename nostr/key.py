@@ -1,12 +1,13 @@
 import base64
 import secrets
+from typing import Optional
 
 import secp256k1
 from cffi import FFI
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-from . import bech32
+from .bech32 import Encoding, bech32_decode, bech32_encode, convertbits
 from .event import EncryptedDirectMessage, Event, EventKind
 
 
@@ -15,44 +16,51 @@ class PublicKey:
         self.raw_bytes = raw_bytes
 
     def bech32(self) -> str:
-        converted_bits = bech32.convertbits(self.raw_bytes, 8, 5)
-        return bech32.bech32_encode("npub", converted_bits, bech32.Encoding.BECH32)
+        converted_bits = convertbits(self.raw_bytes, 8, 5)
+        return bech32_encode("npub", converted_bits, Encoding.BECH32)
 
     def hex(self) -> str:
         return self.raw_bytes.hex()
 
-    def verify_signed_message_hash(self, hash: str, sig: str) -> bool:
+    def verify_signed_message_hash(self, message_hash: str, sig: str) -> bool:
         pk = secp256k1.PublicKey(b"\x02" + self.raw_bytes, True)
-        return pk.schnorr_verify(bytes.fromhex(hash), bytes.fromhex(sig), None, True)
+        return pk.schnorr_verify(
+            bytes.fromhex(message_hash), bytes.fromhex(sig), None, True
+        )
 
     @classmethod
     def from_npub(cls, npub: str):
         """Load a PublicKey from its bech32/npub form"""
-        hrp, data, spec = bech32.bech32_decode(npub)
-        raw_public_key = bech32.convertbits(data, 5, 8)[:-1]
+        hrp, data, spec = bech32_decode(npub)
+        raw_data = convertbits(data, 5, 8)
+        assert raw_data
+        raw_public_key = raw_data[:-1]
         return cls(bytes(raw_public_key))
 
 
 class PrivateKey:
-    def __init__(self, raw_secret: bytes = None) -> None:
+    def __init__(self, raw_secret: Optional[bytes] = None) -> None:
         if raw_secret is not None:
             self.raw_secret = raw_secret
         else:
             self.raw_secret = secrets.token_bytes(32)
 
         sk = secp256k1.PrivateKey(self.raw_secret)
+        assert sk.pubkey
         self.public_key = PublicKey(sk.pubkey.serialize()[1:])
 
     @classmethod
     def from_nsec(cls, nsec: str):
         """Load a PrivateKey from its bech32/nsec form"""
-        hrp, data, spec = bech32.bech32_decode(nsec)
-        raw_secret = bech32.convertbits(data, 5, 8)[:-1]
+        hrp, data, spec = bech32_decode(nsec)
+        raw_data = convertbits(data, 5, 8)
+        assert raw_data
+        raw_secret = raw_data[:-1]
         return cls(bytes(raw_secret))
 
     def bech32(self) -> str:
-        converted_bits = bech32.convertbits(self.raw_secret, 8, 5)
-        return bech32.bech32_encode("nsec", converted_bits, bech32.Encoding.BECH32)
+        converted_bits = convertbits(self.raw_secret, 8, 5)
+        return bech32_encode("nsec", converted_bits, Encoding.BECH32)
 
     def hex(self) -> str:
         return self.raw_secret.hex()
@@ -83,6 +91,8 @@ class PrivateKey:
         )
 
     def encrypt_dm(self, dm: EncryptedDirectMessage) -> None:
+        assert dm.cleartext_content
+        assert dm.recipient_pubkey
         dm.content = self.encrypt_message(
             message=dm.cleartext_content, public_key_hex=dm.recipient_pubkey
         )
@@ -105,14 +115,14 @@ class PrivateKey:
 
         return unpadded_data.decode()
 
-    def sign_message_hash(self, hash: bytes) -> str:
+    def sign_message_hash(self, message_hash: bytes) -> str:
         sk = secp256k1.PrivateKey(self.raw_secret)
-        sig = sk.schnorr_sign(hash, None, raw=True)
+        sig = sk.schnorr_sign(message_hash, None, raw=True)
         return sig.hex()
 
     def sign_event(self, event: Event) -> None:
         if event.kind == EventKind.ENCRYPTED_DIRECT_MESSAGE and event.content is None:
-            self.encrypt_dm(event)
+            self.encrypt_dm(event)  # type: ignore
         if event.public_key is None:
             event.public_key = self.public_key.hex()
         event.signature = self.sign_message_hash(bytes.fromhex(event.id))
@@ -121,7 +131,9 @@ class PrivateKey:
         return self.raw_secret == other.raw_secret
 
 
-def mine_vanity_key(prefix: str = None, suffix: str = None) -> PrivateKey:
+def mine_vanity_key(
+    prefix: Optional[str] = None, suffix: Optional[str] = None
+) -> PrivateKey:
     if prefix is None and suffix is None:
         raise ValueError("Expected at least one of 'prefix' or 'suffix' arguments")
 

@@ -124,27 +124,29 @@ def decode(hrp, addr):
     hrpgot, data, spec = bech32_decode(addr)
     if hrpgot != hrp:
         return (None, None)
-    decoded = convertbits(data[1:], 5, 8, False)
+    decoded = convertbits(data[1:], 5, 8, False)  # type: ignore
     if decoded is None or len(decoded) < 2 or len(decoded) > 40:
         return (None, None)
-    if data[0] > 16:
+    if data[0] > 16:  # type: ignore
         return (None, None)
-    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
+    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:  # type: ignore
         return (None, None)
     if (
-        data[0] == 0
+        data[0] == 0  # type: ignore
         and spec != Encoding.BECH32
-        or data[0] != 0
+        or data[0] != 0  # type: ignore
         and spec != Encoding.BECH32M
     ):
         return (None, None)
-    return (data[0], decoded)
+    return (data[0], decoded)  # type: ignore
 
 
 def encode(hrp, witver, witprog):
     """Encode a segwit address."""
     spec = Encoding.BECH32 if witver == 0 else Encoding.BECH32M
-    ret = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5), spec)
+    wit_prog = convertbits(witprog, 8, 5)
+    assert wit_prog
+    ret = bech32_encode(hrp, [witver, *wit_prog], spec)
     if decode(hrp, ret) == (None, None):
         return None
     return ret
