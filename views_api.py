@@ -1,24 +1,30 @@
 import asyncio
 from http import HTTPStatus
-from typing import List
 
-from fastapi import Depends, WebSocket
-from loguru import logger
-from starlette.exceptions import HTTPException
-
+from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from lnbits.decorators import check_admin
 from lnbits.helpers import decrypt_internal_message, urlsafe_short_hash
+from loguru import logger
 
-from . import all_routers, nostr_client, nostrclient_ext
-from .crud import add_relay, create_config, delete_relay, get_config, get_relays, update_config
+from .crud import (
+    add_relay,
+    create_config,
+    delete_relay,
+    get_config,
+    get_relays,
+    update_config,
+)
 from .helpers import normalize_public_key
-from .models import Config, Relay, TestMessage, TestMessageResponse
+from .models import Config, Relay, RelayStatus, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
+from .nostr_client import all_routers, nostr_client
 from .router import NostrRouter
 
+nostrclient_api_router = APIRouter()
 
-@nostrclient_ext.get("/api/v1/relays",  dependencies=[Depends(check_admin)])
-async def api_get_relays() -> List[Relay]:
+
+@nostrclient_api_router.get("/api/v1/relays", dependencies=[Depends(check_admin)])
+async def api_get_relays() -> list[Relay]:
     relays = []
     for url, r in nostr_client.relay_manager.relays.items():
         relay_id = urlsafe_short_hash()
@@ -27,13 +33,13 @@ async def api_get_relays() -> List[Relay]:
                 id=relay_id,
                 url=url,
                 connected=r.connected,
-                status={
-                    "num_sent_events": r.num_sent_events,
-                    "num_received_events": r.num_received_events,
-                    "error_counter": r.error_counter,
-                    "error_list": r.error_list,
-                    "notice_list": r.notice_list,
-                },
+                status=RelayStatus(
+                    num_sent_events=r.num_sent_events,
+                    num_received_events=r.num_received_events,
+                    error_counter=r.error_counter,
+                    error_list=r.error_list,
+                    notice_list=r.notice_list,
+                ),
                 ping=r.ping,
                 active=True,
             )
@@ -41,10 +47,10 @@ async def api_get_relays() -> List[Relay]:
     return relays
 
 
-@nostrclient_ext.post(
+@nostrclient_api_router.post(
     "/api/v1/relay", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
-async def api_add_relay(relay: Relay) -> List[Relay]:
+async def api_add_relay(relay: Relay) -> list[Relay]:
     if not relay.url:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail="Relay url not provided."
@@ -62,7 +68,7 @@ async def api_add_relay(relay: Relay) -> List[Relay]:
     return await get_relays()
 
 
-@nostrclient_ext.delete(
+@nostrclient_api_router.delete(
     "/api/v1/relay", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
 async def api_delete_relay(relay: Relay) -> None:
@@ -75,7 +81,7 @@ async def api_delete_relay(relay: Relay) -> None:
     await delete_relay(relay)
 
 
-@nostrclient_ext.put(
+@nostrclient_api_router.put(
     "/api/v1/relay/test", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
 async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
@@ -99,35 +105,35 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail=str(ex),
-        )
+        ) from ex
     except Exception as ex:
         logger.warning(ex)
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Cannot generate test event",
-        )
+        ) from ex
 
 
-@nostrclient_ext.websocket("/api/v1/{id}")
-async def ws_relay(id: str, websocket: WebSocket) -> None:
+@nostrclient_api_router.websocket("/api/v1/{id}")
+async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
     """Relay multiplexer: one client (per endpoint) <-> multiple relays"""
 
     logger.info("New websocket connection at: '/api/v1/relay'")
     try:
         config = await get_config()
+        assert config, "Failed to get config"
 
         if not config.private_ws and not config.public_ws:
             raise ValueError("Websocket connections not accepted.")
 
-        if id == "relay":
+        if ws_id == "relay":
             if not config.public_ws:
                 raise ValueError("Public websocket connections not accepted.")
         else:
             if not config.private_ws:
                 raise ValueError("Private websocket connections not accepted.")
-            if decrypt_internal_message(id) != "relay":
+            if decrypt_internal_message(ws_id) != "relay":
                 raise ValueError("Invalid websocket endpoint.")
-
 
         await websocket.accept()
         router = NostrRouter(websocket)
@@ -155,10 +161,10 @@ async def ws_relay(id: str, websocket: WebSocket) -> None:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Cannot accept websocket connection",
-        )
+        ) from ex
 
 
-@nostrclient_ext.get("/api/v1/config",  dependencies=[Depends(check_admin)])
+@nostrclient_api_router.get("/api/v1/config", dependencies=[Depends(check_admin)])
 async def api_get_config() -> Config:
     config = await get_config()
     if not config:
@@ -167,10 +173,8 @@ async def api_get_config() -> Config:
     return config
 
 
-@nostrclient_ext.put("/api/v1/config", dependencies=[Depends(check_admin)])
-async def api_update_config(
-    data: Config
-):
+@nostrclient_api_router.put("/api/v1/config", dependencies=[Depends(check_admin)])
+async def api_update_config(data: Config):
     config = await update_config(data)
     assert config
     return config.dict()

@@ -2,7 +2,6 @@ import asyncio
 import json
 import time
 from queue import Queue
-from typing import List
 
 from loguru import logger
 from websocket import WebSocketApp
@@ -21,14 +20,14 @@ class Relay:
 
         self.error_counter: int = 0
         self.error_threshold: int = 100
-        self.error_list: List[str] = []
-        self.notice_list: List[str] = []
+        self.error_list: list[str] = []
+        self.notice_list: list[str] = []
         self.last_error_date: int = 0
         self.num_received_events: int = 0
         self.num_sent_events: int = 0
         self.num_subscriptions: int = 0
 
-        self.queue = Queue()
+        self.queue: Queue = Queue()
 
     def connect(self):
         self.ws = WebSocketApp(
@@ -63,9 +62,10 @@ class Relay:
     def publish(self, message: str):
         self.queue.put(message)
 
-    def publish_subscriptions(self, subscriptions: List[Subscription] = []):
+    def publish_subscriptions(self, subscriptions: list[Subscription]):
         for s in subscriptions:
-            json_str = json.dumps(["REQ", s.id] + s.filters)
+            assert s.filters
+            json_str = json.dumps(["REQ", s.id, *s.filters])
             self.publish(json_str)
 
     async def queue_worker(self):
@@ -84,14 +84,14 @@ class Relay:
                 logger.warning(f"[Relay: {self.url}] Closing queue worker.")
                 return
 
-    def close_subscription(self, id: str) -> None:
+    def close_subscription(self, sub_id: str) -> None:
         try:
-            self.publish(json.dumps(["CLOSE", id]))
+            self.publish(json.dumps(["CLOSE", sub_id]))
         except Exception as e:
             logger.debug(f"[Relay: {self.url}] Failed to close subscription: {e}")
 
     def add_notice(self, notice: str):
-        self.notice_list = [notice] + self.notice_list
+        self.notice_list = [notice, *self.notice_list]
 
     def _on_open(self, _):
         logger.info(f"[Relay: {self.url}] Connected.")
@@ -110,7 +110,7 @@ class Relay:
         self.message_pool.add_message(message, self.url)
 
     def _on_error(self, _, error):
-        logger.warning(f"[Relay: {self.url}] Error: '{str(error)}'")
+        logger.warning(f"[Relay: {self.url}] Error: '{error!s}'")
         self._append_error_message(str(error))
         self.close()
 
@@ -122,5 +122,5 @@ class Relay:
 
     def _append_error_message(self, message):
         self.error_counter += 1
-        self.error_list = [message] + self.error_list
+        self.error_list = [message, *self.error_list]
         self.last_error_date = int(time.time())

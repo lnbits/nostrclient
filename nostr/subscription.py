@@ -1,7 +1,7 @@
-from typing import List
+from typing import Optional
 
 
 class Subscription:
-    def __init__(self, id: str, filters: List[str] = None) -> None:
+    def __init__(self, id: str, filters: Optional[list[str]] = None) -> None:
         self.id = id
         self.filters = filters

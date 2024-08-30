@@ -1,9 +1,8 @@
 from sqlite3 import Row
 from typing import List, Optional
 
-from pydantic import BaseModel
-
 from lnbits.helpers import urlsafe_short_hash
+from pydantic import BaseModel
 
 
 class RelayStatus(BaseModel):
