@@ -1,5 +1,4 @@
-from sqlite3 import Row
-from typing import List, Optional
+from typing import Optional
 
 from lnbits.helpers import urlsafe_short_hash
 from pydantic import BaseModel
@@ -9,8 +8,8 @@ class RelayStatus(BaseModel):
     num_sent_events: Optional[int] = 0
     num_received_events: Optional[int] = 0
     error_counter: Optional[int] = 0
-    error_list: Optional[List] = []
-    notice_list: Optional[List] = []
+    error_list: Optional[list] = []
+    notice_list: Optional[list] = []
 
 
 class Relay(BaseModel):
@@ -26,9 +25,11 @@ class Relay(BaseModel):
         if not self.id:
             self.id = urlsafe_short_hash()
 
-    @classmethod
-    def from_row(cls, row: Row) -> "Relay":
-        return cls(**dict(row))
+
+class RelayDb(BaseModel):
+    id: str
+    url: str
+    active: Optional[bool] = True
 
 
 class TestMessage(BaseModel):

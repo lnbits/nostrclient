@@ -23,3 +23,13 @@ async def m002_create_config_table(db):
             json_data TEXT NOT NULL
         );"""
     )
+
+
+# async def m003_migrate_config_table(db):
+
+#     await db.execute(
+#         """CREATE TABLE nostrclient.config (
+#             private_ws BOOLEAN DEFAULT true,
+#             public_ws BOOLEAN DEFAULT false
+#         );"""
+#     )
