@@ -1,7 +1,7 @@
 from typing import Optional
 
 from lnbits.helpers import urlsafe_short_hash
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RelayStatus(BaseModel):
@@ -15,11 +15,13 @@ class RelayStatus(BaseModel):
 class Relay(BaseModel):
     id: Optional[str] = None
     url: Optional[str] = None
-    connected: Optional[bool] = None
-    connected_string: Optional[str] = None
-    status: Optional[RelayStatus] = None
     active: Optional[bool] = None
-    ping: Optional[int] = None
+
+    connected: Optional[bool] = Field(default=None, no_database=True)
+    connected_string: Optional[str] = Field(default=None, no_database=True)
+    status: Optional[RelayStatus] = Field(default=None, no_database=True)
+
+    ping: Optional[int] = Field(default=None, no_database=True)
 
     def _init__(self):
         if not self.id:

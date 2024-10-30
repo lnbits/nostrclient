@@ -71,7 +71,7 @@
         <q-table
           flat
           dense
-          :data="nostrrelayLinks"
+          :rows="nostrrelayLinks"
           row-key="id"
           :columns="relayTable.columns"
           :pagination.sync="relayTable.pagination"
@@ -372,8 +372,6 @@
 {% endraw %} {% endblock %} {% block scripts %} {{ window_vars(user) }}
 
 <script>
-  Vue.component(VueQrcode.name, VueQrcode)
-
   var maplrelays = obj => {
     obj._data = _.clone(obj)
     obj.theTime = obj.time * 60 - (Date.now() / 1000 - obj.timestamp)
@@ -391,7 +389,7 @@
     if (obj.time_elapsed) {
       obj.date = 'Time elapsed'
     } else {
-      obj.date = Quasar.utils.date.formatDate(
+      obj.date = Quasar.date.formatDate(
         new Date((obj.theTime - 3600) * 1000),
         'HH:mm:ss'
       )
@@ -399,7 +397,7 @@
     return obj
   }
 
-  new Vue({
+  window.app = Vue.createApp({
     el: '#vue',
     mixins: [windowMixin],
     data: function () {
@@ -484,6 +482,7 @@
             this.g.user.wallets[0].adminkey
           )
           .then(function (response) {
+            console.log("### response", response.data)
             if (response.data) {
               response.data.map(maplrelays)
               self.nostrrelayLinks = response.data
