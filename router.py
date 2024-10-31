@@ -6,8 +6,13 @@ from fastapi import WebSocket, WebSocketDisconnect
 from lnbits.helpers import urlsafe_short_hash
 from loguru import logger
 
-from . import nostr_client
+from .nostr.client.client import NostrClient
+
+# from . import nostr_client
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
+
+nostr_client: NostrClient = NostrClient()
+all_routers: list["NostrRouter"] = []
 
 
 class NostrRouter:

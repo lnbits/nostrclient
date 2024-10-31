@@ -17,8 +17,7 @@ from .crud import (
 from .helpers import normalize_public_key
 from .models import Config, Relay, RelayStatus, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
-from .nostr_client import all_routers, nostr_client
-from .router import NostrRouter
+from .router import NostrRouter, all_routers, nostr_client
 
 nostrclient_api_router = APIRouter()
 
