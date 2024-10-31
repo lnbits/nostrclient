@@ -49,3 +49,8 @@ class TestMessageResponse(BaseModel):
 class Config(BaseModel):
     private_ws: bool = True
     public_ws: bool = False
+
+
+class UserConfig(BaseModel):
+    owner_id: str
+    extra: Config = Config()

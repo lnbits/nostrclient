@@ -119,9 +119,9 @@ async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
 
     logger.info("New websocket connection at: '/api/v1/relay'")
     try:
-        # config = await get_config()
-        # assert config, "Failed to get config"
-        config = Config()
+        config = await get_config(owner_id="admin")
+        assert config, "Failed to get config"
+
         config.public_ws = True
 
         if not config.private_ws and not config.public_ws:
@@ -167,15 +167,15 @@ async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
 
 @nostrclient_api_router.get("/api/v1/config", dependencies=[Depends(check_admin)])
 async def api_get_config() -> Config:
-    config = await get_config()
+    config = await get_config(owner_id="admin")
     if not config:
-        config = await create_config()
+        config = await create_config(owner_id="admin")
         assert config, "Failed to create config"
     return config
 
 
 @nostrclient_api_router.put("/api/v1/config", dependencies=[Depends(check_admin)])
 async def api_update_config(data: Config):
-    config = await update_config(data)
+    config = await update_config(owner_id="admin", config=data)
     assert config
-    return config.dict()
+    return config.extra.dict()

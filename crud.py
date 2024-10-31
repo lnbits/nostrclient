@@ -1,9 +1,8 @@
-import json
 from typing import Optional
 
 from lnbits.db import Database
 
-from .models import Config, Relay
+from .models import Config, Relay, UserConfig
 
 db = Database("ext_nostrclient")
 
@@ -29,28 +28,24 @@ async def delete_relay(relay: Relay) -> None:
 
 
 ######################CONFIG#######################
-async def create_config() -> Config:
-    config = Config()
-    await db.execute(
+async def create_config(owner_id: str) -> UserConfig:
+    admin_config = UserConfig(owner_id=owner_id)
+    await db.insert("nostrclient.config", admin_config)
+    return admin_config
+
+
+async def update_config(owner_id: str, config: Config) -> UserConfig:
+    user_config = UserConfig(owner_id=owner_id, extra=config)
+    await db.update("nostrclient.config", user_config, "WHERE owner_id = :owner_id")
+    return user_config
+
+
+async def get_config(owner_id: str) -> Optional[UserConfig]:
+    return await db.fetchone(
         """
-        INSERT INTO nostrclient.config (json_data)
-        VALUES (?)
+            SELECT * FROM nostrclient.config
+            WHERE owner_id = :owner_id
         """,
-        (json.dumps(config.dict()),),
+        {"owner_id": owner_id},
+        model=UserConfig,
     )
-    row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
-    return json.loads(row[0], object_hook=lambda d: Config(**d))
-
-
-async def update_config(config: Config) -> Optional[Config]:
-    await db.execute(
-        """UPDATE nostrclient.config SET json_data = ?""",
-        (json.dumps(config.dict()),),
-    )
-    row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
-    return json.loads(row[0], object_hook=lambda d: Config(**d))
-
-
-async def get_config() -> Optional[Config]:
-    row = await db.fetchone("SELECT json_data FROM nostrclient.config", ())
-    return json.loads(row[0], object_hook=lambda d: Config(**d)) if row else None
