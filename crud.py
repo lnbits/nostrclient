@@ -28,20 +28,20 @@ async def delete_relay(relay: Relay) -> None:
 
 
 ######################CONFIG#######################
-async def create_config(owner_id: str) -> UserConfig:
+async def create_config(owner_id: str) -> Config:
     admin_config = UserConfig(owner_id=owner_id)
     await db.insert("nostrclient.config", admin_config)
-    return admin_config
+    return admin_config.extra
 
 
-async def update_config(owner_id: str, config: Config) -> UserConfig:
+async def update_config(owner_id: str, config: Config) -> Config:
     user_config = UserConfig(owner_id=owner_id, extra=config)
     await db.update("nostrclient.config", user_config, "WHERE owner_id = :owner_id")
-    return user_config
+    return user_config.extra
 
 
-async def get_config(owner_id: str) -> Optional[UserConfig]:
-    return await db.fetchone(
+async def get_config(owner_id: str) -> Optional[Config]:
+    user_config: UserConfig = await db.fetchone(
         """
             SELECT * FROM nostrclient.config
             WHERE owner_id = :owner_id
@@ -49,3 +49,6 @@ async def get_config(owner_id: str) -> Optional[UserConfig]:
         {"owner_id": owner_id},
         model=UserConfig,
     )
+    if user_config:
+        return user_config.extra
+    return None

@@ -122,8 +122,6 @@ async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
         config = await get_config(owner_id="admin")
         assert config, "Failed to get config"
 
-        config.public_ws = True
-
         if not config.private_ws and not config.public_ws:
             raise ValueError("Websocket connections not accepted.")
 
@@ -178,4 +176,4 @@ async def api_get_config() -> Config:
 async def api_update_config(data: Config):
     config = await update_config(owner_id="admin", config=data)
     assert config
-    return config.extra.dict()
+    return config.dict()
