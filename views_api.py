@@ -17,8 +17,7 @@ from .crud import (
 from .helpers import normalize_public_key
 from .models import Config, Relay, RelayStatus, TestMessage, TestMessageResponse
 from .nostr.key import EncryptedDirectMessage, PrivateKey
-from .nostr_client import all_routers, nostr_client
-from .router import NostrRouter
+from .router import NostrRouter, all_routers, nostr_client
 
 nostrclient_api_router = APIRouter()
 
@@ -114,13 +113,13 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
         ) from ex
 
 
-@nostrclient_api_router.websocket("/api/v1/{id}")
+@nostrclient_api_router.websocket("/api/v1/{ws_id}")
 async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
     """Relay multiplexer: one client (per endpoint) <-> multiple relays"""
 
     logger.info("New websocket connection at: '/api/v1/relay'")
     try:
-        config = await get_config()
+        config = await get_config(owner_id="admin")
         assert config, "Failed to get config"
 
         if not config.private_ws and not config.public_ws:
@@ -166,15 +165,15 @@ async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
 
 @nostrclient_api_router.get("/api/v1/config", dependencies=[Depends(check_admin)])
 async def api_get_config() -> Config:
-    config = await get_config()
+    config = await get_config(owner_id="admin")
     if not config:
-        config = await create_config()
+        config = await create_config(owner_id="admin")
         assert config, "Failed to create config"
     return config
 
 
 @nostrclient_api_router.put("/api/v1/config", dependencies=[Depends(check_admin)])
 async def api_update_config(data: Config):
-    config = await update_config(data)
+    config = await update_config(owner_id="admin", config=data)
     assert config
     return config.dict()

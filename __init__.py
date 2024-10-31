@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from loguru import logger
 
 from .crud import db
-from .nostr_client import all_routers, nostr_client
+from .router import all_routers, nostr_client
 from .tasks import check_relays, init_relays, subscribe_events
 from .views import nostrclient_generic_router
 from .views_api import nostrclient_api_router

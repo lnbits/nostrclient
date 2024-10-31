@@ -2,6 +2,6 @@
   "name": "Nostr Client",
   "short_description": "Nostr client for extensions",
   "tile": "/nostrclient/static/images/nostr-bitcoin.png",
-  "contributors": ["calle", "motorina0"],
-  "min_lnbits_version": "0.12.0"
+  "contributors": ["calle", "motorina0", "dni"],
+  "min_lnbits_version": "1.0.0"
 }

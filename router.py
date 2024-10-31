@@ -1,19 +1,26 @@
 import asyncio
 import json
-from typing import Dict, List
+from typing import ClassVar, Dict, List
 
 from fastapi import WebSocket, WebSocketDisconnect
 from lnbits.helpers import urlsafe_short_hash
 from loguru import logger
 
-from . import nostr_client
+from .nostr.client.client import NostrClient
+
+# from . import nostr_client
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
+
+nostr_client: NostrClient = NostrClient()
+all_routers: list["NostrRouter"] = []
 
 
 class NostrRouter:
-    received_subscription_events: dict[str, List[EventMessage]]
-    received_subscription_notices: list[NoticeMessage]
-    received_subscription_eosenotices: dict[str, EndOfStoredEventsMessage]
+    received_subscription_events: ClassVar[dict[str, List[EventMessage]]] = {}
+    received_subscription_notices: ClassVar[list[NoticeMessage]] = []
+    received_subscription_eosenotices: ClassVar[dict[str, EndOfStoredEventsMessage]] = (
+        {}
+    )
 
     def __init__(self, websocket: WebSocket):
         self.connected: bool = True
@@ -70,6 +77,7 @@ class NostrRouter:
                 self._handle_notices()
             except Exception as e:
                 logger.debug(f"Failed to handle response for client: '{e!s}'.")
+                await asyncio.sleep(1)
             await asyncio.sleep(0.1)
 
     async def _handle_subscriptions(self):

@@ -3,10 +3,9 @@ import threading
 
 from loguru import logger
 
-from . import nostr_client
 from .crud import get_relays
 from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
-from .router import NostrRouter
+from .router import NostrRouter, nostr_client
 
 
 async def init_relays():

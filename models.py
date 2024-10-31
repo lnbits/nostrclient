@@ -1,34 +1,37 @@
-from sqlite3 import Row
-from typing import List, Optional
+from typing import Optional
 
 from lnbits.helpers import urlsafe_short_hash
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RelayStatus(BaseModel):
     num_sent_events: Optional[int] = 0
     num_received_events: Optional[int] = 0
     error_counter: Optional[int] = 0
-    error_list: Optional[List] = []
-    notice_list: Optional[List] = []
+    error_list: Optional[list] = []
+    notice_list: Optional[list] = []
 
 
 class Relay(BaseModel):
     id: Optional[str] = None
     url: Optional[str] = None
-    connected: Optional[bool] = None
-    connected_string: Optional[str] = None
-    status: Optional[RelayStatus] = None
     active: Optional[bool] = None
-    ping: Optional[int] = None
+
+    connected: Optional[bool] = Field(default=None, no_database=True)
+    connected_string: Optional[str] = Field(default=None, no_database=True)
+    status: Optional[RelayStatus] = Field(default=None, no_database=True)
+
+    ping: Optional[int] = Field(default=None, no_database=True)
 
     def _init__(self):
         if not self.id:
             self.id = urlsafe_short_hash()
 
-    @classmethod
-    def from_row(cls, row: Row) -> "Relay":
-        return cls(**dict(row))
+
+class RelayDb(BaseModel):
+    id: str
+    url: str
+    active: Optional[bool] = True
 
 
 class TestMessage(BaseModel):
@@ -46,3 +49,8 @@ class TestMessageResponse(BaseModel):
 class Config(BaseModel):
     private_ws: bool = True
     public_ws: bool = False
+
+
+class UserConfig(BaseModel):
+    owner_id: str
+    extra: Config = Config()
