@@ -482,7 +482,6 @@
             this.g.user.wallets[0].adminkey
           )
           .then(function (response) {
-            console.log("### response", response.data)
             if (response.data) {
               response.data.map(maplrelays)
               self.nostrrelayLinks = response.data
@@ -623,7 +622,7 @@
         try {
           const {data} = await LNbits.api.request(
             'PUT',
-            '/nostrclient/api/v1/relay/test?usr=' + this.g.user.id,
+            '/nostrclient/api/v1/relay/test',
             this.g.user.wallets[0].adminkey,
             {
               sender_private_key: this.testData.senderPrivateKey,

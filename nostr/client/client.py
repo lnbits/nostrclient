@@ -6,10 +6,12 @@ from ..relay_manager import RelayManager
 
 
 class NostrClient:
-    relay_manager = RelayManager()
+    relay_manager: RelayManager
+    running: bool
 
     def __init__(self):
         self.running = True
+        self.relay_manager = RelayManager()
 
     def connect(self, relays):
         for relay in relays:

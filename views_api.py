@@ -114,14 +114,16 @@ async def api_test_endpoint(data: TestMessage) -> TestMessageResponse:
         ) from ex
 
 
-@nostrclient_api_router.websocket("/api/v1/{id}")
+@nostrclient_api_router.websocket("/api/v1/{ws_id}")
 async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
     """Relay multiplexer: one client (per endpoint) <-> multiple relays"""
 
     logger.info("New websocket connection at: '/api/v1/relay'")
     try:
-        config = await get_config()
-        assert config, "Failed to get config"
+        # config = await get_config()
+        # assert config, "Failed to get config"
+        config = Config()
+        config.public_ws = True
 
         if not config.private_ws and not config.public_ws:
             raise ValueError("Websocket connections not accepted.")
