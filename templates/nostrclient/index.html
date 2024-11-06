@@ -376,6 +376,7 @@
     obj._data = _.clone(obj)
     obj.theTime = obj.time * 60 - (Date.now() / 1000 - obj.timestamp)
     obj.time = obj.time + 'mins'
+    obj.status = obj.status || {}
     obj.status = {
       sentEvents: obj.status.num_sent_events,
       receveidEvents: obj.status.num_received_events,
