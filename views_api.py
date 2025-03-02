@@ -131,7 +131,7 @@ async def ws_relay(ws_id: str, websocket: WebSocket) -> None:
         else:
             if not config.private_ws:
                 raise ValueError("Private websocket connections not accepted.")
-            if decrypt_internal_message(ws_id) != "relay":
+            if decrypt_internal_message(ws_id, urlsafe=True) != "relay":
                 raise ValueError("Invalid websocket endpoint.")
 
         await websocket.accept()
