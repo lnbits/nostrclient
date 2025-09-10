@@ -119,9 +119,6 @@ class NostrRouter:
             logger.warning(
                 f"[NOSTRCLIENT] Error in _handle_received_subscription_events: {e}"
             )
-            logger.warning(
-                f"[NOSTRCLIENT] Event JSON was: {event_json[:100] if event_json else 'None'}..."
-            )
 
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
