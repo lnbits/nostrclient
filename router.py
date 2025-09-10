@@ -111,7 +111,9 @@ class NostrRouter:
                 # this reconstructs the original response from the relay
                 # reconstruct original subscription id
                 s_original = self.original_subscription_ids[s]
-                event_to_forward = f"""["EVENT", "{s_original}", {event_json}]"""
+                event_to_forward = json.dumps(
+                    ["EVENT", s_original, json.loads(event_json)]
+                )
                 await self.websocket.send_text(event_to_forward)
         except Exception as e:
             logger.debug(e)  # there are 2900 errors here
