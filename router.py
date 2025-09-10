@@ -116,7 +116,12 @@ class NostrRouter:
                 )
                 await self.websocket.send_text(event_to_forward)
         except Exception as e:
-            logger.debug(e)  # there are 2900 errors here
+            logger.warning(
+                f"[NOSTRCLIENT] Error in _handle_received_subscription_events: {e}"
+            )
+            logger.warning(
+                f"[NOSTRCLIENT] Event JSON was: {event_json[:100] if event_json else 'None'}..."
+            )
 
     def _handle_notices(self):
         while len(NostrRouter.received_subscription_notices):
