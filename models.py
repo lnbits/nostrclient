@@ -1,27 +1,25 @@
-from typing import Optional
-
 from lnbits.helpers import urlsafe_short_hash
 from pydantic import BaseModel, Field
 
 
 class RelayStatus(BaseModel):
-    num_sent_events: Optional[int] = 0
-    num_received_events: Optional[int] = 0
-    error_counter: Optional[int] = 0
-    error_list: Optional[list] = []
-    notice_list: Optional[list] = []
+    num_sent_events: int | None = 0
+    num_received_events: int | None = 0
+    error_counter: int | None = 0
+    error_list: list | None = []
+    notice_list: list | None = []
 
 
 class Relay(BaseModel):
-    id: Optional[str] = None
-    url: Optional[str] = None
-    active: Optional[bool] = None
+    id: str | None = None
+    url: str | None = None
+    active: bool | None = None
 
-    connected: Optional[bool] = Field(default=None, no_database=True)
-    connected_string: Optional[str] = Field(default=None, no_database=True)
-    status: Optional[RelayStatus] = Field(default=None, no_database=True)
+    connected: bool | None = Field(default=None, no_database=True)
+    connected_string: str | None = Field(default=None, no_database=True)
+    status: RelayStatus | None = Field(default=None, no_database=True)
 
-    ping: Optional[int] = Field(default=None, no_database=True)
+    ping: int | None = Field(default=None, no_database=True)
 
     def _init__(self):
         if not self.id:
@@ -31,11 +29,11 @@ class Relay(BaseModel):
 class RelayDb(BaseModel):
     id: str
     url: str
-    active: Optional[bool] = True
+    active: bool | None = True
 
 
 class TestMessage(BaseModel):
-    sender_private_key: Optional[str]
+    sender_private_key: str | None
     reciever_public_key: str
     message: str
 

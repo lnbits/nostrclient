@@ -19,10 +19,20 @@ dev-dependencies = [
     "pre-commit",
     "ruff",
     "pytest-md",
+    "types-cffi",
 ]
 
 [tool.mypy]
+exclude = "(nostr/*)"
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+  "nostr.*",
+  "secp256k1.*",
+]
+follow_imports = "skip"
+ignore_missing_imports = "True"
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

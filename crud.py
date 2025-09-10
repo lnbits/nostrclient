@@ -1,5 +1,3 @@
-from typing import Optional
-
 from lnbits.db import Database
 
 from .models import Config, Relay, UserConfig
@@ -40,7 +38,7 @@ async def update_config(owner_id: str, config: Config) -> Config:
     return user_config.extra
 
 
-async def get_config(owner_id: str) -> Optional[Config]:
+async def get_config(owner_id: str) -> Config | None:
     user_config: UserConfig = await db.fetchone(
         """
             SELECT * FROM nostrclient.config
