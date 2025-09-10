@@ -53,7 +53,7 @@ def nostrclient_start():
 __all__ = [
     "db",
     "nostrclient_ext",
+    "nostrclient_start",
     "nostrclient_static_files",
     "nostrclient_stop",
-    "nostrclient_start",
 ]

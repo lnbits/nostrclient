@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import ClassVar, Dict, List
+from typing import ClassVar
 
 from fastapi import WebSocket, WebSocketDisconnect
 from lnbits.helpers import urlsafe_short_hash
@@ -16,7 +16,7 @@ all_routers: list["NostrRouter"] = []
 
 
 class NostrRouter:
-    received_subscription_events: ClassVar[dict[str, List[EventMessage]]] = {}
+    received_subscription_events: ClassVar[dict[str, list[EventMessage]]] = {}
     received_subscription_notices: ClassVar[list[NoticeMessage]] = []
     received_subscription_eosenotices: ClassVar[dict[str, EndOfStoredEventsMessage]] = (
         {}
@@ -25,11 +25,11 @@ class NostrRouter:
     def __init__(self, websocket: WebSocket):
         self.connected: bool = True
         self.websocket: WebSocket = websocket
-        self.tasks: List[asyncio.Task] = []
-        self.original_subscription_ids: Dict[str, str] = {}
+        self.tasks: list[asyncio.Task] = []
+        self.original_subscription_ids: dict[str, str] = {}
 
     @property
-    def subscriptions(self) -> List[str]:
+    def subscriptions(self) -> list[str]:
         return list(self.original_subscription_ids.keys())
 
     def start(self):
