@@ -1,7 +1,11 @@
 {
   "name": "Nostr Client",
-  "short_description": "Nostr client for extensions",
+  "short_description": "Nostr relay multiplexer",
   "tile": "/nostrclient/static/images/nostr-bitcoin.png",
   "contributors": ["calle", "motorina0", "dni"],
-  "min_lnbits_version": "1.0.0"
+  "min_lnbits_version": "1.0.0",
+  "screenshots": [
+    "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/1.jpeg",
+    "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/2.jpeg"
+  ]
 }

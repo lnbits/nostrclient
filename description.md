@@ -1,1 +1,12 @@
-An always-on extension that can open multiple connections to nostr relays and act as a multiplexer for other clients: You open a single websocket to nostrclient which then sends the data to multiple relays. The responses from these relays are then sent back to the client.
+## Nostr Relay Multiplexer
+
+An always-on relay multiplexer that simplifies connecting to multiple Nostr relays.
+
+Instead of your Nostr client managing connections to dozens of relays, you connect to a single WebSocket endpoint provided by `nostrclient`, which then fans out your requests to all configured relays and aggregates the responses back to you.
+
+### Benefits
+
+- **Simplified Client Configuration** - Connect to one endpoint instead of managing multiple relay connections
+- **Always-On Connectivity** - Your LNbits instance maintains persistent connections to relays
+- **Resource Efficient** - Share relay connections across multiple clients
+- **Automatic Subscription Management** - Subscription ID rewriting prevents conflicts between clients
