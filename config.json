@@ -1,5 +1,5 @@
 {
-  "name": "Nostr Client Dev",
+  "name": "Nostr Client",
   "short_description": "Nostr relay multiplexer",
   "tile": "/nostrclient/static/images/nostr-bitcoin.png",
   "contributors": ["calle", "motorina0", "dni"],
