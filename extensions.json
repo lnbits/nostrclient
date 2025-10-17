@@ -1,39 +1,42 @@
-[
-  {
-    "id": "nostrclient-dev",
-    "repo": "https://github.com/BenGWeeks/nostrclient",
-    "name": "Nostr Client Dev",
-    "version": "0.3.7",
-    "min_lnbits_version": "0.11.0",
-    "max_lnbits_version": "0.12.0",
-    "short_description": "Nostr relay multiplexer",
-    "icon": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/nostr-bitcoin.png",
-    "archive": "https://github.com/BenGWeeks/nostrclient/archive/refs/heads/add-extension-metadata.zip",
-    "hash": "61323bb77a48614cde18b2a6fd424306cbff8cafc6fc4a7a4222270a52fa4bf5"
-  },
-  {
-    "id": "nostrclient-dev",
-    "repo": "https://github.com/BenGWeeks/nostrclient",
-    "name": "Nostr Client Dev",
-    "version": "0.4.0",
-    "min_lnbits_version": "0.12.0",
-    "max_lnbits_version": "1.0.0",
-    "short_description": "Nostr relay multiplexer",
-    "icon": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/nostr-bitcoin.png",
-    "archive": "https://github.com/BenGWeeks/nostrclient/archive/refs/heads/add-extension-metadata.zip",
-    "hash": "4c81c251049599ef0ee32393b45fe5e4870ab02772dadb34e489b1a247411eca",
-    "details_link": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/config.json"
-  },
-  {
-    "id": "nostrclient-dev",
-    "repo": "https://github.com/BenGWeeks/nostrclient",
-    "name": "Nostr Client Dev",
-    "version": "1.0.1",
-    "min_lnbits_version": "1.0.0",
-    "short_description": "Nostr relay multiplexer",
-    "icon": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/nostr-bitcoin.png",
-    "archive": "https://github.com/BenGWeeks/nostrclient/archive/refs/heads/add-extension-metadata.zip",
-    "hash": "cde77e4454297abf9b9c7400fc5a5f071d0b0dd9c6651f403a0a47dfea544e53",
-    "details_link": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/config.json"
-  }
-]
+{
+  "featured": [],
+  "extensions": [
+    {
+      "id": "nostrclient-dev",
+      "repo": "https://github.com/BenGWeeks/nostrclient",
+      "name": "Nostr Client Dev",
+      "version": "0.3.7",
+      "min_lnbits_version": "0.11.0",
+      "max_lnbits_version": "0.12.0",
+      "short_description": "Nostr relay multiplexer",
+      "icon": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/nostr-bitcoin.png",
+      "archive": "https://github.com/BenGWeeks/nostrclient/archive/refs/heads/add-extension-metadata.zip",
+      "hash": "61323bb77a48614cde18b2a6fd424306cbff8cafc6fc4a7a4222270a52fa4bf5"
+    },
+    {
+      "id": "nostrclient-dev",
+      "repo": "https://github.com/BenGWeeks/nostrclient",
+      "name": "Nostr Client Dev",
+      "version": "0.4.0",
+      "min_lnbits_version": "0.12.0",
+      "max_lnbits_version": "1.0.0",
+      "short_description": "Nostr relay multiplexer",
+      "icon": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/nostr-bitcoin.png",
+      "archive": "https://github.com/BenGWeeks/nostrclient/archive/refs/heads/add-extension-metadata.zip",
+      "hash": "4c81c251049599ef0ee32393b45fe5e4870ab02772dadb34e489b1a247411eca",
+      "details_link": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/config.json"
+    },
+    {
+      "id": "nostrclient-dev",
+      "repo": "https://github.com/BenGWeeks/nostrclient",
+      "name": "Nostr Client Dev",
+      "version": "1.0.1",
+      "min_lnbits_version": "1.0.0",
+      "short_description": "Nostr relay multiplexer",
+      "icon": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/static/images/nostr-bitcoin.png",
+      "archive": "https://github.com/BenGWeeks/nostrclient/archive/refs/heads/add-extension-metadata.zip",
+      "hash": "cde77e4454297abf9b9c7400fc5a5f071d0b0dd9c6651f403a0a47dfea544e53",
+      "details_link": "https://raw.githubusercontent.com/BenGWeeks/nostrclient/add-extension-metadata/config.json"
+    }
+  ]
+}
