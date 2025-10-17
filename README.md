@@ -17,44 +17,22 @@
 
 ```mermaid
 flowchart LR
-    subgraph clients[Nostr Clients]
-        A[Client A]
-        B[Client B]
-        C[Client C]
-    end
+    A[Client A] -->|WebSocket| N
+    B[Client B] -->|WebSocket| N
+    C[Client C] -->|WebSocket| N
 
-    subgraph nostrclient[nostrclient Extension]
-        router[NostrRouter]
-        subgraph subscriptions[Subscription Manager]
-            s1[subscription_A1 → rewritten_id_1]
-            s2[subscription_B1 → rewritten_id_2]
-            s3[subscription_C1 → rewritten_id_3]
-        end
-    end
+    N[nostrclient<br/>Router] -->|Fan Out| R1[Relay A]
+    N -->|Fan Out| R2[Relay B]
+    N -->|Fan Out| R3[Relay C]
+    N -->|Fan Out| R4[Relay D]
 
-    subgraph relays[Nostr Relays]
-        R1[wss://relay1.nostr.com]
-        R2[wss://relay2.nostr.com]
-        R3[wss://relay3.nostr.com]
-        R4[wss://relay4.nostr.com]
-    end
-
-    A -->|WebSocket| router
-    B -->|WebSocket| router
-    C -->|WebSocket| router
-
-    router --> subscriptions
-
-    subscriptions -->|Fan Out| R1
-    subscriptions -->|Fan Out| R2
-    subscriptions -->|Fan Out| R3
-    subscriptions -->|Fan Out| R4
-
-    R1 -.->|Aggregate| router
-    R2 -.->|Aggregate| router
-    R3 -.->|Aggregate| router
-    R4 -.->|Aggregate| router
+    R1 -.->|Aggregate| N
+    R2 -.->|Aggregate| N
+    R3 -.->|Aggregate| N
+    R4 -.->|Aggregate| N
 ```
+
+**Key Feature:** The router rewrites subscription IDs to prevent conflicts when multiple clients use the same IDs.
 
 ## Features
 
