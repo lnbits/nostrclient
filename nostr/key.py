@@ -21,7 +21,7 @@ class PublicKey:
         return self.raw_bytes.hex()
 
     def verify_signed_message_hash(self, message_hash: str, sig: str) -> bool:
-        pk = coincurve.PublicKeyXOnly(b"\x02" + self.raw_bytes)
+        pk = coincurve.PublicKeyXOnly(self.raw_bytes)
         return pk.verify(bytes.fromhex(sig), bytes.fromhex(message_hash))
 
     @classmethod

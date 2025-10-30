@@ -75,8 +75,7 @@ class Event:
     def verify(self) -> bool:
         assert self.public_key
         assert self.signature
-        # add 02 for schnorr (bip340)
-        pub_key = coincurve.PublicKeyXOnly(bytes.fromhex("02" + self.public_key))
+        pub_key = coincurve.PublicKeyXOnly(bytes.fromhex(self.public_key))
         return pub_key.verify(bytes.fromhex(self.signature), bytes.fromhex(self.id))
 
     def to_message(self) -> str:
