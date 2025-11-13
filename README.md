@@ -59,12 +59,14 @@ flowchart LR
 - **Private Endpoint**: `/api/v1/{encrypted_id}` - Requires valid encrypted endpoint ID
 
 Configure endpoint access in the extension settings:
+
 - `private_ws` - Enable/disable private WebSocket access
 - `public_ws` - Enable/disable public WebSocket access
 
 ### Adding Relays
 
 Use the nostrclient UI to add/remove Nostr relays. The extension will automatically:
+
 - Connect to new relays
 - Publish existing subscriptions to new relays
 - Monitor relay health and reconnect as needed
@@ -76,6 +78,7 @@ Use the nostrclient UI to add/remove Nostr relays. The extension will automatica
 The `Test Endpoint` feature helps verify that your nostrclient WebSocket endpoint works correctly.
 
 **How to test:**
+
 1. Navigate to the nostrclient extension in LNbits
 2. Use the Test Endpoint feature
 3. Send a DM to yourself (or a temporary account)
