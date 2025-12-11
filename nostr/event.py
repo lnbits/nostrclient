@@ -5,7 +5,7 @@ from enum import IntEnum
 from hashlib import sha256
 from typing import Optional
 
-from secp256k1 import PublicKey
+import coincurve
 
 from .message_type import ClientMessageType
 
@@ -75,12 +75,8 @@ class Event:
     def verify(self) -> bool:
         assert self.public_key
         assert self.signature
-        pub_key = PublicKey(
-            bytes.fromhex("02" + self.public_key), True
-        )  # add 02 for schnorr (bip340)
-        return pub_key.schnorr_verify(
-            bytes.fromhex(self.id), bytes.fromhex(self.signature), None, raw=True
-        )
+        pub_key = coincurve.PublicKeyXOnly(bytes.fromhex(self.public_key))
+        return pub_key.verify(bytes.fromhex(self.signature), bytes.fromhex(self.id))
 
     def to_message(self) -> str:
         return json.dumps(

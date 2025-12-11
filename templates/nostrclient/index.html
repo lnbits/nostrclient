@@ -476,11 +476,7 @@
       getRelays: function () {
         var self = this
         LNbits.api
-          .request(
-            'GET',
-            '/nostrclient/api/v1/relays?usr=' + this.g.user.id,
-            this.g.user.wallets[0].adminkey
-          )
+          .request('GET', '/nostrclient/api/v1/relays')
           .then(function (response) {
             if (response.data) {
               response.data.map(maplrelays)
@@ -508,12 +504,9 @@
         console.log('ADD RELAY ' + this.relayToAdd)
         let that = this
         LNbits.api
-          .request(
-            'POST',
-            '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
-            this.g.user.wallets[0].adminkey,
-            {url: this.relayToAdd}
-          )
+          .request('POST', '/nostrclient/api/v1/relay', null, {
+            url: this.relayToAdd
+          })
           .then(function (response) {
             console.log('response:', response)
             if (response.data) {
@@ -540,12 +533,7 @@
       },
       deleteRelay(url) {
         LNbits.api
-          .request(
-            'DELETE',
-            '/nostrclient/api/v1/relay?usr=' + this.g.user.id,
-            this.g.user.wallets[0].adminkey,
-            {url: url}
-          )
+          .request('DELETE', '/nostrclient/api/v1/relay', null, {url: url})
           .then(response => {
             const relayIndex = this.nostrrelayLinks.indexOf(r => r.url === url)
             if (relayIndex !== -1) {
@@ -561,8 +549,7 @@
         try {
           const {data} = await LNbits.api.request(
             'GET',
-            '/nostrclient/api/v1/config',
-            this.g.user.wallets[0].adminkey
+            '/nostrclient/api/v1/config'
           )
           this.config.data = data
         } catch (error) {
@@ -574,7 +561,7 @@
           const {data} = await LNbits.api.request(
             'PUT',
             '/nostrclient/api/v1/config',
-            this.g.user.wallets[0].adminkey,
+            null,
             this.config.data
           )
           this.config.data = data
@@ -623,7 +610,7 @@
           const {data} = await LNbits.api.request(
             'PUT',
             '/nostrclient/api/v1/relay/test',
-            this.g.user.wallets[0].adminkey,
+            null,
             {
               sender_private_key: this.testData.senderPrivateKey,
               reciever_public_key: this.testData.recieverPublicKey,
