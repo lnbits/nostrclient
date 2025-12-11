@@ -1,8 +1,17 @@
 {
   "name": "Nostr Client",
+  "short_description": "Nostr relay multiplexer",
   "version": "1.1.0",
-  "short_description": "Nostr client for extensions",
   "tile": "/nostrclient/static/images/nostr-bitcoin.png",
   "contributors": ["calle", "motorina0", "dni"],
-  "min_lnbits_version": "1.0.0"
+  "min_lnbits_version": "1.0.0",
+  "images": [
+    {
+      "uri": "https://raw.githubusercontent.com/lnbits/nostrclient/add-extension-metadata/static/images/1.jpeg"
+    },
+    {
+      "uri": "https://raw.githubusercontent.com/lnbits/nostrclient/add-extension-metadata/static/images/2.jpeg"
+    }
+  ],
+  "description_md": "https://raw.githubusercontent.com/lnbits/nostrclient/add-extension-metadata/description.md"
 }
