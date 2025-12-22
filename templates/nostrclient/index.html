@@ -4,8 +4,8 @@
   <div class="col-12 col-md-7 q-gutter-y-md">
     <q-card>
       <q-form @submit="addRelay">
-        <div class="row">
-          <div class="col-12 col-md-7 q-pa-md">
+        <div class="row items-center q-pa-md q-col-gutter-sm">
+          <div class="col-12 col-md-7">
             <q-input
               outlined
               v-model="relayToAdd"
@@ -14,12 +14,11 @@
               label="Relay URL"
             ></q-input>
           </div>
-          <div class="col-6 col-md-3 q-pa-md">
+          <div class="col-auto">
             <q-btn-dropdown
               unelevated
               split
               color="primary"
-              class="float-left"
               type="submit"
               label="Add Relay"
             >
@@ -36,13 +35,13 @@
               </q-item>
             </q-btn-dropdown>
           </div>
-          <div class="col-6 col-md-2 q-pa-md">
+          <div class="col"></div>
+          <div class="col-auto">
             <q-btn
               unelevated
               @click="config.showDialog = true"
               color="primary"
               icon="settings"
-              class="float-right"
             ></q-btn>
           </div>
         </div>
