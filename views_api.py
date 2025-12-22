@@ -3,7 +3,11 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from lnbits.decorators import check_admin
-from lnbits.helpers import decrypt_internal_message, urlsafe_short_hash
+from lnbits.helpers import (
+    decrypt_internal_message,
+    encrypt_internal_message,
+    urlsafe_short_hash,
+)
 from loguru import logger
 
 from .crud import (
@@ -169,6 +173,8 @@ async def api_get_config() -> Config:
     if not config:
         config = await create_config(owner_id="admin")
         assert config, "Failed to create config"
+    # Add private WebSocket endpoint for admin use
+    config.private_ws_endpoint = encrypt_internal_message("relay", urlsafe=True)
     return config
 
 

@@ -47,6 +47,7 @@ class TestMessageResponse(BaseModel):
 class Config(BaseModel):
     private_ws: bool = True
     public_ws: bool = False
+    private_ws_endpoint: str | None = None
 
 
 class UserConfig(BaseModel):

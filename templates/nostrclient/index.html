@@ -4,8 +4,8 @@
   <div class="col-12 col-md-7 q-gutter-y-md">
     <q-card>
       <q-form @submit="addRelay">
-        <div class="row">
-          <div class="col-12 col-md-7 q-pa-md">
+        <div class="row items-center">
+          <div class="col q-pa-md">
             <q-input
               outlined
               v-model="relayToAdd"
@@ -14,12 +14,11 @@
               label="Relay URL"
             ></q-input>
           </div>
-          <div class="col-6 col-md-3 q-pa-md">
+          <div class="col-auto q-pa-md">
             <q-btn-dropdown
               unelevated
               split
               color="primary"
-              class="float-left"
               type="submit"
               label="Add Relay"
             >
@@ -36,14 +35,22 @@
               </q-item>
             </q-btn-dropdown>
           </div>
-          <div class="col-6 col-md-2 q-pa-md">
+          <div class="col-auto q-pa-md">
+            <q-btn
+              unelevated
+              @click="openTestDialog"
+              color="primary"
+              icon="science"
+              class="q-mr-sm"
+              ><q-tooltip>Test endpoint</q-tooltip></q-btn
+            >
             <q-btn
               unelevated
               @click="config.showDialog = true"
               color="primary"
               icon="settings"
-              class="float-right"
-            ></q-btn>
+              ><q-tooltip>Settings</q-tooltip></q-btn
+            >
           </div>
         </div>
       </q-form>
@@ -142,7 +149,7 @@
     </q-card>
     <q-card>
       <q-card-section>
-        <div class="row">
+        <div class="row items-center">
           <div class="col">
             <div class="text-weight-bold">
               <q-btn
@@ -165,142 +172,143 @@
           </div>
         </div>
       </q-card-section>
-      <q-expansion-item
-        group="advanced"
-        icon="settings"
-        label="Test this endpoint"
-        @click="toggleTestPanel"
-      >
-        <q-separator></q-separator>
+    </q-card>
+
+    <q-dialog v-model="testData.show" position="top" persistent>
+      <q-card style="min-width: 600px">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Test Endpoint</div>
+          <q-space></q-space>
+          <q-btn icon="close" flat round dense @click="closeTestDialog"></q-btn>
+        </q-card-section>
+
         <q-card-section>
-          <div class="row">
-            <div class="col-3">
-              <span>Sender Private Key:</span>
-            </div>
-            <div class="col-9">
-              <q-input
-                outlined
-                v-model="testData.senderPrivateKey"
-                dense
-                filled
-                label="Private Key (optional)"
-              ></q-input>
-            </div>
-          </div>
-          <div class="row q-mt-sm q-mb-lg">
-            <div class="col-3"></div>
-            <div class="col-9">
-              <q-badge color="yellow" text-color="black">
-                <span>
-                  No not use your real private key! Leave empty for a randomly
-                  generated key.</span
-                >
-              </q-badge>
-            </div>
-          </div>
-          <div v-if="testData.senderPublicKey" class="row">
-            <div class="col-3">
-              <span>Sender Public Key:</span>
-            </div>
-            <div class="col-9">
+          <p class="text-body2 q-mb-md">
+            Send an encrypted direct message through your relay multiplexer to
+            verify it's working. The message will be sent from a sender key to a
+            recipient's public key (npub).
+          </p>
+
+          <div class="q-gutter-md">
+            <q-input
+              outlined
+              v-model="testData.senderPrivateKey"
+              dense
+              label="Sender Private Key (optional)"
+              hint="Leave empty to generate a random test key. Never use your real private key."
+            ></q-input>
+
+            <div v-if="testData.senderPublicKey">
               <q-input
                 outlined
                 v-model="testData.senderPublicKey"
                 dense
                 readonly
-                filled
+                label="Sender Public Key (generated)"
               ></q-input>
             </div>
-          </div>
-          <div class="row q-mt-md">
-            <div class="col-3">
-              <span>Test Message:</span>
-            </div>
-            <div class="col-9">
-              <q-input
-                outlined
-                v-model="testData.message"
-                dense
-                filled
-                rows="3"
-                type="textarea"
-                label="Test Message *"
-              ></q-input>
-            </div>
-          </div>
-          <div class="row q-mt-md">
-            <div class="col-3">
-              <span>Receiver Public Key:</span>
-            </div>
-            <div class="col-9">
-              <q-input
-                outlined
-                v-model="testData.recieverPublicKey"
-                dense
-                filled
-                label="Public Key (hex or npub) *"
-              ></q-input>
-            </div>
-          </div>
-          <div class="row q-mt-sm q-mb-lg">
-            <div class="col-3"></div>
-            <div class="col-9">
-              <q-badge color="yellow" text-color="black">
-                <span
-                  >This is the recipient of the message. Field required.</span
-                >
-              </q-badge>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-12">
+
+            <q-input
+              outlined
+              v-model="testData.recieverPublicKey"
+              dense
+              label="Recipient Public Key (npub or hex) *"
+              hint="The public key of who will receive this test message. Send to yourself to verify."
+              :rules="[val => !!val || 'Recipient public key is required']"
+            ></q-input>
+
+            <q-input
+              outlined
+              v-model="testData.message"
+              dense
+              type="textarea"
+              rows="2"
+              label="Test Message *"
+              hint="This message will be encrypted and sent through your relays."
+              :rules="[val => !!val || 'Message is required']"
+            ></q-input>
+
+            <div class="row justify-end">
               <q-btn
                 :disabled="!testData.recieverPublicKey || !testData.message"
+                :loading="testData.sending"
                 @click="sendTestMessage"
                 unelevated
                 color="primary"
-                class="float-right"
-                >Send Message</q-btn
-              >
+                label="Send Test Message"
+                icon="send"
+              ></q-btn>
             </div>
           </div>
         </q-card-section>
 
-        <q-separator></q-separator>
-        <q-card-section>
-          <div class="row q-mt-md">
-            <div class="col-3">
-              <span>Sent Data:</span>
-            </div>
-            <div class="col-9">
-              <q-input
-                outlined
-                v-model="testData.sentData"
-                dense
-                filled
-                rows="5"
-                type="textarea"
-              ></q-input>
-            </div>
+        <q-separator
+          v-if="testData.sentData || testData.receivedData || testData.connectionStatus"
+        ></q-separator>
+
+        <q-card-section
+          v-if="testData.sentData || testData.receivedData || testData.connectionStatus"
+        >
+          <div class="row items-center q-mb-sm">
+            <div class="text-subtitle2">Results</div>
+            <q-space></q-space>
+            <q-badge
+              v-if="testData.connectionStatus === 'error'"
+              color="negative"
+              label="Connection Failed"
+            ></q-badge>
+            <q-badge
+              v-else-if="testData.connectionStatus === 'connected'"
+              color="positive"
+              label="Connected"
+            ></q-badge>
           </div>
-          <div class="row q-mt-md">
-            <div class="col-3">
-              <span>Received Data:</span>
-            </div>
-            <div class="col-9">
-              <q-input
-                outlined
-                v-model="testData.receivedData"
-                dense
-                filled
-                rows="5"
-                type="textarea"
-              ></q-input>
-            </div>
+
+          <q-expansion-item
+            v-if="testData.sentData"
+            dense
+            label="Sent Data"
+            icon="upload"
+            header-class="text-primary"
+          >
+            <q-card>
+              <q-card-section class="q-pa-sm">
+                <pre
+                  class="text-caption"
+                  style="white-space: pre-wrap; word-break: break-all"
+                >
+{{ testData.sentData }}</pre
+                >
+              </q-card-section>
+            </q-card>
+          </q-expansion-item>
+
+          <q-expansion-item
+            v-if="testData.receivedData"
+            dense
+            label="Received Data"
+            icon="download"
+            header-class="text-primary"
+          >
+            <q-card>
+              <q-card-section class="q-pa-sm">
+                <pre
+                  class="text-caption"
+                  style="white-space: pre-wrap; word-break: break-all"
+                >
+{{ testData.receivedData }}</pre
+                >
+              </q-card-section>
+            </q-card>
+          </q-expansion-item>
+
+          <div class="text-caption text-grey q-mt-md">
+            <strong>How to verify:</strong> Check your Nostr client (Damus,
+            Amethyst, etc.) for the test message in your DMs.
           </div>
         </q-card-section>
-      </q-expansion-item>
-    </q-card>
+      </q-card>
+    </q-dialog>
   </div>
 
   <div class="col-12 col-md-5 q-gutter-y-md">
@@ -418,13 +426,15 @@
         },
         testData: {
           show: false,
+          sending: false,
           wsConnection: null,
           senderPrivateKey: null,
           senderPublicKey: null,
           recieverPublicKey: null,
           message: null,
           sentData: '',
-          receivedData: ''
+          receivedData: '',
+          connectionStatus: null
         },
         relayTable: {
           columns: [
@@ -570,42 +580,44 @@
         }
         this.config.showDialog = false
       },
-      toggleTestPanel: async function () {
-        if (this.testData.show) {
-          await this.hideTestPannel()
-        } else {
-          await this.showTestPanel()
-        }
-      },
-      showTestPanel: async function () {
+      openTestDialog: async function () {
+        // Refresh config to get latest private_ws_endpoint
+        await this.getConfig()
         this.testData = {
           show: true,
+          sending: false,
           wsConnection: null,
           senderPrivateKey:
             this.$q.localStorage.getItem(
               'lnbits.nostrclient.senderPrivateKey'
             ) || '',
+          senderPublicKey: null,
           recieverPublicKey: null,
           message: null,
           sentData: '',
-          receivedData: ''
+          receivedData: '',
+          connectionStatus: null
         }
         await this.closeWebsocket()
         this.connectToWebsocket()
       },
-      hideTestPannel: async function () {
+      closeTestDialog: async function () {
         await this.closeWebsocket()
         this.testData = {
           show: false,
+          sending: false,
           wsConnection: null,
           senderPrivateKey: null,
+          senderPublicKey: null,
           recieverPublicKey: null,
           message: null,
           sentData: '',
-          receivedData: ''
+          receivedData: '',
+          connectionStatus: null
         }
       },
       sendTestMessage: async function () {
+        this.testData.sending = true
         try {
           const {data} = await LNbits.api.request(
             'PUT',
@@ -631,8 +643,14 @@
             {kinds: [4], '#p': [event.pubkey]}
           ])
           this.testData.wsConnection.send(subscription)
+          this.$q.notify({
+            type: 'positive',
+            message: 'Test message sent successfully'
+          })
         } catch (error) {
           LNbits.utils.notifyApiError(error)
+        } finally {
+          this.testData.sending = false
         }
       },
 
@@ -643,9 +661,13 @@
             await this.sleep(500)
           }
           this.testData.wsConnection.send(data)
-          const separator = '='.repeat(80)
-          this.testData.sentData =
-            data + `\n\n${separator}\n` + this.testData.sentData
+          try {
+            const parsed = JSON.parse(data)
+            const formatted = JSON.stringify(parsed, null, 2)
+            this.testData.sentData += formatted + '\n\n'
+          } catch {
+            this.testData.sentData += data + '\n\n'
+          }
         } catch (error) {
           this.$q.notify({
             timeout: 5000,
@@ -658,17 +680,45 @@
       connectToWebsocket: function () {
         const scheme = location.protocol === 'http:' ? 'ws' : 'wss'
         const port = location.port ? `:${location.port}` : ''
-        const wsUrl = `${scheme}://${document.domain}${port}/nostrclient/api/v1/relay`
+        // Use private endpoint if available, otherwise fall back to public
+        const endpoint =
+          this.config.data.private_ws && this.config.data.private_ws_endpoint
+            ? this.config.data.private_ws_endpoint
+            : 'relay'
+        const wsUrl = `${scheme}://${document.domain}${port}/nostrclient/api/v1/${endpoint}`
         this.testData.wsConnection = new WebSocket(wsUrl)
-        const updateReciveData = async e => {
-          const separator = '='.repeat(80)
-          this.testData.receivedData =
-            e.data + `\n\n${separator}\n` + this.testData.receivedData
+
+        this.testData.wsConnection.onopen = () => {
+          this.testData.receivedData = '[Connected to WebSocket]\n'
+          this.testData.connectionStatus = 'connected'
         }
 
-        this.testData.wsConnection.onmessage = updateReciveData
-        this.testData.wsConnection.onerror = updateReciveData
-        this.testData.wsConnection.onclose = updateReciveData
+        this.testData.wsConnection.onmessage = e => {
+          if (e.data) {
+            try {
+              const parsed = JSON.parse(e.data)
+              const formatted = JSON.stringify(parsed, null, 2)
+              this.testData.receivedData += formatted + '\n\n'
+            } catch {
+              this.testData.receivedData += e.data + '\n'
+            }
+          }
+        }
+
+        this.testData.wsConnection.onerror = () => {
+          this.testData.receivedData +=
+            '[WebSocket error - check Settings to enable Private or Public WebSocket]\n'
+          this.testData.connectionStatus = 'error'
+        }
+
+        this.testData.wsConnection.onclose = e => {
+          const reason =
+            e.reason || (e.code === 1006 ? 'Connection refused (403)' : '')
+          this.testData.receivedData += `[WebSocket closed${reason ? ': ' + reason : ''}]\n`
+          if (this.testData.connectionStatus !== 'connected') {
+            this.testData.connectionStatus = 'error'
+          }
+        }
       },
       closeWebsocket: async function () {
         try {
