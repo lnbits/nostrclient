@@ -60,6 +60,7 @@ relay_positions = [
 for x, y in relay_positions:
     draw.line([(center_x, center_y), (x, y)], fill=white_transparent, width=2 * scale)
 
+# Central circle (the multiplexer)
 draw.ellipse(
     [
         center_x - 14 * scale,
@@ -69,20 +70,38 @@ draw.ellipse(
     ],
     fill=white,
 )
-draw.line(
-    [(16 * scale, center_y), (center_x - 14 * scale, center_y)],
-    fill=white,
-    width=4 * scale,
-)
+
+# Bi-directional arrow
+arrow_head_size = 8 * scale
+left_tip = 10 * scale  # leftmost point of left arrow
+right_tip = center_x - 14 * scale  # rightmost point (touching circle)
+
+# Arrow shaft - between the two arrow heads (not extending into them)
+shaft_left = left_tip + arrow_head_size
+shaft_right = right_tip - arrow_head_size
+draw.line([(shaft_left, center_y), (shaft_right, center_y)], fill=white, width=4 * scale)
+
+# Right-pointing arrow head (going into circle) - tip touches circle
 draw.polygon(
     [
-        (center_x - 14 * scale, center_y),
-        (center_x - 22 * scale, center_y - 6 * scale),
-        (center_x - 22 * scale, center_y + 6 * scale),
+        (right_tip, center_y),
+        (right_tip - arrow_head_size, center_y - 6 * scale),
+        (right_tip - arrow_head_size, center_y + 6 * scale),
     ],
     fill=white,
 )
 
+# Left-pointing arrow head (coming out) - tip at left edge
+draw.polygon(
+    [
+        (left_tip, center_y),
+        (left_tip + arrow_head_size, center_y - 6 * scale),
+        (left_tip + arrow_head_size, center_y + 6 * scale),
+    ],
+    fill=white,
+)
+
+# Draw output circles on top
 for x, y in relay_positions:
     draw.ellipse(
         [x - 7 * scale, y - 7 * scale, x + 7 * scale, y + 7 * scale], fill=white
