@@ -172,7 +172,11 @@ async def api_get_config() -> Config:
     config = await get_config(owner_id="admin")
     if not config:
         config = await create_config(owner_id="admin")
-        assert config, "Failed to create config"
+    if not config:
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Failed to get or create config",
+        )
     # Add private WebSocket endpoint for admin use
     config.private_ws_endpoint = encrypt_internal_message("relay", urlsafe=True)
     return config
