@@ -80,7 +80,9 @@ right_tip = center_x - 14 * scale  # rightmost point (touching circle)
 shaft_left = left_tip + arrow_head_size
 shaft_right = right_tip - arrow_head_size
 draw.line(
-    [(shaft_left, center_y), (shaft_right, center_y)], fill=white, width=4 * scale
+    [(shaft_left, center_y), (shaft_right, center_y)],
+    fill=white,
+    width=4 * scale,
 )
 
 # Right-pointing arrow head (going into circle) - tip touches circle
