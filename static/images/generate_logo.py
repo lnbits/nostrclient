@@ -5,7 +5,7 @@ Requires: pip install Pillow
 """
 import math
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw  # type: ignore[import-not-found]
 
 # Render at 4x size for antialiasing
 scale = 4
