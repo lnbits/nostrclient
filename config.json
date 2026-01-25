@@ -1,17 +1,42 @@
 {
-  "name": "Nostr Client",
-  "short_description": "Nostr relay multiplexer",
+  "id": "nostrclient",
   "version": "1.1.0",
+  "name": "Nostr Client",
+  "repo": "https://github.com/lnbits/nostrclient",
+  "short_description": "Nostr relay multiplexer",
+  "description": "",
   "tile": "/nostrclient/static/images/nostr-bitcoin.png",
-  "contributors": ["calle", "motorina0", "dni"],
   "min_lnbits_version": "1.4.0",
-  "images": [
+  "contributors": [
     {
-      "uri": "https://raw.githubusercontent.com/lnbits/nostrclient/add-extension-metadata/static/images/1.jpeg"
+      "name": "callebtc",
+      "uri": "https://github.com/callebtc",
+      "role": "Developer"
     },
     {
-      "uri": "https://raw.githubusercontent.com/lnbits/nostrclient/add-extension-metadata/static/images/2.jpeg"
+      "name": "Vlad Stan",
+      "uri": "https://github.com/motorina0",
+      "role": "Developer"
+    },
+    {
+      "name": "dni",
+      "uri": "https://github.com/dni",
+      "role": "Developer"
     }
   ],
-  "description_md": "https://raw.githubusercontent.com/lnbits/nostrclient/add-extension-metadata/description.md"
+  "images": [
+    {
+      "uri": "https://raw.githubusercontent.com/lnbits/nostrclient/static/images/1.jpeg"
+    },
+    {
+      "uri": "https://raw.githubusercontent.com/lnbits/nostrclient/static/images/2.jpeg"
+    }
+  ],
+  "description_md": "https://raw.githubusercontent.com/lnbits/nostrclient/main/description.md",
+  "terms_and_conditions_md": "https://raw.githubusercontent.com/lnbits/nostrclient/main/toc.md",
+  "license": "MIT",
+  "paid_features": "",
+  "tags": ["Nostr"],
+  "donate": "",
+  "hidden": false
 }
