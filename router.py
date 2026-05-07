@@ -150,9 +150,7 @@ class NostrRouter:
             else:
                 nostr_client.relay_manager.publish_message(json_str)
                 # NIP-01: OK response so clients know the event was accepted
-                await self.websocket.send_text(
-                    json.dumps(["OK", event_id, True, ""])
-                )
+                await self.websocket.send_text(json.dumps(["OK", event_id, True, ""]))
             return
 
     async def _handle_client_req(self, json_data):
