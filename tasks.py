@@ -1,5 +1,4 @@
 import asyncio
-import threading
 
 from loguru import logger
 
@@ -55,18 +54,8 @@ async def subscribe_events():
 
         NostrRouter.received_subscription_eosenotices[sub_id] = event_message
 
-    def wrap_async_subscribe():
-        asyncio.run(
-            nostr_client.subscribe(
-                callback_events,
-                callback_notices,
-                callback_eose_notices,
-            )
-        )
-
-    t = threading.Thread(
-        target=wrap_async_subscribe,
-        name="Nostr-event-subscription",
-        daemon=True,
+    await nostr_client.subscribe(
+        callback_events,
+        callback_notices,
+        callback_eose_notices,
     )
-    t.start()

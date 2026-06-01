@@ -3,9 +3,8 @@ import time
 from dataclasses import dataclass, field
 from enum import IntEnum
 from hashlib import sha256
-from typing import Optional
 
-import coincurve
+from nostr_sdk import Event as SdkEvent
 
 from .message_type import ClientMessageType
 
@@ -21,18 +20,15 @@ class EventKind(IntEnum):
 
 @dataclass
 class Event:
-    content: Optional[str] = None
-    public_key: Optional[str] = None
-    created_at: Optional[int] = None
+    content: str | None = None
+    public_key: str | None = None
+    created_at: int | None = None
     kind: int = EventKind.TEXT_NOTE
-    tags: list[list[str]] = field(
-        default_factory=list
-    )  # Dataclasses require special handling when the default value is a mutable type
-    signature: Optional[str] = None
+    tags: list[list[str]] = field(default_factory=list)
+    signature: str | None = None
 
     def __post_init__(self):
         if self.content is not None and not isinstance(self.content, str):
-            # DMs initialize content to None but all other kinds should pass in a str
             raise TypeError("Argument 'content' must be of type str")
 
         if self.created_at is None:
@@ -56,7 +52,6 @@ class Event:
 
     @property
     def id(self) -> str:
-        # Always recompute the id to reflect the up-to-date state of the Event
         assert self.public_key
         assert self.created_at
         assert self.content
@@ -65,41 +60,34 @@ class Event:
         )
 
     def add_pubkey_ref(self, pubkey: str):
-        """Adds a reference to a pubkey as a 'p' tag"""
         self.tags.append(["p", pubkey])
 
     def add_event_ref(self, event_id: str):
-        """Adds a reference to an event_id as an 'e' tag"""
         self.tags.append(["e", event_id])
 
     def verify(self) -> bool:
-        assert self.public_key
-        assert self.signature
-        pub_key = coincurve.PublicKeyXOnly(bytes.fromhex(self.public_key))
-        return pub_key.verify(bytes.fromhex(self.signature), bytes.fromhex(self.id))
+        return SdkEvent.from_json(json.dumps(self.to_dict())).verify()
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "pubkey": self.public_key,
+            "created_at": self.created_at,
+            "kind": self.kind,
+            "tags": self.tags,
+            "content": self.content,
+            "sig": self.signature,
+        }
 
     def to_message(self) -> str:
-        return json.dumps(
-            [
-                ClientMessageType.EVENT,
-                {
-                    "id": self.id,
-                    "pubkey": self.public_key,
-                    "created_at": self.created_at,
-                    "kind": self.kind,
-                    "tags": self.tags,
-                    "content": self.content,
-                    "sig": self.signature,
-                },
-            ]
-        )
+        return json.dumps([ClientMessageType.EVENT, self.to_dict()])
 
 
 @dataclass
 class EncryptedDirectMessage(Event):
-    recipient_pubkey: Optional[str] = None
-    cleartext_content: Optional[str] = None
-    reference_event_id: Optional[str] = None
+    recipient_pubkey: str | None = None
+    cleartext_content: str | None = None
+    reference_event_id: str | None = None
 
     def __post_init__(self):
         if self.content is not None:
@@ -111,11 +99,8 @@ class EncryptedDirectMessage(Event):
 
         self.kind = EventKind.ENCRYPTED_DIRECT_MESSAGE
         super().__post_init__()
-
-        # Must specify the DM recipient's pubkey in a 'p' tag
         self.add_pubkey_ref(self.recipient_pubkey)
 
-        # Optionally specify a reference event (DM) this is a reply to
         if self.reference_event_id is not None:
             self.add_event_ref(self.reference_event_id)
 
