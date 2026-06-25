@@ -32,28 +32,31 @@ async def subscribe_events():
         await asyncio.sleep(2)
 
     def callback_events(event_message: EventMessage):
-        sub_id = event_message.subscription_id
-        if sub_id not in NostrRouter.received_subscription_events:
-            NostrRouter.received_subscription_events[sub_id] = [event_message]
-            return
+        with NostrRouter.lock:
+            sub_id = event_message.subscription_id
+            if sub_id not in NostrRouter.received_subscription_events:
+                NostrRouter.received_subscription_events[sub_id] = [event_message]
+                return
 
-        # do not add duplicate events (by event id)
-        ids = [e.event_id for e in NostrRouter.received_subscription_events[sub_id]]
-        if event_message.event_id in ids:
-            return
+            # do not add duplicate events (by event id)
+            ids = [e.event_id for e in NostrRouter.received_subscription_events[sub_id]]
+            if event_message.event_id in ids:
+                return
 
-        NostrRouter.received_subscription_events[sub_id].append(event_message)
+            NostrRouter.received_subscription_events[sub_id].append(event_message)
 
     def callback_notices(notice_message: NoticeMessage):
-        if notice_message not in NostrRouter.received_subscription_notices:
-            NostrRouter.received_subscription_notices.append(notice_message)
+        with NostrRouter.lock:
+            if notice_message not in NostrRouter.received_subscription_notices:
+                NostrRouter.received_subscription_notices.append(notice_message)
 
     def callback_eose_notices(event_message: EndOfStoredEventsMessage):
-        sub_id = event_message.subscription_id
-        if sub_id in NostrRouter.received_subscription_eosenotices:
-            return
+        with NostrRouter.lock:
+            sub_id = event_message.subscription_id
+            if sub_id in NostrRouter.received_subscription_eosenotices:
+                return
 
-        NostrRouter.received_subscription_eosenotices[sub_id] = event_message
+            NostrRouter.received_subscription_eosenotices[sub_id] = event_message
 
     def wrap_async_subscribe():
         asyncio.run(

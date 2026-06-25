@@ -1,5 +1,6 @@
 import asyncio
 import json
+import threading
 from typing import ClassVar
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -21,6 +22,7 @@ class NostrRouter:
     received_subscription_eosenotices: ClassVar[dict[str, EndOfStoredEventsMessage]] = (
         {}
     )
+    lock: ClassVar[threading.Lock] = threading.Lock()
 
     def __init__(self, websocket: WebSocket):
         self.connected: bool = True
@@ -92,9 +94,10 @@ class NostrRouter:
             if s not in self.original_subscription_ids:
                 return
             s_original = self.original_subscription_ids[s]
-            event_to_forward = ["EOSE", s_original]
-            del NostrRouter.received_subscription_eosenotices[s]
+            with NostrRouter.lock:
+                del NostrRouter.received_subscription_eosenotices[s]
 
+            event_to_forward = ["EOSE", s_original]
             await self.websocket.send_text(json.dumps(event_to_forward))
         except Exception as e:
             logger.debug(e)
@@ -104,8 +107,11 @@ class NostrRouter:
             if s not in NostrRouter.received_subscription_events:
                 return
 
-            while len(NostrRouter.received_subscription_events[s]):
-                event_message = NostrRouter.received_subscription_events[s].pop(0)
+            while True:
+                with NostrRouter.lock:
+                    if not NostrRouter.received_subscription_events[s]:
+                        break
+                    event_message = NostrRouter.received_subscription_events[s].pop(0)
                 event_json = event_message.event
 
                 # this reconstructs the original response from the relay
@@ -121,8 +127,11 @@ class NostrRouter:
             )
 
     def _handle_notices(self):
-        while len(NostrRouter.received_subscription_notices):
-            my_event = NostrRouter.received_subscription_notices.pop(0)
+        while True:
+            with NostrRouter.lock:
+                if not NostrRouter.received_subscription_notices:
+                    break
+                my_event = NostrRouter.received_subscription_notices.pop(0)
             logger.debug(f"[Relay '{my_event.url}'] Notice: '{my_event.content}']")
             #  Note: we don't send it to the user because
             #  we don't know who should receive it
@@ -165,11 +174,9 @@ class NostrRouter:
         if subscription_id_rewritten:
             self.original_subscription_ids.pop(subscription_id_rewritten)
             nostr_client.relay_manager.close_subscription(subscription_id_rewritten)
-            logger.info(
-                f"""
+            logger.info(f"""
             Unsubscribe from '{subscription_id_rewritten}'.
             Original id: '{subscription_id}.'
-            """
-            )
+            """)
         else:
             logger.info(f"Failed to unsubscribe from '{subscription_id}.'")
