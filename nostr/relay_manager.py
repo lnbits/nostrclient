@@ -3,7 +3,7 @@ import json
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from loguru import logger
 from nostr_sdk import (
@@ -89,7 +89,7 @@ class _NotificationHandler(HandleNotification):
             return
 
         if message_enum.is_NOTICE():
-            relay.add_notice(message_enum.message)
+            relay.add_notice(getattr(message_enum, "message", ""))
             self.relay_manager.message_pool.add_message(message_json, url)
             return
 
@@ -212,7 +212,7 @@ class RelayManager:
     def _run_event_loop(self) -> None:
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
-        uniffi_set_event_loop(self._loop)
+        uniffi_set_event_loop(cast(asyncio.BaseEventLoop, self._loop))
         self._client = Client()
         self._handler = _NotificationHandler(self)
         self._notification_task = self._loop.create_task(

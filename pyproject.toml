@@ -28,6 +28,9 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = [
+  "lnbits.*",
+  "nostr_sdk",
+  "nostr_sdk.*",
   "nostr.*",
 ]
 follow_imports = "skip"

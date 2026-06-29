@@ -37,7 +37,9 @@ class PublicKey:
 
 class PrivateKey:
     def __init__(self, raw_secret: bytes | None = None) -> None:
-        self.raw_secret = raw_secret if raw_secret is not None else secrets.token_bytes(32)
+        self.raw_secret = (
+            raw_secret if raw_secret is not None else secrets.token_bytes(32)
+        )
         self._keys = Keys(SecretKey.from_bytes(self.raw_secret))
         self.public_key = PublicKey(bytes.fromhex(self._keys.public_key().to_hex()))
 
