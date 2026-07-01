@@ -1,10 +1,8 @@
-import asyncio
 import json
 import time
 from queue import Queue
 
 from loguru import logger
-from websocket import WebSocketApp
 
 from .message_pool import MessagePool
 from .subscription import Subscription
@@ -26,27 +24,17 @@ class Relay:
         self.num_received_events: int = 0
         self.num_sent_events: int = 0
         self.num_subscriptions: int = 0
-
         self.queue: Queue = Queue()
 
     def connect(self):
-        self.ws = WebSocketApp(
-            self.url,
-            on_open=self._on_open,
-            on_message=self._on_message,
-            on_error=self._on_error,
-            on_close=self._on_close,
-            on_ping=self._on_ping,
-            on_pong=self._on_pong,
+        logger.warning(
+            "nostr.relay.Relay is a legacy compatibility shim. "
+            "Use nostr.relay_manager.RelayManager for SDK-backed relay IO."
         )
-        if not self.connected:
-            self.ws.run_forever(ping_interval=10)
+        self.connected = True
+        self.shutdown = False
 
     def close(self):
-        try:
-            self.ws.close()
-        except Exception as e:
-            logger.warning(f"[Relay: {self.url}] Failed to close websocket: {e}")
         self.connected = False
         self.shutdown = True
 
@@ -56,69 +44,25 @@ class Relay:
 
     @property
     def ping(self):
-        ping_ms = int((self.ws.last_pong_tm - self.ws.last_ping_tm) * 1000)
-        return ping_ms if self.connected and ping_ms > 0 else 0
+        return 0
 
     def publish(self, message: str):
         self.queue.put(message)
+        self.num_sent_events += 1
 
     def publish_subscriptions(self, subscriptions: list[Subscription]):
         for s in subscriptions:
             assert s.filters
-            json_str = json.dumps(["REQ", s.id, *s.filters])
-            self.publish(json_str)
+            self.publish(json.dumps(["REQ", s.id, *s.filters]))
 
     async def queue_worker(self):
-        while True:
-            if self.connected:
-                try:
-                    message = self.queue.get(timeout=1)
-                    self.num_sent_events += 1
-                    self.ws.send(message)
-                except Exception as _:
-                    pass
-            else:
-                await asyncio.sleep(1)
-
-            if self.shutdown:
-                logger.warning(f"[Relay: {self.url}] Closing queue worker.")
-                return
+        return
 
     def close_subscription(self, sub_id: str) -> None:
-        try:
-            self.publish(json.dumps(["CLOSE", sub_id]))
-        except Exception as e:
-            logger.debug(f"[Relay: {self.url}] Failed to close subscription: {e}")
+        self.publish(json.dumps(["CLOSE", sub_id]))
 
     def add_notice(self, notice: str):
         self.notice_list = [notice, *self.notice_list]
-
-    def _on_open(self, _):
-        logger.info(f"[Relay: {self.url}] Connected.")
-        self.connected = True
-        self.shutdown = False
-
-    def _on_close(self, _, status_code, message):
-        logger.warning(
-            f"[Relay: {self.url}] Connection closed."
-            + f" Status: '{status_code}'. Message: '{message}'."
-        )
-        self.close()
-
-    def _on_message(self, _, message: str):
-        self.num_received_events += 1
-        self.message_pool.add_message(message, self.url)
-
-    def _on_error(self, _, error):
-        logger.warning(f"[Relay: {self.url}] Error: '{error!s}'")
-        self._append_error_message(str(error))
-        self.close()
-
-    def _on_ping(self, *_):
-        return
-
-    def _on_pong(self, *_):
-        return
 
     def _append_error_message(self, message):
         self.error_counter += 1
