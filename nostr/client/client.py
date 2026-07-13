@@ -29,6 +29,7 @@ class NostrClient:
         try:
             self.relay_manager.close_all_subscriptions()
             self.relay_manager.close_connections()
+            self.relay_manager.shutdown()
 
             self.running = False
         except Exception as e:

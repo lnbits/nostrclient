@@ -5,7 +5,7 @@ requires-python = ">=3.10,<3.13"
 description = "LNbits, free and open-source Lightning wallet and accounts system."
 authors = [{ name = "Alan Bits", email = "alan@lnbits.com" }]
 urls = { Homepage = "https://lnbits.com", Repository = "https://github.com/lnbits/nostrclient" }
-dependencies = [ "lnbits>1" ]
+dependencies = [ "lnbits>1", "nostr-sdk~=0.44.0" ]
 
 [tool.poetry]
 package-mode = false
@@ -28,6 +28,9 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = [
+  "lnbits.*",
+  "nostr_sdk",
+  "nostr_sdk.*",
   "nostr.*",
 ]
 follow_imports = "skip"
