@@ -52,17 +52,17 @@
       <q-card-section>
         <div class="row items-center no-wrap q-mb-md">
           <div class="col">
-            <h5 class="text-subtitle1 q-my-none">Nostrclient</h5>
+            <h5 class="text-subtitle1 q-my-none">Forward Relays</h5>
           </div>
           <div class="col-auto">
             <q-input
-              borderless
               dense
               debounce="300"
               v-model="filter"
-              placeholder="Search"
+              label="Search by URL"
+              clearable
             >
-              <template v-slot:append>
+              <template v-slot:prepend>
                 <q-icon name="search"></q-icon>
               </template>
             </q-input>
@@ -100,36 +100,78 @@
                 auto-width
               >
                 <div v-if="col.name == 'connected'">
-                  <div v-if="col.value">🟢</div>
-                  <div v-else>🔴</div>
+                  <q-badge
+                    :color="col.value ? 'positive' : 'negative'"
+                    rounded
+                    class="q-pa-sm"
+                  >
+                    <q-tooltip
+                      >{{ col.value ? 'Connected' : 'Disconnected' }}</q-tooltip
+                    >
+                  </q-badge>
                 </div>
                 <div v-else-if="col.name == 'status'">
-                  <div>
-                    ⬆️ <span v-text="col.value.sentEvents"></span> ⬇️
+                  <div class="row items-center no-wrap q-gutter-x-sm">
+                    <q-icon name="arrow_upward" color="primary" size="xs">
+                      <q-tooltip>Events sent</q-tooltip>
+                    </q-icon>
+                    <span v-text="col.value.sentEvents"></span>
+                    <q-icon name="arrow_downward" color="secondary" size="xs">
+                      <q-tooltip>Events received</q-tooltip>
+                    </q-icon>
                     <span v-text="col.value.receveidEvents"></span>
                     <span
                       @click="showLogDataDialog(col.value.errorList)"
                       class="cursor-pointer"
                     >
-                      ⚠️ <span v-text="col.value.errorCount"> </span>
+                      <q-icon name="warning" color="warning" size="xs">
+                        <q-tooltip>Errors (click to view)</q-tooltip>
+                      </q-icon>
+                      <span v-text="col.value.errorCount"></span>
                     </span>
                     <span
                       @click="showLogDataDialog(col.value.noticeList)"
-                      class="cursor-pointer float-right"
+                      class="cursor-pointer"
                     >
-                      ⓘ
+                      <q-icon name="info" color="info" size="xs">
+                        <q-tooltip>Notices (click to view)</q-tooltip>
+                      </q-icon>
                     </span>
                   </div>
                 </div>
                 <div v-else-if="col.name == 'delete'">
-                  <q-btn
-                    flat
-                    dense
-                    size="md"
-                    @click="showDeleteRelayDialog(props.row.url)"
-                    icon="cancel"
-                    color="pink"
-                  ></q-btn>
+                  <div class="row items-center no-wrap">
+                    <q-btn
+                      flat
+                      dense
+                      size="sm"
+                      icon="content_copy"
+                      @click="copyText(props.row.url)"
+                    >
+                      <q-tooltip>Copy URL</q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      flat
+                      dense
+                      size="sm"
+                      @click="showDeleteRelayDialog(props.row.url)"
+                      icon="delete"
+                      color="negative"
+                    >
+                      <q-tooltip>Remove relay</q-tooltip>
+                    </q-btn>
+                  </div>
+                </div>
+                <div v-else-if="col.name == 'relay'">
+                  <span>{{ col.value }}</span>
+                </div>
+                <div v-else-if="col.name == 'ping'">
+                  <q-badge
+                    :color="getPingColor(props.row.ping)"
+                    :label="col.value"
+                  >
+                    <q-tooltip>Response time</q-tooltip>
+                  </q-badge>
                 </div>
                 <div v-else>
                   <div>{{ col.value }}</div>
@@ -544,6 +586,23 @@
             console.error(error)
             LNbits.utils.notifyApiError(error)
           })
+      },
+      getPingColor(ping) {
+        // Extract numeric value from ping string (e.g., "123 ms" -> 123)
+        const ms = parseInt(ping)
+        if (isNaN(ms)) return 'grey'
+        if (ms < 100) return 'positive'
+        if (ms < 300) return 'warning'
+        return 'negative'
+      },
+      copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.$q.notify({
+            type: 'positive',
+            message: 'Copied to clipboard',
+            timeout: 1000
+          })
+        })
       },
       getConfig: async function () {
         try {
