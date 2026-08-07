@@ -133,7 +133,7 @@ class NostrRouter:
         assert len(json_data), "Bad JSON array"
 
         if json_data[0] == "REQ":
-            self._handle_client_req(json_data)
+            await self._handle_client_req(json_data)
             return
 
         if json_data[0] == "CLOSE":
@@ -141,12 +141,27 @@ class NostrRouter:
             return
 
         if json_data[0] == "EVENT":
-            nostr_client.relay_manager.publish_message(json_str)
+            event_id = json_data[1].get("id", "") if len(json_data) > 1 else ""
+            if not nostr_client.relay_manager.relays:
+                # NIP-01: OK with failure when no relays are connected
+                await self.websocket.send_text(
+                    json.dumps(["OK", event_id, False, "error: no relay connections"])
+                )
+            else:
+                nostr_client.relay_manager.publish_message(json_str)
+                # NIP-01: OK response so clients know the event was accepted
+                await self.websocket.send_text(json.dumps(["OK", event_id, True, ""]))
             return
 
-    def _handle_client_req(self, json_data):
+    async def _handle_client_req(self, json_data):
         subscription_id = json_data[1]
         logger.info(f"New subscription: '{subscription_id}'")
+        if not nostr_client.relay_manager.relays:
+            # NIP-01: CLOSED when relay refuses to fulfill a REQ
+            await self.websocket.send_text(
+                json.dumps(["CLOSED", subscription_id, "error: no relay connections"])
+            )
+            return
         subscription_id_rewritten = urlsafe_short_hash()
         self.original_subscription_ids[subscription_id_rewritten] = subscription_id
         filters = json_data[2:]
