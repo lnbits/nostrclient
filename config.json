@@ -1,8 +1,8 @@
 {
-  "name": "Nostr Client",
+  "name": "Nostr Proxy",
   "short_description": "Nostr relay multiplexer",
   "version": "1.1.0",
-  "tile": "/nostrclient/static/images/nostr-bitcoin.png",
+  "tile": "/nostrclient/static/images/nostr-proxy.png",
   "contributors": ["calle", "motorina0", "dni"],
   "min_lnbits_version": "1.4.0",
   "images": [

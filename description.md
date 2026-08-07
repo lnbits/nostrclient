@@ -1,6 +1,6 @@
 An always-on relay multiplexer that simplifies connecting to multiple Nostr relays.
 
-Instead of your Nostr client managing connections to dozens of relays, you connect to a single WebSocket endpoint provided by `nostrclient`, which then fans out your requests to all configured relays and aggregates the responses back to you.
+Other LNbits extensions like **Nostr Market** and **NWC Provider** use this extension to communicate on Nostr. You can also connect your own Nostr client to the WebSocket endpoint, which fans out your requests to all configured relays and aggregates the responses.
 
 - **Simplified Client Configuration** - Connect to one endpoint instead of managing multiple relay connections
 - **Always-On Connectivity** - Your LNbits instance maintains persistent connections to relays

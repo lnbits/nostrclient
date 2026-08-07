@@ -141,30 +141,6 @@
       </q-card-section>
     </q-card>
     <q-card>
-      <q-card-section>
-        <div class="row">
-          <div class="col">
-            <div class="text-weight-bold">
-              <q-btn
-                flat
-                dense
-                size="0.6rem"
-                class="q-px-none q-mx-none"
-                color="grey"
-                icon="content_copy"
-                @click="copyText(`wss://${host}/nostrclient/api/v1/relay`)"
-                ><q-tooltip>Copy address</q-tooltip></q-btn
-              >
-              Your endpoint:
-              <q-badge
-                outline
-                class="q-ml-sm text-subtitle2"
-                :label="`wss://${host}/nostrclient/api/v1/relay`"
-              />
-            </div>
-          </div>
-        </div>
-      </q-card-section>
       <q-expansion-item
         group="advanced"
         icon="settings"
@@ -306,23 +282,94 @@
   <div class="col-12 col-md-5 q-gutter-y-md">
     <q-card>
       <q-card-section>
-        <h6 class="text-subtitle1 q-my-none">Nostrclient Extension</h6>
+        <h6 class="text-subtitle1 q-my-none">Nostr Proxy</h6>
         <p>
-          This extension is a always-on nostr client that other extensions can
-          use to send and receive events on nostr. Add multiple nostr relays to
-          connect to. The extension then opens a websocket for you to use at
+          An always-on relay multiplexer for your LNbits instance. Other
+          extensions like Nostr Market and NWC Provider use this to communicate
+          on Nostr. You can also connect your own Nostr client to the WebSocket
+          endpoint below.
         </p>
 
-        <p>
-          <q-badge
-            outline
-            class="q-ml-sm text-subtitle2"
-            color="primary"
-            :label="`wss://${host}/nostrclient/api/v1/relay`"
-          />
+        <div class="q-mt-md">
+          <div v-if="config.data.private_ws_endpoint" class="q-mb-sm">
+            <div class="text-caption text-grey q-mb-xs">Private endpoint:</div>
+            <div class="row items-center no-wrap q-gutter-sm">
+              <q-input
+                :model-value="`wss://${host}/nostrclient/api/v1/${config.data.private_ws_endpoint}`"
+                outlined
+                dense
+                readonly
+                class="col"
+                :class="config.data.private_ws ? 'endpoint-enabled' : 'endpoint-disabled'"
+              >
+                <template v-slot:append>
+                  <q-badge
+                    :color="config.data.private_ws ? 'positive' : 'negative'"
+                    :label="config.data.private_ws ? 'Enabled' : 'Disabled'"
+                  />
+                </template>
+              </q-input>
+              <q-btn
+                flat
+                dense
+                icon="content_copy"
+                @click="copyText(`wss://${host}/nostrclient/api/v1/${config.data.private_ws_endpoint}`)"
+                ><q-tooltip>Copy</q-tooltip></q-btn
+              >
+            </div>
+          </div>
+
+          <div class="q-mb-sm">
+            <div class="text-caption text-grey q-mb-xs">Public endpoint:</div>
+            <div class="row items-center no-wrap q-gutter-sm">
+              <q-input
+                :model-value="`wss://${host}/nostrclient/api/v1/relay`"
+                outlined
+                dense
+                readonly
+                class="col"
+                :class="config.data.public_ws ? 'endpoint-enabled' : 'endpoint-disabled'"
+              >
+                <template v-slot:append>
+                  <q-badge
+                    :color="config.data.public_ws ? 'positive' : 'negative'"
+                    :label="config.data.public_ws ? 'Enabled' : 'Disabled'"
+                  />
+                </template>
+              </q-input>
+              <q-btn
+                flat
+                dense
+                icon="content_copy"
+                @click="copyText(`wss://${host}/nostrclient/api/v1/relay`)"
+                ><q-tooltip>Copy</q-tooltip></q-btn
+              >
+            </div>
+          </div>
+
+          <q-banner
+            v-if="!config.data.public_ws && !config.data.private_ws"
+            class="bg-warning text-dark q-mt-sm"
+            dense
+          >
+            No endpoints enabled. Enable Public or Private WebSocket in
+            Settings.
+          </q-banner>
+        </div>
+
+        <p class="q-mt-md text-caption text-grey">
+          Only Admin users can manage this extension.
         </p>
-        Only Admin users can manage this extension.
-        <q-card-section></q-card-section>
+        <p class="text-caption">
+          <a
+            href="https://github.com/lnbits/nostrclient/issues"
+            target="_blank"
+            class="text-grey"
+            style="text-decoration: none"
+          >
+            💡 Have feedback or found a bug? Let us know on GitHub
+          </a>
+        </p>
       </q-card-section>
     </q-card>
   </div>
@@ -697,4 +744,12 @@
     }
   })
 </script>
+<style>
+  .endpoint-enabled.q-field--outlined .q-field__control:before {
+    border-color: #21ba45 !important;
+  }
+  .endpoint-disabled.q-field--outlined .q-field__control:before {
+    border-color: #c10015 !important;
+  }
+</style>
 {% endblock %}
