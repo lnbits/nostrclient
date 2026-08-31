@@ -10,8 +10,8 @@ dependencies = [ "lnbits>1", "nostr-sdk~=0.44.0" ]
 [tool.poetry]
 package-mode = false
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black",
     "pytest-asyncio",
     "pytest",
