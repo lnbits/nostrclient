@@ -3,8 +3,13 @@ import asyncio
 from loguru import logger
 
 from .crud import get_relays
-from .nostr.message_pool import EndOfStoredEventsMessage, EventMessage, NoticeMessage
-from .router import NostrRouter, nostr_client
+from .nostr.message_pool import (
+    CommandResultMessage,
+    EndOfStoredEventsMessage,
+    EventMessage,
+    NoticeMessage,
+)
+from .router import NostrRouter, all_routers, nostr_client
 
 
 async def init_relays():
@@ -54,8 +59,20 @@ async def subscribe_events():
 
         NostrRouter.received_subscription_eosenotices[sub_id] = event_message
 
+    def callback_command_results(result_message: CommandResultMessage):
+        event_id = result_message.event_id
+        # Only keep OKs some client is still waiting on; the rest would
+        # accumulate forever (events published by other relay users, or
+        # results arriving after the client already got its reply).
+        if not any(event_id in r.pending_publishes for r in all_routers):
+            return
+        NostrRouter.received_command_results.setdefault(event_id, []).append(
+            result_message
+        )
+
     await nostr_client.subscribe(
         callback_events,
         callback_notices,
         callback_eose_notices,
+        callback_command_results,
     )

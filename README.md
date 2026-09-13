@@ -50,6 +50,7 @@ flowchart LR
 3. **Fan-Out** - Subscription requests are sent to all configured relays
 4. **Aggregation** - Events from all relays are collected and deduplicated
 5. **Response** - Events are sent back to the client with the original subscription ID
+6. **Publish Acknowledgement** - Every `EVENT` a client publishes gets exactly one `["OK", <id>, <accepted>, <message>]` reply (NIP-01): `true` as soon as any relay accepts it, `false` once every relay has rejected it, the wait times out (10 s), or no relay is connected. A `REQ` while no relay is configured at all is answered with `CLOSED`
 
 ## Configuration
 
