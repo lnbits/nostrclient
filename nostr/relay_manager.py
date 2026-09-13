@@ -97,6 +97,12 @@ class _NotificationHandler(HandleNotification):
             self.relay_manager.message_pool.add_message(message_json, url)
             return
 
+        if message_enum.is_OK():
+            # Command result for an EVENT we forwarded; the router replies to
+            # the publishing client once it has heard from the relays.
+            self.relay_manager.message_pool.add_message(message_json, url)
+            return
+
         if getattr(message_enum, "is_CLOSED", lambda: False)():
             relay.append_error(getattr(message_enum, "message", "Subscription closed."))
 

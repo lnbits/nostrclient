@@ -40,11 +40,13 @@ class NostrClient:
         callback_events_func=None,
         callback_notices_func=None,
         callback_eosenotices_func=None,
+        callback_command_results_func=None,
     ):
         while self.running:
             self._check_events(callback_events_func)
             self._check_notices(callback_notices_func)
             self._check_eos_notices(callback_eosenotices_func)
+            self._check_command_results(callback_command_results_func)
 
             await asyncio.sleep(0.2)
 
@@ -72,5 +74,14 @@ class NostrClient:
                 event_msg = self.relay_manager.message_pool.get_eose_notice()
                 if callback_eosenotices_func:
                     callback_eosenotices_func(event_msg)
+        except Exception as e:
+            logger.debug(e)
+
+    def _check_command_results(self, callback_command_results_func=None):
+        try:
+            while self.relay_manager.message_pool.has_command_results():
+                result_msg = self.relay_manager.message_pool.get_command_result()
+                if callback_command_results_func:
+                    callback_command_results_func(result_msg)
         except Exception as e:
             logger.debug(e)

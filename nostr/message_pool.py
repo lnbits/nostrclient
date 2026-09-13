@@ -27,11 +27,22 @@ class EndOfStoredEventsMessage:
         self.url = url
 
 
+class CommandResultMessage:
+    """An `["OK", <event_id>, <accepted>, <message>]` reply from one relay."""
+
+    def __init__(self, event_id: str, accepted: bool, message: str, url: str) -> None:
+        self.event_id = event_id
+        self.accepted = accepted
+        self.message = message
+        self.url = url
+
+
 class MessagePool:
     def __init__(self) -> None:
         self.events: Queue[EventMessage] = Queue()
         self.notices: Queue[NoticeMessage] = Queue()
         self.eose_notices: Queue[EndOfStoredEventsMessage] = Queue()
+        self.command_results: Queue[CommandResultMessage] = Queue()
         self._unique_events: set = set()
         self.lock: Lock = Lock()
 
@@ -47,6 +58,9 @@ class MessagePool:
     def get_eose_notice(self):
         return self.eose_notices.get()
 
+    def get_command_result(self):
+        return self.command_results.get()
+
     def has_events(self):
         return self.events.qsize() > 0
 
@@ -55,6 +69,9 @@ class MessagePool:
 
     def has_eose_notices(self):
         return self.eose_notices.qsize() > 0
+
+    def has_command_results(self):
+        return self.command_results.qsize() > 0
 
     def _process_message(self, message: str, url: str):
         message_json = json.loads(message)
@@ -75,6 +92,13 @@ class MessagePool:
             self.notices.put(NoticeMessage(message_json[1], url))
         elif message_type == RelayMessageType.END_OF_STORED_EVENTS:
             self.eose_notices.put(EndOfStoredEventsMessage(message_json[1], url))
+        elif message_type == RelayMessageType.COMMAND_RESULT:
+            message = message_json[3] if len(message_json) > 3 else ""
+            self.command_results.put(
+                CommandResultMessage(
+                    message_json[1], bool(message_json[2]), str(message), url
+                )
+            )
 
     def _accept_event(self, event_message: EventMessage):
         """
