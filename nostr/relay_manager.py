@@ -9,6 +9,7 @@ from loguru import logger
 from nostr_sdk import (
     Client,
     ClientMessage,
+    Filter,
     HandleNotification,
     RelayMessage,
     RelayUrl,
@@ -99,18 +100,32 @@ class _NotificationHandler(HandleNotification):
 
         if getattr(message_enum, "is_CLOSED", lambda: False)():
             relay.append_error(getattr(message_enum, "message", "Subscription closed."))
+            return
+
+        if getattr(message_enum, "is_EVENT_MSG", lambda: False)():
+            try:
+                self.relay_manager.message_pool.add_message(message_json, url)
+            except Exception as e:
+                logger.error(f"[NOSTRCLIENT] msg EVENT exception: {e}")
+            return
+
+        if getattr(message_enum, "is_OK", lambda: False)():
+            return
 
     async def handle(
         self, relay_url: RelayUrl, subscription_id: str, event: Any
     ) -> None:
-        url = str(relay_url)
-        relay = self.relay_manager._ensure_relay_state(url)
-        relay.num_received_events += 1
-        relay.update_from_sdk(await self.relay_manager._get_sdk_relay(url))
-        self.relay_manager.message_pool.add_message(
-            RelayMessage.event(subscription_id, event).as_json(),
-            url,
-        )
+        try:
+            url = str(relay_url)
+            relay = self.relay_manager._ensure_relay_state(url)
+            relay.num_received_events += 1
+            relay.update_from_sdk(await self.relay_manager._get_sdk_relay(url))
+            self.relay_manager.message_pool.add_message(
+                RelayMessage.event(subscription_id, event).as_json(),
+                url,
+            )
+        except Exception as e:
+            logger.error(f"[NOSTRCLIENT] handle EVENT exception: {e}")
 
 
 class RelayManager:
@@ -270,8 +285,16 @@ class RelayManager:
     ) -> None:
         if not self.relays:
             return
+        relay_urls = list(self.relays.keys())
         message = self._req_message(subscription_id, filters)
-        await self._send_to_relays(list(self.relays.keys()), message)
+        await self._send_to_relays(relay_urls, message)
+        parsed_urls = [RelayUrl.parse(url) for url in relay_urls]
+        for f in filters:
+            try:
+                filter_obj = Filter.from_json(json.dumps(f))
+                await self._client.subscribe_with_id_to(parsed_urls, subscription_id, filter_obj)
+            except Exception as e:
+                logger.warning(f"[NOSTRCLIENT] SDK subscribe failed: {e}")
         for relay in self.relays.values():
             relay.num_sent_events += 1
 
@@ -316,6 +339,12 @@ class RelayManager:
         for subscription_id, filters in cached:
             message = self._req_message(subscription_id, filters)
             await self._client.send_msg_to(relay_urls, message)
+            for f in filters:
+                try:
+                    filter_obj = Filter.from_json(json.dumps(f))
+                    await self._client.subscribe_with_id_to(relay_urls, subscription_id, filter_obj)
+                except Exception as e:
+                    logger.warning(f"[NOSTRCLIENT] SDK subscribe failed: {e}")
 
     async def _send_to_relays(
         self, relay_urls: list[str], message: ClientMessage
