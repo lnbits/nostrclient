@@ -38,7 +38,8 @@ class NostrRouter:
         self.tasks.append(asyncio.create_task(self._nostr_to_client()))
 
     async def stop(self):
-        nostr_client.relay_manager.close_subscriptions(self.subscriptions)
+        for s in self.subscriptions:
+            self._close_subscription(s)
         self.connected = False
 
         for t in self.tasks:
@@ -164,7 +165,7 @@ class NostrRouter:
         )
         if subscription_id_rewritten:
             self.original_subscription_ids.pop(subscription_id_rewritten)
-            nostr_client.relay_manager.close_subscription(subscription_id_rewritten)
+            self._close_subscription(subscription_id_rewritten)
             logger.info(
                 f"""
             Unsubscribe from '{subscription_id_rewritten}'.
@@ -173,3 +174,10 @@ class NostrRouter:
             )
         else:
             logger.info(f"Failed to unsubscribe from '{subscription_id}.'")
+
+    @staticmethod
+    def _close_subscription(subscription_id: str):
+        """Close upstream and drop messages no client will read."""
+        nostr_client.relay_manager.close_subscription(subscription_id)
+        NostrRouter.received_subscription_events.pop(subscription_id, None)
+        NostrRouter.received_subscription_eosenotices.pop(subscription_id, None)

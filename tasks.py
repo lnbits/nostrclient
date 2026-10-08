@@ -26,36 +26,45 @@ async def check_relays():
             logger.warning(f"Cannot restart relays: '{e!s}'.")
 
 
+def _is_subscription_open(sub_id: str) -> bool:
+    # Messages can still be queued when their subscription closes. Caching them
+    # would recreate entries that no client will read or remove.
+    return nostr_client.relay_manager.message_pool.is_subscription_open(sub_id)
+
+
+def on_event(event_message: EventMessage):
+    sub_id = event_message.subscription_id
+    if not _is_subscription_open(sub_id):
+        return
+    if sub_id not in NostrRouter.received_subscription_events:
+        NostrRouter.received_subscription_events[sub_id] = [event_message]
+        return
+
+    # do not add duplicate events (by event id)
+    ids = [e.event_id for e in NostrRouter.received_subscription_events[sub_id]]
+    if event_message.event_id in ids:
+        return
+
+    NostrRouter.received_subscription_events[sub_id].append(event_message)
+
+
+def on_notice(notice_message: NoticeMessage):
+    if notice_message not in NostrRouter.received_subscription_notices:
+        NostrRouter.received_subscription_notices.append(notice_message)
+
+
+def on_eose_notice(event_message: EndOfStoredEventsMessage):
+    sub_id = event_message.subscription_id
+    if not _is_subscription_open(sub_id):
+        return
+    if sub_id in NostrRouter.received_subscription_eosenotices:
+        return
+
+    NostrRouter.received_subscription_eosenotices[sub_id] = event_message
+
+
 async def subscribe_events():
     while not [r.connected for r in nostr_client.relay_manager.relays.values()]:
         await asyncio.sleep(2)
 
-    def callback_events(event_message: EventMessage):
-        sub_id = event_message.subscription_id
-        if sub_id not in NostrRouter.received_subscription_events:
-            NostrRouter.received_subscription_events[sub_id] = [event_message]
-            return
-
-        # do not add duplicate events (by event id)
-        ids = [e.event_id for e in NostrRouter.received_subscription_events[sub_id]]
-        if event_message.event_id in ids:
-            return
-
-        NostrRouter.received_subscription_events[sub_id].append(event_message)
-
-    def callback_notices(notice_message: NoticeMessage):
-        if notice_message not in NostrRouter.received_subscription_notices:
-            NostrRouter.received_subscription_notices.append(notice_message)
-
-    def callback_eose_notices(event_message: EndOfStoredEventsMessage):
-        sub_id = event_message.subscription_id
-        if sub_id in NostrRouter.received_subscription_eosenotices:
-            return
-
-        NostrRouter.received_subscription_eosenotices[sub_id] = event_message
-
-    await nostr_client.subscribe(
-        callback_events,
-        callback_notices,
-        callback_eose_notices,
-    )
+    await nostr_client.subscribe(on_event, on_notice, on_eose_notice)

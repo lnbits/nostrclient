@@ -32,11 +32,29 @@ class MessagePool:
         self.events: Queue[EventMessage] = Queue()
         self.notices: Queue[NoticeMessage] = Queue()
         self.eose_notices: Queue[EndOfStoredEventsMessage] = Queue()
-        self._unique_events: set = set()
+        # Event IDs seen per open subscription. Messages for subscriptions that
+        # are not open are dropped, so this state is bounded by open subscriptions.
+        self._subscription_events: dict[str, set[str]] = {}
         self.lock: Lock = Lock()
 
     def add_message(self, message: str, url: str):
         self._process_message(message, url)
+
+    def open_subscription(self, subscription_id: str) -> None:
+        with self.lock:
+            self._subscription_events.setdefault(subscription_id, set())
+
+    def close_subscription(self, subscription_id: str) -> None:
+        with self.lock:
+            self._subscription_events.pop(subscription_id, None)
+
+    def is_subscription_open(self, subscription_id: str) -> bool:
+        with self.lock:
+            return subscription_id in self._subscription_events
+
+    def tracked_event_count(self) -> int:
+        with self.lock:
+            return sum(len(ids) for ids in self._subscription_events.values())
 
     def get_event(self):
         return self.events.get()
@@ -67,23 +85,20 @@ class MessagePool:
             event_id = event["id"]
 
             with self.lock:
-                if f"{subscription_id}_{event_id}" not in self._unique_events:
-                    self._accept_event(
-                        EventMessage(json.dumps(event), event_id, subscription_id, url)
-                    )
+                # Event uniqueness is considered per `subscription_id`. The
+                # `subscription_id` is rewritten to be unique and it is the same
+                # across relays. The same event can come from different
+                # subscriptions (from the same client or from different ones).
+                seen = self._subscription_events.get(subscription_id)
+                if seen is None or event_id in seen:
+                    return
+                seen.add(event_id)
+                self.events.put(
+                    EventMessage(json.dumps(event), event_id, subscription_id, url)
+                )
         elif message_type == RelayMessageType.NOTICE:
             self.notices.put(NoticeMessage(message_json[1], url))
         elif message_type == RelayMessageType.END_OF_STORED_EVENTS:
-            self.eose_notices.put(EndOfStoredEventsMessage(message_json[1], url))
-
-    def _accept_event(self, event_message: EventMessage):
-        """
-        Event uniqueness is considered per `subscription_id`.  The `subscription_id` is
-        rewritten to be unique and it is the same accross relays. The same event can
-        come from different subscriptions (from the same client or from different ones).
-        Clients that have joined later should receive older events.
-        """
-        self.events.put(event_message)
-        self._unique_events.add(
-            f"{event_message.subscription_id}_{event_message.event_id}"
-        )
+            subscription_id = message_json[1]
+            if self.is_subscription_open(subscription_id):
+                self.eose_notices.put(EndOfStoredEventsMessage(subscription_id, url))

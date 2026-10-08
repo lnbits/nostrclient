@@ -152,6 +152,7 @@ class RelayManager:
     def add_subscription(self, subscription_id: str, filters: list[Any]) -> None:
         with self._subscriptions_lock:
             self._cached_subscriptions[subscription_id] = filters
+        self.message_pool.open_subscription(subscription_id)
 
         self._run_coro(
             self._broadcast_subscription(subscription_id, filters),
@@ -163,6 +164,7 @@ class RelayManager:
         logger.info(f"Closing subscription: '{subscription_id}'.")
         with self._subscriptions_lock:
             self._cached_subscriptions.pop(subscription_id, None)
+        self.message_pool.close_subscription(subscription_id)
         self._run_coro(self._close_subscription(subscription_id), suppress=True)
         self._refresh_subscription_counts()
 
