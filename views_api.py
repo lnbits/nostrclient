@@ -171,4 +171,4 @@ async def api_get_config() -> Config:
 async def api_update_config(data: Config):
     config = await update_config(owner_id="admin", config=data)
     assert config
-    return config.dict()
+    return config.model_dump()
