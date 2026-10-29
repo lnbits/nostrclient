@@ -18,5 +18,5 @@ async def index(request: Request, account: Account = Depends(check_admin)):
     if not user:
         return HTMLResponse("No user found", status_code=404)
     return nostr_renderer().TemplateResponse(
-        "nostrclient/index.html", {"request": request, "user": user.json()}
+        "nostrclient/index.html", {"request": request, "user": user.model_dump_json()}
     )

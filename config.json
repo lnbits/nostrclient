@@ -1,10 +1,10 @@
 {
   "name": "Nostr Client",
   "short_description": "Nostr relay multiplexer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "tile": "/nostrclient/static/images/nostr-bitcoin.png",
   "contributors": ["calle", "motorina0", "dni"],
-  "min_lnbits_version": "1.4.0",
+  "min_lnbits_version": "1.7.0-rc1",
   "images": [
     {
       "uri": "https://raw.githubusercontent.com/lnbits/nostrclient/add-extension-metadata/static/images/1.jpeg"

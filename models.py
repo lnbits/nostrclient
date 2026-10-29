@@ -15,11 +15,17 @@ class Relay(BaseModel):
     url: str | None = None
     active: bool | None = None
 
-    connected: bool | None = Field(default=None, no_database=True)
-    connected_string: str | None = Field(default=None, no_database=True)
-    status: RelayStatus | None = Field(default=None, no_database=True)
+    connected: bool | None = Field(
+        default=None, json_schema_extra={"no_database": True}
+    )
+    connected_string: str | None = Field(
+        default=None, json_schema_extra={"no_database": True}
+    )
+    status: RelayStatus | None = Field(
+        default=None, json_schema_extra={"no_database": True}
+    )
 
-    ping: int | None = Field(default=None, no_database=True)
+    ping: int | None = Field(default=None, json_schema_extra={"no_database": True})
 
     def _init__(self):
         if not self.id:
@@ -33,7 +39,7 @@ class RelayDb(BaseModel):
 
 
 class TestMessage(BaseModel):
-    sender_private_key: str | None
+    sender_private_key: str | None = None
     reciever_public_key: str
     message: str
 
