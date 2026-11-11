@@ -2,7 +2,7 @@ import asyncio
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
-from lnbits.decorators import check_admin
+from lnbits.decorators import check_admin, require_admin_key
 from lnbits.helpers import decrypt_internal_message, urlsafe_short_hash
 from loguru import logger
 
@@ -43,6 +43,13 @@ async def api_get_relays() -> list[Relay]:
             )
         )
     return relays
+
+
+@nostrclient_api_router.get(
+    "/api/v1/relays/urls", dependencies=[Depends(require_admin_key)]
+)
+async def api_get_relay_urls() -> list[str]:
+    return list(nostr_client.relay_manager.relays.keys())
 
 
 @nostrclient_api_router.post(
